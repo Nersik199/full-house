@@ -12,7 +12,9 @@ export async function SequelizeConfig(
     password: configService.getOrThrow<string>('POSTGRES_PASSWORD'),
     database: configService.getOrThrow<string>('POSTGRES_DB'),
     autoLoadModels: true,
+    logging: false,
     synchronize: true,
+    ssl: true,
     dialectOptions: {
       ssl: {
         require: true,

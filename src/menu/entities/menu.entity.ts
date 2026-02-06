@@ -1,9 +1,9 @@
 import { Column, DataType, Model, Table } from 'sequelize-typescript';
 @Table({
-  tableName: 'rooms',
+  tableName: 'menus',
   timestamps: true,
 })
-export class Room extends Model {
+export class Menu extends Model {
   @Column({
     type: DataType.BIGINT,
     autoIncrement: true,
@@ -30,44 +30,10 @@ export class Room extends Model {
   price: number;
 
   @Column({
-    type: DataType.BOOLEAN,
-    defaultValue: true,
+    type: DataType.TEXT,
+    allowNull: true,
   })
-  wifi: boolean;
-
-  @Column({
-    type: DataType.INTEGER,
-    allowNull: false,
-    defaultValue: 1,
-  })
-  member: number;
-
-  @Column({
-    type: DataType.JSON,
-    allowNull: false,
-  })
-  images: string[];
-
-  @Column({
-    type: DataType.INTEGER,
-    allowNull: false,
-    field: 'room_number',
-  })
-  roomNumber: number;
-
-  @Column({
-    type: DataType.INTEGER,
-    allowNull: false,
-    field: 'bath_room',
-  })
-  bathroom: number;
-
-  @Column({
-    type: DataType.BOOLEAN,
-    allowNull: false,
-    defaultValue: false,
-  })
-  smoking: boolean;
+  image: string;
 
   @Column({
     type: DataType.DATE,

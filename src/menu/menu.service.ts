@@ -1,22 +1,23 @@
+import { MenuModule } from './menu.module';
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Room } from './entities/room.entity';
+import { Menu } from './entities/menu.entity';
 import { InjectModel } from '@nestjs/sequelize';
-import { RoomCreateDto, RoomUpdateDto } from './dto/room.dto';
 import { FilesService } from '@/files/files.service';
-import { HeaderRoomCreateDto, HeaderRoomUpdateDto } from './dto/header.dto';
-import { HeaderRoom } from './entities/header.entity';
+import { MenuCreateDto, MenuUpdateDto } from './dto/menu.dto';
+import { HeaderMenuCreateDto, HeaderMenuUpdateDto } from './dto/header.dto';
+import { HeaderMenu } from './entities/header.entity';
 
 @Injectable()
-export class RoomService {
+export class MenuService {
   constructor(
-    @InjectModel(Room)
-    private roomModel: typeof Room,
-    @InjectModel(HeaderRoom)
-    private readonly headerModel: typeof HeaderRoom,
+    @InjectModel(Menu)
+    private menuModel: typeof Menu,
+    @InjectModel(HeaderMenu)
+    private readonly headerModel: typeof HeaderMenu,
     private readonly filesService: FilesService,
   ) {}
 
-  async createHeader(dto: HeaderRoomCreateDto, file?: Express.Multer.File) {
+  async createHeader(dto: HeaderMenuCreateDto, file?: Express.Multer.File) {
     const uploaded = await this.filesService.upload(file, 'header');
 
     const headerData = await this.headerModel.create({
@@ -38,7 +39,7 @@ export class RoomService {
   async updateHeader(
     id: number,
     urlId: string,
-    dto: HeaderRoomUpdateDto,
+    dto: HeaderMenuUpdateDto,
     file?: Express.Multer.File,
   ) {
     await this.filesService.delete(urlId);
@@ -56,19 +57,19 @@ export class RoomService {
     return updatedHeader;
   }
 
-  async create(dto: RoomCreateDto, files?: Express.Multer.File[]) {
-    const imageUrls = await this.filesService.uploadMany(files, 'rooms');
+  async create(dto: MenuCreateDto, file?: Express.Multer.File) {
+    const imageUrls = await this.filesService.upload(file, 'menu');
 
-    const room = await this.roomModel.create({
+    const menu = await this.menuModel.create({
       ...dto,
-      images: imageUrls,
+      image: imageUrls,
     });
 
-    return room;
+    return menu;
   }
 
   async findAll() {
-    const rooms = await this.roomModel.findAll({
+    const rooms = await this.menuModel.findAll({
       order: [['created_at', 'DESC']],
     });
 
@@ -80,7 +81,7 @@ export class RoomService {
   }
 
   async findById(id: number) {
-    const room = await this.roomModel.findByPk(id);
+    const room = await this.menuModel.findByPk(id);
     if (!room) {
       throw new NotFoundException(`Room with id ${id} not found`);
     }
@@ -89,38 +90,38 @@ export class RoomService {
 
   async update(
     id: number,
-    dto: RoomUpdateDto,
+    dto: MenuUpdateDto,
     urlId: string,
     file?: Express.Multer.File,
   ) {
-    const room = await this.roomModel.findByPk(id);
+    const menu = await this.menuModel.findByPk(id);
 
-    if (!room) {
+    if (!menu) {
       throw new NotFoundException('Room not found');
     }
 
-    let images: string[] = Array.isArray(room.images) ? [...room.images] : [];
+    let image: string[] = Array.isArray(menu.image) ? [...menu.image] : [];
 
     if (file) {
       const targetKey = urlId.startsWith('/') ? urlId.slice(1) : urlId;
 
       await this.filesService.delete(targetKey);
 
-      images = images.filter((img) => {
+      image = image.filter((img) => {
         const imgKey = this.filesService.extractKey(img);
         return imgKey !== targetKey;
       });
 
-      const newImg = await this.filesService.upload(file, 'rooms');
-      images.push(newImg);
+      const newImg = await this.filesService.upload(file, 'menu');
+      image.push(newImg);
     }
 
-    await room.update({
+    await menu.update({
       ...dto,
-      images,
+      image,
     });
 
-    return room;
+    return menu;
   }
 
   async delete(id: number) {

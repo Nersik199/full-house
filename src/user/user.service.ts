@@ -20,28 +20,28 @@ export class UserService {
     return user?.dataValues || null;
   }
 
-  async create(dto: AuthDto) {
-    const { email, password } = dto;
+  // async create(dto: AuthDto) {
+  //   const { email, password } = dto;
 
-    const existingUser = await this.getByEmail(email);
+  //   const existingUser = await this.getByEmail(email);
 
-    if (existingUser) {
-      throw new NotFoundException('User already exists');
-    }
+  //   if (existingUser) {
+  //     throw new NotFoundException('User already exists');
+  //   }
 
-    try {
-      const result = await this.userModel.create({
-        email,
-        password: await argon2.hash(password),
-      });
+  //   try {
+  //     const result = await this.userModel.create({
+  //       email,
+  //       password: await argon2.hash(password),
+  //     });
 
-      if (!result) {
-        throw new Error('Failed to create user');
-      }
+  //     if (!result) {
+  //       throw new Error('Failed to create user');
+  //     }
 
-      return { message: `User successfully created` };
-    } catch (error) {
-      throw new Error(error.message);
-    }
-  }
+  //     return { message: `User successfully created` };
+  //   } catch (error) {
+  //     throw new Error(error.message);
+  //   }
+  // }
 }

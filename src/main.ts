@@ -1,46 +1,49 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { ValidationPipe } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { Sequelize } from 'sequelize-typescript';
+import { setupSwagger } from './shared/utils/swagger';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import morgan from 'morgan';
+import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const logger = new Logger(AppModule.name);
   const sequelize = app.get(Sequelize);
-
   await sequelize.sync({ alter: true });
-
-  app.useGlobalPipes(new ValidationPipe());
-
-  const config = new DocumentBuilder()
-    .setTitle('Social API')
-    .setDescription('The Social API description')
-    .addBearerAuth(
-      {
-        type: 'http',
-        scheme: 'bearer',
-        bearerFormat: 'JWT',
+  const configService = app.get(ConfigService);
+  app.use(
+    morgan('dev', {
+      stream: {
+        write: (message: string) => {
+          logger.log(message.trim());
+        },
       },
-      'bearer-Token',
-    )
-    .setContact('Your Name', 'https://yourwebsite.com', 'xxx@test.com')
-    .setVersion('1.0')
-    .build();
+    }),
+  );
 
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('docs', app, document);
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+    }),
+  );
 
-  await app.listen(process.env.PORT ?? 3000).then(() => {
-    console.log(
-      `Application is running on: http://localhost:${process.env.PORT ?? 3000}`,
-    );
-    console.log(
-      `Swagger docs available at: http://localhost:${
-        process.env.PORT ?? 3000
-      }/docs`,
-    );
-  });
+  setupSwagger(app);
 
-  console.log('Database synced with force: true (tables recreated)');
+  await app
+    .listen(configService.getOrThrow<number>('APPLICATION_PORT'))
+    .then(() => {
+      logger.log(
+        `🚀 Server is running at http://localhost:${process.env.PORT ?? 3000}`,
+      );
+
+      logger.log(
+        `Swagger docs available at: http://localhost:${
+          process.env.PORT ?? 3000
+        }/docs`,
+      );
+    });
+  logger.log('Database synced with force: true (tables recreated)');
 }
 bootstrap();

@@ -52,7 +52,7 @@ export class MenuService {
       },
     );
 
-    if (updatedCount === 0) throw new NotFoundException('Room not found');
+    if (updatedCount === 0) throw new NotFoundException('Menu not found');
 
     return updatedHeader;
   }
@@ -69,23 +69,23 @@ export class MenuService {
   }
 
   async findAll() {
-    const rooms = await this.menuModel.findAll({
+    const menus = await this.menuModel.findAll({
       order: [['created_at', 'DESC']],
     });
 
-    if (!rooms || rooms.length === 0) {
+    if (!menus || menus.length === 0) {
       throw new NotFoundException('No rooms found');
     }
 
-    return rooms;
+    return menus;
   }
 
   async findById(id: number) {
-    const room = await this.menuModel.findByPk(id);
-    if (!room) {
-      throw new NotFoundException(`Room with id ${id} not found`);
+    const menu = await this.menuModel.findByPk(id);
+    if (!menu) {
+      throw new NotFoundException(`menu with id ${id} not found`);
     }
-    return room;
+    return menu;
   }
 
   async update(
@@ -97,7 +97,7 @@ export class MenuService {
     const menu = await this.menuModel.findByPk(id);
 
     if (!menu) {
-      throw new NotFoundException('Room not found');
+      throw new NotFoundException('Menu not found');
     }
 
     let image: string[] = Array.isArray(menu.image) ? [...menu.image] : [];
@@ -125,8 +125,11 @@ export class MenuService {
   }
 
   async delete(id: number) {
-    const room = await this.findById(id);
-    await room.destroy();
-    return { message: 'Room successfully deleted' };
+    const menu = await this.menuModel.findOne({ where: { id } });
+    await menu.destroy();
+    const parsedUrl = new URL(menu.image);
+    const pathOnly = parsedUrl.pathname;
+    await this.filesService.delete(pathOnly);
+    return { message: 'Menu successfully deleted' };
   }
 }

@@ -1,4 +1,3 @@
-import { Auth } from 'src/auth/decorators/auth.decorators';
 import {
   Body,
   Controller,
@@ -9,19 +8,25 @@ import {
   Put,
   Query,
   UploadedFile,
-  UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
-import { RoomService } from './room.service';
-import { RoomCreateDto, RoomUpdateDto } from './dto/room.dto';
+import { DiningRoomService } from './dining_room.service';
 import { ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
-import { CurrentAdmin } from 'src/user/decorators/user.decorator';
-import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
-import { HeaderRoomCreateDto, HeaderRoomUpdateDto } from './dto/header.dto';
+import { Auth } from '@/auth/decorators/auth.decorators';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { CurrentAdmin } from '@/user/decorators/user.decorator';
+import {
+  HeaderDiningRoomCreateDto,
+  HeaderDiningRoomUpdateDto,
+} from './dto/header.dto';
+import {
+  DiningRoomCreateDto,
+  DiningRoomUpdateDto,
+} from './dto/dining_room.createDto';
 
-@Controller('room')
-export class RoomController {
-  constructor(private readonly roomService: RoomService) {}
+@Controller('dining-room')
+export class DiningRoomController {
+  constructor(private readonly diningRoomService: DiningRoomService) {}
 
   @ApiBearerAuth('Authorization')
   @Auth()
@@ -30,10 +35,10 @@ export class RoomController {
   @UseInterceptors(FileInterceptor('file'))
   async createHeader(
     @CurrentAdmin('role') role: string,
-    @Body() dto: HeaderRoomCreateDto,
+    @Body() dto: HeaderDiningRoomCreateDto,
     @UploadedFile() file?: Express.Multer.File,
   ) {
-    return await this.roomService.createHeader(dto, file);
+    return await this.diningRoomService.createHeader(dto, file);
   }
 
   @ApiBearerAuth('Authorization')
@@ -45,38 +50,37 @@ export class RoomController {
     @Param('id') id: number,
     @Query('urlId') urlId: string,
     @CurrentAdmin('id') userId: number,
-    @Body() dto: HeaderRoomUpdateDto,
+    @Body() dto: HeaderDiningRoomUpdateDto,
     @UploadedFile() file?: Express.Multer.File,
   ) {
-    return await this.roomService.updateHeader(id, urlId, dto, file);
+    return await this.diningRoomService.updateHeader(id, urlId, dto, file);
   }
 
   @Get('header/info')
   async getHeader() {
-    return await this.roomService.getHeader();
+    return await this.diningRoomService.getHeader();
   }
 
   @ApiBearerAuth('Authorization')
   @Auth()
   @Post('admin/create')
   @ApiConsumes('multipart/form-data')
-  @UseInterceptors(FilesInterceptor('files', 10))
   async create(
     @CurrentAdmin('role') role: string,
-    @Body() dto: RoomCreateDto,
-    @UploadedFiles() files?: Express.Multer.File[],
+    @Body() dto: DiningRoomCreateDto,
+    @UploadedFile() file?: Express.Multer.File,
   ) {
-    return await this.roomService.create(dto, files);
+    return await this.diningRoomService.create(dto, file);
   }
 
   @Get('all')
   async findAll(@Query() limit: string) {
-    return await this.roomService.findAll();
+    return await this.diningRoomService.findAll();
   }
 
   @Get(':id')
   async findById(@Param('id') id: number) {
-    return await this.roomService.findById(id);
+    return await this.diningRoomService.findById(id);
   }
 
   @ApiBearerAuth('Authorization')
@@ -85,21 +89,18 @@ export class RoomController {
   @UseInterceptors(FileInterceptor('file'))
   @Put('admin/update/:id')
   async update(
-    @Body() dto: RoomUpdateDto,
+    @Body() dto: DiningRoomUpdateDto,
     @Param('id') id: number,
     @Query('urlId') urlId: string,
     @UploadedFile() file?: Express.Multer.File,
   ) {
-    return await this.roomService.update(id, dto, urlId, file);
+    return await this.diningRoomService.update(id, dto, urlId, file);
   }
 
   @ApiBearerAuth('Authorization')
   @Auth()
   @Delete('admin/delete/:id')
   async delete(@Param('id') id: number) {
-    return await this.roomService.delete(id);
+    return await this.diningRoomService.delete(id);
   }
-
-  @Get('search')
-  async search() {}
 }

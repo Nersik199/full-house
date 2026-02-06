@@ -124,7 +124,17 @@ export class RoomService {
   }
 
   async delete(id: number) {
-    const room = await this.findById(id);
+    const room = await this.roomModel.findOne({ where: { id } });
+
+    const image: string[] = Array.isArray(room.images) ? [...room.images] : [];
+
+    image.forEach(async (img) => {
+      const parsedUrl = new URL(img);
+
+      const pathOnly = parsedUrl.pathname;
+      await this.filesService.delete(pathOnly);
+    });
+
     await room.destroy();
     return { message: 'Room successfully deleted' };
   }

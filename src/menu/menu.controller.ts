@@ -11,7 +11,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { MenuService } from './menu.service';
-import { ApiBearerAuth, ApiBody, ApiConsumes } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
 import { Auth } from '@/auth/decorators/auth.decorators';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CurrentAdmin } from '@/user/decorators/user.decorator';
@@ -37,7 +37,7 @@ export class MenuController {
 
   @ApiBearerAuth('Authorization')
   @Auth()
-  @Post('admin/update/header/:id')
+  @Put('admin/update/header/:id')
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('file'))
   async updateHeader(

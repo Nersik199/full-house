@@ -1,10 +1,10 @@
 import { Column, DataType, Model, Table } from 'sequelize-typescript';
 
 @Table({
-  tableName: 'about_us',
+  tableName: 'dining_room',
   timestamps: true,
 })
-export class AboutUs extends Model {
+export class DiningRoom extends Model {
   @Column({
     type: DataType.BIGINT,
     autoIncrement: true,

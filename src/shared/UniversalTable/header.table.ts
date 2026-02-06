@@ -23,7 +23,7 @@ export abstract class BaseHeader extends Model {
 
   @Column({
     type: DataType.STRING,
-    allowNull: false,
+    allowNull: true,
   })
   description: string;
 

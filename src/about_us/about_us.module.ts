@@ -4,9 +4,10 @@ import { AboutUsController } from './about_us.controller';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { AboutUs } from './entities/about_us.entity';
 import { FilesModule } from '@/files/files.module';
+import { AboutUsHeader } from './entities/about_us.header.entity';
 
 @Module({
-  imports: [SequelizeModule.forFeature([AboutUs]), FilesModule],
+  imports: [SequelizeModule.forFeature([AboutUs, AboutUsHeader]), FilesModule],
   controllers: [AboutUsController],
   providers: [AboutUsService],
 })

@@ -8,6 +8,7 @@ import { RoomModule } from './room/room.module';
 import { FilesModule } from './files/files.module';
 import { MenuModule } from './menu/menu.module';
 import { AboutUsModule } from './about_us/about_us.module';
+import { DiningRoomModule } from './dining_room/dining_room.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -24,6 +25,7 @@ import { AboutUsModule } from './about_us/about_us.module';
     FilesModule,
     MenuModule,
     AboutUsModule,
+    DiningRoomModule,
   ],
   controllers: [],
   providers: [],

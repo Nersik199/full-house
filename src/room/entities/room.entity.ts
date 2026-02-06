@@ -70,6 +70,13 @@ export class Room extends Model {
   smoking: boolean;
 
   @Column({
+    type: DataType.BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
+  })
+  Busy: boolean;
+
+  @Column({
     type: DataType.DATE,
     defaultValue: DataType.NOW,
     field: 'created_at',

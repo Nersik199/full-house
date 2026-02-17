@@ -10,5 +10,6 @@ import { HeaderRoom } from './entities/header.entity';
   imports: [SequelizeModule.forFeature([Room, HeaderRoom]), FilesModule],
   controllers: [RoomController],
   providers: [RoomService],
+  exports: [RoomService],
 })
 export class RoomModule {}

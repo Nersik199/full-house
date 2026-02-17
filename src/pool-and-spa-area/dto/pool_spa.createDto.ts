@@ -1,15 +1,17 @@
 import { ApiProperty, PartialType } from '@nestjs/swagger';
 import { IsNotEmpty, IsString, Length } from 'class-validator';
 
-export class DiningRoomCreateDto {
+export class PoolSpaCreateDto {
   @ApiProperty({
     example:
-      'Просторный и уютный обеденный зал с комфортной атмосферой для гостей.',
-    description: 'Описание обеденного зала',
+      'Просторная зона бассейна и спа с тёплой водой, удобными шезлонгами и атмосферой полного расслабления.',
+    description: 'Описание зоны бассейна и спа',
   })
   @IsString({ message: 'Описание должно быть строкой' })
   @IsNotEmpty({ message: 'Описание обязательно для заполнения' })
-  @Length(6, 1500)
+  @Length(6, 1500, {
+    message: 'Описание должно содержать от 6 до 1500 символов',
+  })
   description: string;
 
   @ApiProperty({
@@ -21,4 +23,4 @@ export class DiningRoomCreateDto {
   file?: any;
 }
 
-export class DiningRoomUpdateDto extends PartialType(DiningRoomCreateDto) {}
+export class PoolSpaUpdateDto extends PartialType(PoolSpaCreateDto) {}

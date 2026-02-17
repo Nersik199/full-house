@@ -3,6 +3,8 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Post,
   Put,
@@ -27,6 +29,7 @@ export class MenuController {
   @Post('admin/create/header')
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('file'))
+  @HttpCode(HttpStatus.OK)
   async createHeader(
     @CurrentAdmin('role') role: string,
     @Body() dto: HeaderMenuCreateDto,
@@ -40,6 +43,7 @@ export class MenuController {
   @Put('admin/update/header/:id')
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('file'))
+  @HttpCode(HttpStatus.OK)
   async updateHeader(
     @Param('id') id: number,
     @Query('urlId') urlId: string,
@@ -51,6 +55,7 @@ export class MenuController {
   }
 
   @Get('header/info')
+  @HttpCode(HttpStatus.OK)
   async getHeader() {
     return await this.menuService.getHeader();
   }
@@ -60,6 +65,7 @@ export class MenuController {
   @Post('admin/create')
   @UseInterceptors(FileInterceptor('file'))
   @ApiConsumes('multipart/form-data')
+  @HttpCode(HttpStatus.OK)
   async create(
     @CurrentAdmin('id') userId: number,
     @Body() dto: MenuCreateDto,
@@ -78,6 +84,7 @@ export class MenuController {
   @Put('admin/update/:id')
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('file'))
+  @HttpCode(HttpStatus.OK)
   async update(
     @Body() dto: MenuUpdateDto,
     @Param('id') id: number,
@@ -90,6 +97,7 @@ export class MenuController {
   @ApiBearerAuth('Authorization')
   @Auth()
   @Delete('admin/delete/:id')
+  @HttpCode(HttpStatus.OK)
   async delete(@Param('id') id: number) {
     return await this.menuService.delete(id);
   }

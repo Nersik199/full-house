@@ -3,34 +3,36 @@ import { IsNotEmpty, IsString, Length } from 'class-validator';
 
 export class HeaderDiningRoomCreateDto {
   @ApiProperty({
-    example: 'Наше меню',
-    description: 'Основной заголовок раздела меню',
+    example: 'Свадебный зал',
+    description: 'Основной заголовок раздела свадебного зала',
   })
-  @IsString({ message: 'Title должен быть строкой' })
-  @IsNotEmpty({ message: 'Title обязательно' })
-  @Length(5, 200, { message: 'Title должен содержать от 5 до 200 символов' })
+  @IsString({ message: 'Заголовок должен быть строкой' })
+  @IsNotEmpty({ message: 'Заголовок обязателен' })
+  @Length(5, 200, {
+    message: 'Заголовок должен содержать от 5 до 200 символов',
+  })
   title: string;
 
   @ApiProperty({
-    example: 'Блюда, приготовленные с любовью и из свежих ингредиентов',
-    description: 'Короткий подзаголовок для раздела меню',
+    example: 'Идеальное место для вашего свадебного торжества',
+    description: 'Короткий подзаголовок для свадебного зала',
   })
-  @IsString({ message: 'SubTitle должен быть строкой' })
-  @IsNotEmpty({ message: 'SubTitle обязательно' })
+  @IsString({ message: 'Подзаголовок должен быть строкой' })
+  @IsNotEmpty({ message: 'Подзаголовок обязателен' })
   @Length(6, 1500, {
-    message: 'Sub title должен содержать от 6 до 1500 символов',
+    message: 'Подзаголовок должен содержать от 6 до 1500 символов',
   })
   subTitle: string;
 
   @ApiProperty({
     example:
-      'В нашем меню вы найдёте широкий выбор горячих блюд, закусок и напитков. Мы готовим из свежих продуктов и предлагаем блюда на любой вкус.',
-    description: 'Подробное описание раздела меню',
+      'Наш свадебный зал сочетает элегантный интерьер, просторное пространство и современное оснащение. Мы создаём атмосферу, в которой каждый момент вашего торжества станет по-настоящему незабываемым.',
+    description: 'Подробное описание свадебного зала',
   })
-  @IsString({ message: 'Description должен быть строкой' })
-  @IsNotEmpty({ message: 'Description обязательно' })
+  @IsString({ message: 'Описание должно быть строкой' })
+  @IsNotEmpty({ message: 'Описание обязательно' })
   @Length(6, 1500, {
-    message: 'Description должен содержать от 6 до 1500 символов',
+    message: 'Описание должно содержать от 6 до 1500 символов',
   })
   description: string;
 
@@ -38,7 +40,7 @@ export class HeaderDiningRoomCreateDto {
     type: 'string',
     format: 'binary',
     required: false,
-    description: 'Изображение для шапки раздела меню (опционально)',
+    description: 'Изображение для шапки свадебного зала (опционально)',
   })
   file?: any;
 }

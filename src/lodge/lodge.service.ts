@@ -1,22 +1,22 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { Room } from './entities/room.entity';
-import { InjectModel } from '@nestjs/sequelize';
-import { RoomCreateDto, RoomUpdateDto } from './dto/room.dto';
 import { FilesService } from '@/files/files.service';
-import { HeaderRoomCreateDto, HeaderRoomUpdateDto } from './dto/header.dto';
-import { HeaderRoom } from './entities/header.entity';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectModel } from '@nestjs/sequelize';
+import { HeaderLodge } from './entities/header.entity';
+import { HeaderLodgeCreateDto, HeaderLodgeUpdateDto } from './dto/header.dto';
+import { LodgeCreateDto, LodgeUpdateDto } from './dto/lodge.dto';
+import { Lodge } from './entities/lodge.entity';
 
 @Injectable()
-export class RoomService {
+export class LodgeService {
   constructor(
-    @InjectModel(Room)
-    private roomModel: typeof Room,
-    @InjectModel(HeaderRoom)
-    private readonly headerModel: typeof HeaderRoom,
+    @InjectModel(Lodge)
+    private lodgeModel: typeof Lodge,
+    @InjectModel(HeaderLodge)
+    private readonly headerModel: typeof HeaderLodge,
     private readonly filesService: FilesService,
   ) {}
 
-  async createHeader(dto: HeaderRoomCreateDto, file?: Express.Multer.File) {
+  async createHeader(dto: HeaderLodgeCreateDto, file?: Express.Multer.File) {
     const uploaded = await this.filesService.upload(file, 'header');
 
     const headerData = await this.headerModel.create({
@@ -38,7 +38,7 @@ export class RoomService {
   async updateHeader(
     id: number,
     urlId: string,
-    dto: HeaderRoomUpdateDto,
+    dto: HeaderLodgeUpdateDto,
     file?: Express.Multer.File,
   ) {
     await this.filesService.delete(urlId);
@@ -56,31 +56,31 @@ export class RoomService {
     return updatedHeader;
   }
 
-  async create(dto: RoomCreateDto, files?: Express.Multer.File[]) {
-    const imageUrls = await this.filesService.uploadMany(files, 'rooms');
+  async create(dto: LodgeCreateDto, files?: Express.Multer.File[]) {
+    const imageUrls = await this.filesService.uploadMany(files, 'lodge');
 
-    const room = await this.roomModel.create({
+    const lodge = await this.lodgeModel.create({
       ...dto,
       images: imageUrls,
     });
 
-    return room;
+    return lodge;
   }
 
   async findAll() {
-    const rooms = await this.roomModel.findAll({
+    const lodge = await this.lodgeModel.findAll({
       order: [['created_at', 'DESC']],
     });
 
-    if (!rooms || rooms.length === 0) {
-      throw new NotFoundException('No rooms found');
+    if (!lodge || lodge.length === 0) {
+      throw new NotFoundException('No lodge found');
     }
 
-    return rooms;
+    return lodge;
   }
 
   async findById(id: number) {
-    const room = await this.roomModel.findByPk(id);
+    const room = await this.lodgeModel.findByPk(id);
     if (!room) {
       throw new NotFoundException(`Room with id ${id} not found`);
     }
@@ -89,17 +89,17 @@ export class RoomService {
 
   async update(
     id: number,
-    dto: RoomUpdateDto,
+    dto: LodgeUpdateDto,
     urlId: string,
     file?: Express.Multer.File,
   ) {
-    const room = await this.roomModel.findByPk(id);
+    const lodge = await this.lodgeModel.findByPk(id);
 
-    if (!room) {
-      throw new NotFoundException('Room not found');
+    if (!lodge) {
+      throw new NotFoundException('lodge not found');
     }
 
-    let images: string[] = Array.isArray(room.images) ? [...room.images] : [];
+    let images: string[] = Array.isArray(lodge.images) ? [...lodge.images] : [];
 
     if (file) {
       const targetKey = urlId.startsWith('/') ? urlId.slice(1) : urlId;
@@ -111,20 +111,20 @@ export class RoomService {
         return imgKey !== targetKey;
       });
 
-      const newImg = await this.filesService.upload(file, 'rooms');
+      const newImg = await this.filesService.upload(file, 'lodge');
       images.push(newImg);
     }
 
-    await room.update({
+    await lodge.update({
       ...dto,
       images,
     });
 
-    return room;
+    return lodge;
   }
 
-  async updateRoom(id: number, startDate: Date, endDate: Date) {
-    await this.roomModel.update(
+  async updateLodge(id: number, startDate: Date, endDate: Date) {
+    await this.lodgeModel.update(
       {
         Busy: true,
         rentalStart: new Date(startDate),
@@ -139,9 +139,11 @@ export class RoomService {
   }
 
   async delete(id: number) {
-    const room = await this.roomModel.findOne({ where: { id } });
+    const lodge = await this.lodgeModel.findOne({ where: { id } });
 
-    const image: string[] = Array.isArray(room.images) ? [...room.images] : [];
+    const image: string[] = Array.isArray(lodge.images)
+      ? [...lodge.images]
+      : [];
 
     image.forEach(async (img) => {
       const parsedUrl = new URL(img);
@@ -150,7 +152,7 @@ export class RoomService {
       await this.filesService.delete(pathOnly);
     });
 
-    await room.destroy();
+    await lodge.destroy();
     return { message: 'Room successfully deleted' };
   }
 }

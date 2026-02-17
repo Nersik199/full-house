@@ -5,11 +5,12 @@ import {
   Length,
   IsNumber,
   IsBoolean,
+  IsArray,
   IsOptional,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
-export class RoomCreateDto {
+export class LodgeCreateDto {
   @ApiProperty({ example: 'Стандартный номер' })
   @IsString({ message: 'Название должно быть строкой' })
   @IsNotEmpty({ message: 'Название обязательно' })
@@ -70,44 +71,6 @@ export class RoomCreateDto {
   @Type(() => Boolean)
   smoking: boolean;
 
-  @ApiProperty({ example: false, description: 'Наличие холодильника' })
-  @IsBoolean({ message: 'refrigerator должно быть логическим значением' })
-  @IsOptional()
-  @Type(() => Boolean)
-  refrigerator?: boolean;
-
-  @ApiProperty({ example: false, description: 'Наличие кондиционера' })
-  @IsBoolean({ message: 'airConditioner должно быть логическим значением' })
-  @IsOptional()
-  @Type(() => Boolean)
-  airConditioner?: boolean;
-
-  @ApiProperty({ example: 2, description: 'Количество кроватей в номере' })
-  @IsNumber({}, { message: 'bedCount должно быть числом' })
-  @IsOptional()
-  @Type(() => Number)
-  bedCount?: number;
-
-  @ApiProperty({
-    example: 'single',
-    description: 'Тип кровати: single | double',
-  })
-  @IsString({ message: 'bedType должно быть строкой' })
-  @IsOptional()
-  bedType?: 'single' | 'double';
-
-  @ApiProperty({ example: false, description: 'Наличие гостиной' })
-  @IsBoolean({ message: 'livingRoom должно быть логическим значением' })
-  @IsOptional()
-  @Type(() => Boolean)
-  livingRoom?: boolean;
-
-  @ApiProperty({ example: false, description: 'Наличие столовой' })
-  @IsBoolean({ message: 'diningRoom должно быть логическим значением' })
-  @IsOptional()
-  @Type(() => Boolean)
-  diningRoom?: boolean;
-
   @ApiProperty({
     type: 'array',
     items: { type: 'string', format: 'binary' },
@@ -117,8 +80,8 @@ export class RoomCreateDto {
   files?: any[];
 }
 
-export class RoomUpdateDto extends PartialType(
-  OmitType(RoomCreateDto, ['files'] as const),
+export class LodgeUpdateDto extends PartialType(
+  OmitType(LodgeCreateDto, ['files'] as const),
 ) {
   @ApiProperty({
     type: 'string',

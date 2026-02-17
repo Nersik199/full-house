@@ -9,6 +9,11 @@ import { FilesModule } from './files/files.module';
 import { MenuModule } from './menu/menu.module';
 import { AboutUsModule } from './about_us/about_us.module';
 import { DiningRoomModule } from './dining_room/dining_room.module';
+import { PaymentModule } from './payment/payment.module';
+import { OrderModule } from './order/order.module';
+import { LibsModule } from './libs/libs.module';
+import { LodgeModule } from './lodge/lodge.module';
+import { PoolAndSpaAreaModule } from './pool-and-spa-area/pool-and-spa-area.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -26,8 +31,12 @@ import { DiningRoomModule } from './dining_room/dining_room.module';
     MenuModule,
     AboutUsModule,
     DiningRoomModule,
+    OrderModule,
+    LibsModule,
+    LodgeModule,
+    PoolAndSpaAreaModule,
+    PaymentModule,
   ],
-  controllers: [],
   providers: [],
 })
 export class AppModule {}

@@ -1,4 +1,3 @@
-import { MenuModule } from './menu.module';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Menu } from './entities/menu.entity';
 import { InjectModel } from '@nestjs/sequelize';

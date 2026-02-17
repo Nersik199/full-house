@@ -9,6 +9,7 @@ import { randomUUID } from 'crypto';
 import { ConfigService } from '@nestjs/config';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import sharp from 'sharp';
+import multer from 'multer';
 
 @Injectable()
 export class FilesService {

@@ -12,20 +12,20 @@ import {
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
-import { AboutUsService } from './about_us.service';
+import { PoolAndSpaAreaService } from './pool-and-spa-area.service';
 import { ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
 import { Auth } from '@/auth/decorators/auth.decorators';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CurrentAdmin } from '@/user/decorators/user.decorator';
-import { AboutUsCreateDto, AboutUsUpdateDto } from './dto/about_us.createDto';
 import {
-  HeaderAboutUsCreateDto,
-  HeaderAboutUsUpdateDto,
+  HeaderPoolSpaCreateDto,
+  HeaderPoolSpaUpdateDto,
 } from './dto/header.dto';
+import { PoolSpaCreateDto, PoolSpaUpdateDto } from './dto/pool_spa.createDto';
 
-@Controller('about-us')
-export class AboutUsController {
-  constructor(private readonly aboutUsService: AboutUsService) {}
+@Controller('pool-spa')
+export class PoolAndSpaAreaController {
+  constructor(private readonly poolAndSpaAreaService: PoolAndSpaAreaService) {}
 
   @ApiBearerAuth('Authorization')
   @Auth()
@@ -35,10 +35,10 @@ export class AboutUsController {
   @HttpCode(HttpStatus.OK)
   async createHeader(
     @CurrentAdmin('role') role: string,
-    @Body() dto: HeaderAboutUsCreateDto,
+    @Body() dto: HeaderPoolSpaCreateDto,
     @UploadedFile() file?: Express.Multer.File,
   ) {
-    return await this.aboutUsService.createHeader(dto, file);
+    return await this.poolAndSpaAreaService.createHeader(dto, file);
   }
 
   @ApiBearerAuth('Authorization')
@@ -51,41 +51,39 @@ export class AboutUsController {
     @Param('id') id: number,
     @Query('urlId') urlId: string,
     @CurrentAdmin('id') userId: number,
-    @Body() dto: HeaderAboutUsUpdateDto,
+    @Body() dto: HeaderPoolSpaUpdateDto,
     @UploadedFile() file?: Express.Multer.File,
   ) {
-    return await this.aboutUsService.updateHeader(id, urlId, dto, file);
+    return await this.poolAndSpaAreaService.updateHeader(id, urlId, dto, file);
   }
 
   @Get('header/info')
   @HttpCode(HttpStatus.OK)
   async getHeader() {
-    return await this.aboutUsService.getHeader();
+    return await this.poolAndSpaAreaService.getHeader();
   }
 
   @ApiBearerAuth('Authorization')
   @Auth()
   @Post('admin/create')
   @ApiConsumes('multipart/form-data')
-  @HttpCode(HttpStatus.OK)
+  @UseInterceptors(FileInterceptor('file'))
   async create(
     @CurrentAdmin('role') role: string,
-    @Body() dto: AboutUsCreateDto,
+    @Body() dto: PoolSpaCreateDto,
     @UploadedFile() file?: Express.Multer.File,
   ) {
-    return await this.aboutUsService.create(dto, file);
+    return await this.poolAndSpaAreaService.create(dto, file);
   }
 
   @Get('all')
-  @HttpCode(HttpStatus.OK)
   async findAll(@Query() limit: string) {
-    return await this.aboutUsService.findAll();
+    return await this.poolAndSpaAreaService.findAll();
   }
 
   @Get(':id')
-  @HttpCode(HttpStatus.OK)
   async findById(@Param('id') id: number) {
-    return await this.aboutUsService.findById(id);
+    return await this.poolAndSpaAreaService.findById(id);
   }
 
   @ApiBearerAuth('Authorization')
@@ -93,21 +91,19 @@ export class AboutUsController {
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('file'))
   @Put('admin/update/:id')
-  @HttpCode(HttpStatus.OK)
   async update(
-    @Body() dto: AboutUsUpdateDto,
+    @Body() dto: PoolSpaUpdateDto,
     @Param('id') id: number,
     @Query('urlId') urlId: string,
     @UploadedFile() file?: Express.Multer.File,
   ) {
-    return await this.aboutUsService.update(id, dto, urlId, file);
+    return await this.poolAndSpaAreaService.update(id, dto, urlId, file);
   }
 
   @ApiBearerAuth('Authorization')
   @Auth()
   @Delete('admin/delete/:id')
-  @HttpCode(HttpStatus.OK)
   async delete(@Param('id') id: number) {
-    return await this.aboutUsService.delete(id);
+    return await this.poolAndSpaAreaService.delete(id);
   }
 }

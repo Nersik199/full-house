@@ -10,22 +10,20 @@ import {
   Put,
   Query,
   UploadedFile,
+  UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
-import { AboutUsService } from './about_us.service';
+import { LodgeService } from './lodge.service';
 import { ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
 import { Auth } from '@/auth/decorators/auth.decorators';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { CurrentAdmin } from '@/user/decorators/user.decorator';
-import { AboutUsCreateDto, AboutUsUpdateDto } from './dto/about_us.createDto';
-import {
-  HeaderAboutUsCreateDto,
-  HeaderAboutUsUpdateDto,
-} from './dto/header.dto';
+import { HeaderLodgeCreateDto, HeaderLodgeUpdateDto } from './dto/header.dto';
+import { LodgeCreateDto, LodgeUpdateDto } from './dto/lodge.dto';
 
-@Controller('about-us')
-export class AboutUsController {
-  constructor(private readonly aboutUsService: AboutUsService) {}
+@Controller('lodge')
+export class LodgeController {
+  constructor(private readonly lodgeService: LodgeService) {}
 
   @ApiBearerAuth('Authorization')
   @Auth()
@@ -35,10 +33,10 @@ export class AboutUsController {
   @HttpCode(HttpStatus.OK)
   async createHeader(
     @CurrentAdmin('role') role: string,
-    @Body() dto: HeaderAboutUsCreateDto,
+    @Body() dto: HeaderLodgeCreateDto,
     @UploadedFile() file?: Express.Multer.File,
   ) {
-    return await this.aboutUsService.createHeader(dto, file);
+    return await this.lodgeService.createHeader(dto, file);
   }
 
   @ApiBearerAuth('Authorization')
@@ -51,41 +49,42 @@ export class AboutUsController {
     @Param('id') id: number,
     @Query('urlId') urlId: string,
     @CurrentAdmin('id') userId: number,
-    @Body() dto: HeaderAboutUsUpdateDto,
+    @Body() dto: HeaderLodgeUpdateDto,
     @UploadedFile() file?: Express.Multer.File,
   ) {
-    return await this.aboutUsService.updateHeader(id, urlId, dto, file);
+    return await this.lodgeService.updateHeader(id, urlId, dto, file);
   }
 
   @Get('header/info')
   @HttpCode(HttpStatus.OK)
   async getHeader() {
-    return await this.aboutUsService.getHeader();
+    return await this.lodgeService.getHeader();
   }
 
   @ApiBearerAuth('Authorization')
   @Auth()
   @Post('admin/create')
   @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FilesInterceptor('files', 10))
   @HttpCode(HttpStatus.OK)
   async create(
     @CurrentAdmin('role') role: string,
-    @Body() dto: AboutUsCreateDto,
-    @UploadedFile() file?: Express.Multer.File,
+    @Body() dto: LodgeCreateDto,
+    @UploadedFiles() files?: Express.Multer.File[],
   ) {
-    return await this.aboutUsService.create(dto, file);
+    return await this.lodgeService.create(dto, files);
   }
 
   @Get('all')
   @HttpCode(HttpStatus.OK)
   async findAll(@Query() limit: string) {
-    return await this.aboutUsService.findAll();
+    return await this.lodgeService.findAll();
   }
 
   @Get(':id')
   @HttpCode(HttpStatus.OK)
   async findById(@Param('id') id: number) {
-    return await this.aboutUsService.findById(id);
+    return await this.lodgeService.findById(id);
   }
 
   @ApiBearerAuth('Authorization')
@@ -95,12 +94,12 @@ export class AboutUsController {
   @Put('admin/update/:id')
   @HttpCode(HttpStatus.OK)
   async update(
-    @Body() dto: AboutUsUpdateDto,
+    @Body() dto: LodgeUpdateDto,
     @Param('id') id: number,
     @Query('urlId') urlId: string,
     @UploadedFile() file?: Express.Multer.File,
   ) {
-    return await this.aboutUsService.update(id, dto, urlId, file);
+    return await this.lodgeService.update(id, dto, urlId, file);
   }
 
   @ApiBearerAuth('Authorization')
@@ -108,6 +107,6 @@ export class AboutUsController {
   @Delete('admin/delete/:id')
   @HttpCode(HttpStatus.OK)
   async delete(@Param('id') id: number) {
-    return await this.aboutUsService.delete(id);
+    return await this.lodgeService.delete(id);
   }
 }

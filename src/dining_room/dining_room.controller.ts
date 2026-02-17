@@ -65,6 +65,7 @@ export class DiningRoomController {
   @Auth()
   @Post('admin/create')
   @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('file'))
   async create(
     @CurrentAdmin('role') role: string,
     @Body() dto: DiningRoomCreateDto,

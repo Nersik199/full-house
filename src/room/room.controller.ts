@@ -1,13 +1,15 @@
 import { Auth } from 'src/auth/decorators/auth.decorators';
 import {
-  Body,
-  Controller,
-  Delete,
   Get,
-  Param,
   Post,
   Put,
+  Delete,
   Query,
+  Param,
+  Body,
+  Controller,
+  HttpCode,
+  HttpStatus,
   UploadedFile,
   UploadedFiles,
   UseInterceptors,
@@ -28,6 +30,7 @@ export class RoomController {
   @Post('admin/create/header')
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('file'))
+  @HttpCode(HttpStatus.OK)
   async createHeader(
     @CurrentAdmin('role') role: string,
     @Body() dto: HeaderRoomCreateDto,
@@ -41,6 +44,7 @@ export class RoomController {
   @Put('admin/update/header/:id')
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('file'))
+  @HttpCode(HttpStatus.OK)
   async updateHeader(
     @Param('id') id: number,
     @Query('urlId') urlId: string,
@@ -52,6 +56,7 @@ export class RoomController {
   }
 
   @Get('header/info')
+  @HttpCode(HttpStatus.OK)
   async getHeader() {
     return await this.roomService.getHeader();
   }
@@ -61,6 +66,7 @@ export class RoomController {
   @Post('admin/create')
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FilesInterceptor('files', 10))
+  @HttpCode(HttpStatus.OK)
   async create(
     @CurrentAdmin('role') role: string,
     @Body() dto: RoomCreateDto,
@@ -70,11 +76,13 @@ export class RoomController {
   }
 
   @Get('all')
+  @HttpCode(HttpStatus.OK)
   async findAll(@Query() limit: string) {
     return await this.roomService.findAll();
   }
 
   @Get(':id')
+  @HttpCode(HttpStatus.OK)
   async findById(@Param('id') id: number) {
     return await this.roomService.findById(id);
   }
@@ -84,6 +92,7 @@ export class RoomController {
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('file'))
   @Put('admin/update/:id')
+  @HttpCode(HttpStatus.OK)
   async update(
     @Body() dto: RoomUpdateDto,
     @Param('id') id: number,
@@ -96,6 +105,7 @@ export class RoomController {
   @ApiBearerAuth('Authorization')
   @Auth()
   @Delete('admin/delete/:id')
+  @HttpCode(HttpStatus.OK)
   async delete(@Param('id') id: number) {
     return await this.roomService.delete(id);
   }

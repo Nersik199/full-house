@@ -24,3 +24,23 @@ export class PoolSpaCreateDto {
 }
 
 export class PoolSpaUpdateDto extends PartialType(PoolSpaCreateDto) {}
+
+export class uploadSliderImagesDto {
+  @ApiProperty({
+    type: 'array',
+    items: { type: 'string', format: 'binary' },
+    required: false,
+    description: 'Здесь можно загрузить несколько изображений слайдера',
+  })
+  files?: any[];
+}
+
+export class updateSliderDto {
+  @ApiProperty({
+    type: 'string',
+    format: 'binary',
+    required: false,
+    description: 'Изображение обеденного зала (опционально)',
+  })
+  file?: any;
+}

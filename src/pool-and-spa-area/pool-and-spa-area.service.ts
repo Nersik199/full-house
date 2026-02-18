@@ -143,4 +143,53 @@ export class PoolAndSpaAreaService {
     await this.filesService.delete(pathOnly);
     return { message: 'Pool Spa successfully deleted' };
   }
+
+  async uploadSliderImages(files: Express.Multer.File[]) {
+    try {
+      const images = await this.filesService.uploadMany(
+        files,
+        'pool-spa/slider',
+      );
+      const slider = await this.sliderImageModel.create({ images });
+      return slider;
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  async getSlider() {
+    const slider = await this.sliderImageModel.findAll();
+    if (!slider) throw new NotFoundException('slider нету');
+    return slider;
+  }
+
+  async updateSlider(id: number, urlId: string, file?: Express.Multer.File) {
+    const slider = await this.sliderImageModel.findByPk(id);
+
+    if (!slider) {
+      throw new NotFoundException('Pool Spa not found');
+    }
+
+    let images: string[] = Array.isArray(slider.images)
+      ? [...slider.images]
+      : [];
+
+    const targetKey = urlId.startsWith('/') ? urlId.slice(1) : urlId;
+
+    await this.filesService.delete(targetKey);
+
+    images = images.filter((img) => {
+      const imgKey = this.filesService.extractKey(img);
+      return imgKey !== targetKey;
+    });
+
+    if (file) {
+      const newImg = await this.filesService.upload(file, 'pool-spa/slider');
+      images.push(newImg);
+    }
+
+    await slider.update({ images });
+
+    return slider;
+  }
 }

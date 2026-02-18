@@ -2,7 +2,7 @@ import { Column, DataType, Model, Table } from 'sequelize-typescript';
 
 @Table({
   tableName: 'slider_images',
-  timestamps: true,
+  timestamps: false,
 })
 export class SliderImage extends Model {
   @Column({

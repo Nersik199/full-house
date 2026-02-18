@@ -5,23 +5,30 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  NotFoundException,
   Param,
   Post,
   Put,
   Query,
   UploadedFile,
+  UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
 import { PoolAndSpaAreaService } from './pool-and-spa-area.service';
 import { ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
 import { Auth } from '@/auth/decorators/auth.decorators';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { CurrentAdmin } from '@/user/decorators/user.decorator';
 import {
   HeaderPoolSpaCreateDto,
   HeaderPoolSpaUpdateDto,
 } from './dto/header.dto';
-import { PoolSpaCreateDto, PoolSpaUpdateDto } from './dto/pool_spa.createDto';
+import {
+  PoolSpaCreateDto,
+  PoolSpaUpdateDto,
+  updateSliderDto,
+  uploadSliderImagesDto,
+} from './dto/pool_spa.createDto';
 
 @Controller('pool-spa')
 export class PoolAndSpaAreaController {
@@ -63,6 +70,12 @@ export class PoolAndSpaAreaController {
     return await this.poolAndSpaAreaService.getHeader();
   }
 
+  @Get('sliders')
+  @HttpCode(HttpStatus.OK)
+  async getSliderImages() {
+    return await this.poolAndSpaAreaService.getSlider();
+  }
+
   @ApiBearerAuth('Authorization')
   @Auth()
   @Post('admin/create')
@@ -98,6 +111,30 @@ export class PoolAndSpaAreaController {
     @UploadedFile() file?: Express.Multer.File,
   ) {
     return await this.poolAndSpaAreaService.update(id, dto, urlId, file);
+  }
+
+  @ApiBearerAuth('Authorization')
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FilesInterceptor('files', 10))
+  @Post('admin/create/slider')
+  async createSlider(
+    @Body() dto: uploadSliderImagesDto,
+    @UploadedFiles() files?: Express.Multer.File[],
+  ) {
+    return await this.poolAndSpaAreaService.uploadSliderImages(files);
+  }
+
+  @ApiBearerAuth('Authorization')
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('file'))
+  @Put('admin/update/slider/:id')
+  async updateSlider(
+    @Body() dto: updateSliderDto,
+    @Param('id') id: number,
+    @Query('urlId') urlId: string,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    return await this.poolAndSpaAreaService.updateSlider(id, urlId, file);
   }
 
   @ApiBearerAuth('Authorization')

@@ -1,7 +1,7 @@
 import { ConfigService } from '@nestjs/config';
 import type { YookassaModuleOptions } from 'nestjs-yookassa';
 
-import { YookassaConfig } from '../definitions /yookassa.config';
+import { YookassaConfig } from '../definitions/yookassa.config';
 
 export function getYookassaConfig(
   configService: ConfigService<YookassaConfig>,

@@ -6,6 +6,7 @@ import { setupSwagger } from './shared/utils/swagger';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import morgan from 'morgan';
 import { ConfigService } from '@nestjs/config';
+import expressBasicAuth from 'express-basic-auth';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
@@ -25,6 +26,19 @@ async function bootstrap() {
         write: (message: string) => {
           logger.log(message.trim());
         },
+      },
+    }),
+  );
+  app.use(
+    ['/docs', '/docs-json', '/openapi.yaml'],
+    expressBasicAuth({
+      challenge: true,
+      authorizeAsync: false,
+      authorizer: (username: string, password: string) => {
+        return (
+          username === config.getOrThrow<string>('DOCS_USER') &&
+          password === config.getOrThrow<string>('DOCS_PASSWORD')
+        );
       },
     }),
   );

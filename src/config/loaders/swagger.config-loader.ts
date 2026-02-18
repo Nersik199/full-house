@@ -8,9 +8,10 @@ export function getSwaggerConfig() {
     .setTermsOfService('https://fullhousehotel.ru')
     .setContact(
       'Full House Support',
-      'https://fullhousehotel.ru',
+      'https://full-house-production.up.railway.app/docs',
       'support@fullhouse.ru',
     )
+
     .addBearerAuth(
       {
         type: 'http',

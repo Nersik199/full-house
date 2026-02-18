@@ -1,6 +1,6 @@
 import type { MailerOptions } from '@nestjs-modules/mailer';
 import { ConfigService } from '@nestjs/config';
-import { MailerConfig } from '../definitions /mailer.config';
+import { MailerConfig } from '../definitions/mailer.config';
 
 export function getMailerConfig(
   configService: ConfigService<MailerConfig>,
@@ -16,6 +16,7 @@ export function getMailerConfig(
           infer: true,
         }),
       },
+      connectionTimeout: 10000,
     },
     defaults: {
       from: `"Full House Hotel" ${configService.getOrThrow<string>('MAILER_LOGIN', { infer: true })}`,

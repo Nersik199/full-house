@@ -41,8 +41,11 @@ export class AboutUsService {
     dto: HeaderAboutUsUpdateDto,
     file?: Express.Multer.File,
   ) {
-    await this.filesService.delete(urlId);
-    const newImg = await this.filesService.upload(file, 'header');
+    let newImg: string;
+    if (urlId && file) {
+      await this.filesService.delete(urlId);
+      newImg = await this.filesService.upload(file, 'header');
+    }
     const [updatedCount, [updatedHeader]] = await this.aboutUsModel.update(
       { ...dto, image: newImg },
       {

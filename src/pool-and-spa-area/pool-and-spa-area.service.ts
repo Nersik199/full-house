@@ -47,8 +47,11 @@ export class PoolAndSpaAreaService {
     dto: HeaderPoolSpaUpdateDto,
     file?: Express.Multer.File,
   ) {
-    await this.filesService.delete(urlId);
-    const newImg = await this.filesService.upload(file, 'header');
+    let newImg: string;
+    if (urlId && file) {
+      await this.filesService.delete(urlId);
+      newImg = await this.filesService.upload(file, 'header');
+    }
     const [updatedCount, [updatedHeader]] = await this.headerModel.update(
       { ...dto, image: newImg },
       {

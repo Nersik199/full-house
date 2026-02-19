@@ -13,7 +13,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { MenuService } from './menu.service';
-import { ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiConsumes, ApiQuery } from '@nestjs/swagger';
 import { Auth } from '@/auth/decorators/auth.decorators';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CurrentAdmin } from '@/user/decorators/user.decorator';
@@ -38,6 +38,11 @@ export class MenuController {
     return await this.menuService.createHeader(dto, file);
   }
 
+  @ApiQuery({
+    name: 'urlId',
+    required: false,
+    type: String,
+  })
   @ApiBearerAuth('Authorization')
   @Auth()
   @Put('admin/update/header/:id')
@@ -79,6 +84,11 @@ export class MenuController {
     return await this.menuService.findAll();
   }
 
+  @ApiQuery({
+    name: 'urlId',
+    required: false,
+    type: String,
+  })
   @ApiBearerAuth('Authorization')
   @Auth()
   @Put('admin/update/:id')
@@ -88,7 +98,7 @@ export class MenuController {
   async update(
     @Body() dto: MenuUpdateDto,
     @Param('id') id: number,
-    @Query('urlId') urlId: string,
+    @Query('urlId') urlId?: string,
     @UploadedFile() file?: Express.Multer.File,
   ) {
     return await this.menuService.update(id, dto, urlId, file);

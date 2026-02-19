@@ -18,6 +18,17 @@ export class RoomCreateDto {
   })
   title: string;
 
+  @ApiProperty({
+    example:
+      'Вместимость — 3 человека (2 взрослых + 1 ребёнок). Цена указана за 2-х.',
+  })
+  @IsString({ message: 'SubTitle должен быть строкой' })
+  @Length(5, 200, {
+    message: 'SubTitle должен содержать от 5 до 200 символов',
+  })
+  @IsOptional()
+  subTitle?: string;
+
   @ApiProperty({ example: 'Уютный номер с видом на город' })
   @IsString({ message: 'Описание должно быть строкой' })
   @IsNotEmpty({ message: 'Описание обязательно' })

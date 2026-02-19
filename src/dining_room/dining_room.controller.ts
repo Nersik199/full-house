@@ -11,7 +11,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { DiningRoomService } from './dining_room.service';
-import { ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiConsumes, ApiQuery } from '@nestjs/swagger';
 import { Auth } from '@/auth/decorators/auth.decorators';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CurrentAdmin } from '@/user/decorators/user.decorator';
@@ -41,6 +41,11 @@ export class DiningRoomController {
     return await this.diningRoomService.createHeader(dto, file);
   }
 
+  @ApiQuery({
+    name: 'urlId',
+    required: false,
+    type: String,
+  })
   @ApiBearerAuth('Authorization')
   @Auth()
   @Put('admin/update/header/:id')
@@ -84,6 +89,11 @@ export class DiningRoomController {
     return await this.diningRoomService.findById(id);
   }
 
+  @ApiQuery({
+    name: 'urlId',
+    required: false,
+    type: String,
+  })
   @ApiBearerAuth('Authorization')
   @Auth()
   @ApiConsumes('multipart/form-data')

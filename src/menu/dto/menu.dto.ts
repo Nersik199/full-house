@@ -1,5 +1,11 @@
-import { ApiProperty, PartialType } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, Length, IsNumber } from 'class-validator';
+import { ApiProperty, ApiQuery, PartialType } from '@nestjs/swagger';
+import {
+  IsNotEmpty,
+  IsString,
+  Length,
+  IsNumber,
+  IsOptional,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class MenuCreateDto {

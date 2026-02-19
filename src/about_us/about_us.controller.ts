@@ -13,7 +13,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { AboutUsService } from './about_us.service';
-import { ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiConsumes, ApiQuery } from '@nestjs/swagger';
 import { Auth } from '@/auth/decorators/auth.decorators';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CurrentAdmin } from '@/user/decorators/user.decorator';
@@ -41,6 +41,11 @@ export class AboutUsController {
     return await this.aboutUsService.createHeader(dto, file);
   }
 
+  @ApiQuery({
+    name: 'urlId',
+    required: false,
+    type: String,
+  })
   @ApiBearerAuth('Authorization')
   @Auth()
   @Put('admin/update/header/:id')
@@ -88,6 +93,11 @@ export class AboutUsController {
     return await this.aboutUsService.findById(id);
   }
 
+  @ApiQuery({
+    name: 'urlId',
+    required: false,
+    type: String,
+  })
   @ApiBearerAuth('Authorization')
   @Auth()
   @ApiConsumes('multipart/form-data')

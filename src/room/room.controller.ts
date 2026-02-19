@@ -16,7 +16,7 @@ import {
 } from '@nestjs/common';
 import { RoomService } from './room.service';
 import { RoomCreateDto, RoomUpdateDto } from './dto/room.dto';
-import { ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiConsumes, ApiQuery } from '@nestjs/swagger';
 import { CurrentAdmin } from 'src/user/decorators/user.decorator';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { HeaderRoomCreateDto, HeaderRoomUpdateDto } from './dto/header.dto';
@@ -39,6 +39,11 @@ export class RoomController {
     return await this.roomService.createHeader(dto, file);
   }
 
+  @ApiQuery({
+    name: 'urlId',
+    required: false,
+    type: String,
+  })
   @ApiBearerAuth('Authorization')
   @Auth()
   @Put('admin/update/header/:id')
@@ -87,6 +92,11 @@ export class RoomController {
     return await this.roomService.findById(id);
   }
 
+  @ApiQuery({
+    name: 'urlId',
+    required: false,
+    type: String,
+  })
   @ApiBearerAuth('Authorization')
   @Auth()
   @ApiConsumes('multipart/form-data')

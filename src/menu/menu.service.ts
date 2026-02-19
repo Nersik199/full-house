@@ -41,8 +41,11 @@ export class MenuService {
     dto: HeaderMenuUpdateDto,
     file?: Express.Multer.File,
   ) {
-    await this.filesService.delete(urlId);
-    const newImg = await this.filesService.upload(file, 'header');
+    let newImg: string;
+    if (urlId && file) {
+      await this.filesService.delete(urlId);
+      newImg = await this.filesService.upload(file, 'header');
+    }
     const [updatedCount, [updatedHeader]] = await this.headerModel.update(
       { ...dto, image: newImg },
       {
@@ -90,7 +93,7 @@ export class MenuService {
   async update(
     id: number,
     dto: MenuUpdateDto,
-    urlId: string,
+    urlId?: string,
     file?: Express.Multer.File,
   ) {
     const menu = await this.menuModel.findByPk(id);
@@ -99,20 +102,13 @@ export class MenuService {
       throw new NotFoundException('Menu not found');
     }
 
-    let image: string[] = Array.isArray(menu.image) ? [...menu.image] : [];
-
-    if (file) {
+    let image: string = menu.image || '';
+    if (file && urlId) {
       const targetKey = urlId.startsWith('/') ? urlId.slice(1) : urlId;
 
       await this.filesService.delete(targetKey);
 
-      image = image.filter((img) => {
-        const imgKey = this.filesService.extractKey(img);
-        return imgKey !== targetKey;
-      });
-
-      const newImg = await this.filesService.upload(file, 'menu');
-      image.push(newImg);
+      image = await this.filesService.upload(file, 'menu');
     }
 
     await menu.update({

@@ -24,6 +24,13 @@ export class Room extends Model {
   description: string;
 
   @Column({
+    type: DataType.STRING,
+    allowNull: true,
+    field: 'sub_title',
+  })
+  subTitle: string;
+
+  @Column({
     type: DataType.INTEGER,
     allowNull: false,
   })

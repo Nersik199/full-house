@@ -45,8 +45,11 @@ export class DiningRoomService {
     dto: HeaderAboutUsUpdateDto,
     file?: Express.Multer.File,
   ) {
-    await this.filesService.delete(urlId);
-    const newImg = await this.filesService.upload(file, 'header');
+    let newImg: string;
+    if (urlId && file) {
+      await this.filesService.delete(urlId);
+      newImg = await this.filesService.upload(file, 'header');
+    }
     const [updatedCount, [updatedHeader]] = await this.diningRoomModel.update(
       { ...dto, image: newImg },
       {

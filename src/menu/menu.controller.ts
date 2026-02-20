@@ -80,8 +80,8 @@ export class MenuController {
   }
 
   @Get('all')
-  async findAll() {
-    return await this.menuService.findAll();
+  async findAll(@Query('page') page: number, @Query('limit') limit: number) {
+    return await this.menuService.findAll(page, limit);
   }
 
   @ApiQuery({

@@ -82,8 +82,8 @@ export class RoomController {
 
   @Get('all')
   @HttpCode(HttpStatus.OK)
-  async findAll(@Query() limit: string) {
-    return await this.roomService.findAll();
+  async findAll(@Query('page') page: number, @Query('limit') limit: number) {
+    return await this.roomService.findAll(page, limit);
   }
 
   @Get(':id')

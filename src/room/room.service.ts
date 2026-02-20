@@ -1,10 +1,15 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Room } from './entities/room.entity';
 import { InjectModel } from '@nestjs/sequelize';
 import { RoomCreateDto, RoomUpdateDto } from './dto/room.dto';
 import { FilesService } from '@/files/files.service';
 import { HeaderRoomCreateDto, HeaderRoomUpdateDto } from './dto/header.dto';
 import { HeaderRoom } from './entities/header.entity';
+import { calculatePagination } from '@/shared/utils/calculate.pagination';
 
 @Injectable()
 export class RoomService {
@@ -62,6 +67,16 @@ export class RoomService {
   async create(dto: RoomCreateDto, files?: Express.Multer.File[]) {
     const imageUrls = await this.filesService.uploadMany(files, 'rooms');
 
+    const roomNumber = await this.roomModel.findOne({
+      where: { roomNumber: dto.roomNumber },
+    });
+
+    if (roomNumber) {
+      throw new BadRequestException(
+        `Этот номер уже существует${dto.roomNumber}`,
+      );
+    }
+
     const room = await this.roomModel.create({
       ...dto,
       images: imageUrls,
@@ -70,16 +85,34 @@ export class RoomService {
     return room;
   }
 
-  async findAll() {
+  async findAll(page: number, limit: number) {
+    const total = await this.roomModel.count();
+
+    const { maxPageCount, offset } = calculatePagination(
+      Number(page),
+      Number(limit),
+      total,
+    );
+
     const rooms = await this.roomModel.findAll({
       order: [['created_at', 'DESC']],
+      limit: Number(limit),
+      offset,
     });
 
-    if (!rooms || rooms.length === 0) {
+    if (!rooms.length) {
       throw new NotFoundException('No rooms found');
     }
 
-    return rooms;
+    return {
+      data: rooms,
+      meta: {
+        total,
+        page: Number(page),
+        limit: Number(limit),
+        maxPageCount,
+      },
+    };
   }
 
   async findById(id: number) {

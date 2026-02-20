@@ -5,6 +5,7 @@ import { FilesService } from '@/files/files.service';
 import { MenuCreateDto, MenuUpdateDto } from './dto/menu.dto';
 import { HeaderMenuCreateDto, HeaderMenuUpdateDto } from './dto/header.dto';
 import { HeaderMenu } from './entities/header.entity';
+import { calculatePagination } from '@/shared/utils/calculate.pagination';
 
 @Injectable()
 export class MenuService {
@@ -70,16 +71,34 @@ export class MenuService {
     return menu;
   }
 
-  async findAll() {
+  async findAll(page: number, limit: number) {
+    const total = await this.menuModel.count();
+
+    const { maxPageCount, offset } = calculatePagination(
+      Number(page),
+      Number(limit),
+      total,
+    );
+
     const menus = await this.menuModel.findAll({
       order: [['created_at', 'DESC']],
+      limit: Number(limit),
+      offset,
     });
 
-    if (!menus || menus.length === 0) {
-      throw new NotFoundException('No rooms found');
+    if (!menus.length) {
+      throw new NotFoundException('No menus found');
     }
 
-    return menus;
+    return {
+      data: menus,
+      meta: {
+        total,
+        page: Number(page),
+        limit: Number(limit),
+        maxPageCount,
+      },
+    };
   }
 
   async findById(id: number) {

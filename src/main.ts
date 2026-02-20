@@ -6,7 +6,7 @@ import { setupSwagger } from './shared/utils/swagger';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import morgan from 'morgan';
 import { ConfigService } from '@nestjs/config';
-import expressBasicAuth from 'express-basic-auth';
+import { swaggerBasicAuth } from './config/loaders/swagger.basic.auth';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
@@ -29,19 +29,6 @@ async function bootstrap() {
       },
     }),
   );
-  app.use(
-    ['/docs', '/docs-json', '/openapi.yaml'],
-    expressBasicAuth({
-      challenge: true,
-      authorizeAsync: false,
-      authorizer: (username: string, password: string) => {
-        return (
-          username === config.getOrThrow<string>('DOCS_USER') &&
-          password === config.getOrThrow<string>('DOCS_PASSWORD')
-        );
-      },
-    }),
-  );
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -49,7 +36,7 @@ async function bootstrap() {
       whitelist: true,
     }),
   );
-
+  swaggerBasicAuth(app, config);
   setupSwagger(app);
 
   const port = config.getOrThrow<number>('APPLICATION_PORT');

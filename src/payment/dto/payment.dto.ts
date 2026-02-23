@@ -16,17 +16,7 @@ export class InitPaymentRequest {
   @IsNumber({}, { message: 'Номер комнаты должен быть числом' })
   @IsOptional({ message: 'Номер комнаты обязателен' })
   @Type(() => Number)
-  roomId: number;
-
-  @IsNumber({}, { message: 'Номер комнаты должен быть числом' })
-  @IsOptional({ message: 'Номер комнаты обязателен' })
-  @Type(() => Number)
-  lodgeId: number;
-
-  @IsNotEmpty({ message: '' })
-  @IsString({ message: '' })
-  @Type(() => String)
-  roomNumber: string;
+  bookingId: number;
 
   @IsNumber({}, { message: 'Цена должна быть числом' })
   @IsNotEmpty({ message: 'Цена обязательна' })

@@ -127,6 +127,10 @@ export class LodgeService {
   }
 
   async updateLodge(id: number, startDate: Date, endDate: Date) {
+    const lodge = await this.headerModel.findByPk(id);
+    if (!lodge) {
+      throw new NotFoundException('Room not found');
+    }
     await this.lodgeModel.update(
       {
         Busy: true,

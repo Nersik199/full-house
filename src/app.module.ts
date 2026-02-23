@@ -14,6 +14,7 @@ import { OrderModule } from './order/order.module';
 import { LibsModule } from './libs/libs.module';
 import { LodgeModule } from './lodge/lodge.module';
 import { PoolAndSpaAreaModule } from './pool-and-spa-area/pool-and-spa-area.module';
+import { BookingModule } from './booking/booking.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -36,6 +37,7 @@ import { PoolAndSpaAreaModule } from './pool-and-spa-area/pool-and-spa-area.modu
     LodgeModule,
     PoolAndSpaAreaModule,
     PaymentModule,
+    BookingModule,
   ],
   providers: [],
 })

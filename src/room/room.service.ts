@@ -159,21 +159,6 @@ export class RoomService {
     return room;
   }
 
-  async updateRoom(id: number, startDate: Date, endDate: Date) {
-    await this.roomModel.update(
-      {
-        Busy: true,
-        rentalStart: new Date(startDate),
-        rentalEnd: new Date(endDate),
-      },
-      {
-        where: {
-          id,
-        },
-      },
-    );
-  }
-
   async delete(id: number) {
     const room = await this.roomModel.findOne({ where: { id } });
 

@@ -21,8 +21,7 @@ import { InitPaymentRequest } from './dto/payment.dto';
 import { InjectModel } from '@nestjs/sequelize';
 
 import { Order } from '@/order/entities/order.entity';
-import { RoomService } from '@/room/room.service';
-import { LodgeService } from '@/lodge/lodge.service';
+import { BookingService } from '@/booking/booking.service';
 
 @Injectable()
 export class PaymentService {
@@ -34,8 +33,7 @@ export class PaymentService {
     private readonly yookassaService: YookassaService,
     private readonly configService: ConfigService,
     private readonly mailService: MailService,
-    private readonly roomService: RoomService,
-    private readonly lodgeService: LodgeService,
+    private readonly bookingService: BookingService,
     @InjectModel(Order) private readonly orderModel: typeof Order,
   ) {
     this.FRONTEND_URL = this.configService.getOrThrow<string>(
@@ -124,9 +122,8 @@ export class PaymentService {
       metadata: {
         email: order.customerEmail,
         orderId: order.id.toString(),
-        lodgeId: order.lodgeId ? order.lodgeId.toString() : null,
-        roomId: order.roomId ? order.roomId.toString() : null,
-        roomNumber: order.roomNumber.toString(),
+        bookingId: order.bookingId.toString(),
+        // roomNumber: order.roomNumber.toString(),
         startDate: order.startDate.toISOString(),
         endDate: order.endDate.toISOString(),
       },
@@ -161,6 +158,9 @@ export class PaymentService {
     }
 
     if (payload.event === 'payment.canceled') {
+      await this.bookingService.cancelBooking(
+        payload.object.metadata.bookingId,
+      );
       return { status: 'canceled' };
     }
 
@@ -168,30 +168,13 @@ export class PaymentService {
   }
 
   private async processPayment(paymentObject: any) {
-    const { orderId, lodgeId, roomId, roomNumber, startDate, endDate } =
-      paymentObject.metadata;
+    const { orderId, roomNumber, bookingId } = paymentObject.metadata;
 
     if (!orderId) {
       throw new BadRequestException('orderId not found in metadata');
     }
 
     this.logger.log(`Payment success for order ${orderId}`);
-
-    if (roomId) {
-      await this.roomService.updateRoom(
-        roomId,
-        new Date(startDate),
-        new Date(endDate),
-      );
-    }
-
-    if (lodgeId) {
-      await this.lodgeService.updateLodge(
-        lodgeId,
-        new Date(startDate),
-        new Date(endDate),
-      );
-    }
 
     await this.orderModel.update(
       {
@@ -202,6 +185,11 @@ export class PaymentService {
       },
       { where: { id: orderId } },
     );
+
+    if (bookingId) {
+      console.log(bookingId);
+      await this.bookingService.confirmBooking(bookingId);
+    }
 
     await this.sendMail(paymentObject);
     return { status: 'processed' };

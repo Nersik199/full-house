@@ -46,7 +46,7 @@ export function PaymentSuccessTemplate({
           }}
         >
           <Heading style={{ color: '#333', marginBottom: '20px' }}>
-            🏨 Подтверждение бронирования
+            Подтверждение бронирования
           </Heading>
 
           <Text>Спасибо за ваш заказ! Ниже детали аренды вашего номера:</Text>

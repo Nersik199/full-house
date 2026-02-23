@@ -86,13 +86,6 @@ export class Room extends Model {
 
   @Column({
     type: DataType.BOOLEAN,
-    allowNull: false,
-    defaultValue: false,
-  })
-  Busy: boolean;
-
-  @Column({
-    type: DataType.BOOLEAN,
     defaultValue: false,
   })
   refrigerator: boolean;
@@ -134,20 +127,6 @@ export class Room extends Model {
 
   @Column({
     type: DataType.DATE,
-    allowNull: true,
-    field: 'rental_start',
-  })
-  rentalStart: Date;
-
-  @Column({
-    type: DataType.DATE,
-    allowNull: true,
-    field: 'rental_end',
-  })
-  rentalEnd: Date;
-
-  @Column({
-    type: DataType.DATE,
     defaultValue: DataType.NOW,
     field: 'created_at',
   })
@@ -173,15 +152,12 @@ export class Room extends Model {
 //   bathroom: 'Количество ванных комнат',
 //   tv: 'Количество телевизоров',
 //   smoking: 'Разрешено ли курение (да / нет)',
-//   Busy: 'Занята ли комната (да / нет)',
 //   refrigerator: 'Наличие холодильника (да / нет)',
 //   airConditioner: 'Наличие кондиционера (да / нет)',
 //   bedCount: 'Количество кроватей',
 //   bedType: 'Тип кровати (односпальная / двуспальная)',
 //   livingRoom: 'Наличие гостиной (да / нет)',
 //   diningRoom: 'Наличие столовой (да / нет)',
-//   rentalStart: 'Дата начала аренды',
-//   rentalEnd: 'Дата окончания аренды',
 //   createdAt: 'Дата создания записи',
 //   updatedAt: 'Дата обновления записи',
 // };

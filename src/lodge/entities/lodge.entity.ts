@@ -78,27 +78,6 @@ export class Lodge extends Model {
   smoking: boolean;
 
   @Column({
-    type: DataType.BOOLEAN,
-    allowNull: false,
-    defaultValue: false,
-  })
-  Busy: boolean;
-
-  @Column({
-    type: DataType.DATE,
-    allowNull: true,
-    field: 'rental_start',
-  })
-  rentalStart: Date;
-
-  @Column({
-    type: DataType.DATE,
-    allowNull: true,
-    field: 'rental_end',
-  })
-  rentalEnd: Date;
-
-  @Column({
     type: DataType.DATE,
     defaultValue: DataType.NOW,
     field: 'created_at',

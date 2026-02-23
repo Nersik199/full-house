@@ -14,30 +14,11 @@ export class Order extends Model {
   id: number;
 
   @Column({
-    type: DataType.BIGINT,
-    allowNull: true,
-  })
-  roomId: number;
-
-  @Column({
-    type: DataType.BIGINT,
-    allowNull: true,
-  })
-  lodgeId: number;
-
-  @Column({
     type: DataType.STRING,
     allowNull: false,
     field: 'customer_name',
   })
   customerName: string;
-
-  @Column({
-    type: DataType.STRING,
-    allowNull: false,
-    field: 'room_number',
-  })
-  roomNumber: string;
 
   @Column({
     type: DataType.STRING,
@@ -111,4 +92,11 @@ export class Order extends Model {
     allowNull: false,
   })
   paymentMethod: string;
+
+  @Column({
+    type: DataType.BIGINT,
+    allowNull: true,
+    field: 'booking_id',
+  })
+  bookingId: number;
 }

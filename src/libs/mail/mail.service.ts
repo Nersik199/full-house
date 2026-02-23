@@ -6,7 +6,7 @@ import { PaymentSuccessTemplate } from './templates';
 interface paymentData {
   transactionId: string;
   amount: { value: string; currency: string };
-  roomNumber: string;
+  roomNumber: number;
   startDate: Date;
   endDate: Date;
 }

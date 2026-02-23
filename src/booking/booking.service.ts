@@ -95,4 +95,8 @@ export class BookingService {
       { where: { id } },
     );
   }
+
+  async findOne(id: number) {
+    return await this.bookingModel.findByPk(id);
+  }
 }

@@ -123,9 +123,6 @@ export class PaymentService {
         email: order.customerEmail,
         orderId: order.id.toString(),
         bookingId: order.bookingId.toString(),
-        // roomNumber: order.roomNumber.toString(),
-        startDate: order.startDate.toISOString(),
-        endDate: order.endDate.toISOString(),
       },
       receipt: {
         customer: { email: order.customerEmail },
@@ -187,7 +184,6 @@ export class PaymentService {
     );
 
     if (bookingId) {
-      console.log(bookingId);
       await this.bookingService.confirmBooking(bookingId);
     }
 
@@ -196,24 +192,27 @@ export class PaymentService {
   }
 
   private async sendMail(paymentObject: any) {
-    const email = paymentObject.metadata?.email;
-    if (!email) {
+    const { bookingId } = paymentObject.metadata;
+    const booking = await this.bookingService.findOne(bookingId);
+
+    if (!booking.guestEmail) {
       throw new BadRequestException('email not found in metadata');
     }
     try {
-      const email = paymentObject.metadata?.email;
-      if (email) {
-        await this.mailService.sendPaymentSuccessEmail(email, {
+      if (booking.guestEmail && booking) {
+        await this.mailService.sendPaymentSuccessEmail(booking.guestEmail, {
           transactionId: paymentObject.id,
           amount: paymentObject.amount,
-          roomNumber: paymentObject.metadata.roomNumber,
-          startDate: paymentObject.metadata.startDate,
-          endDate: paymentObject.metadata.endDate,
+          roomNumber: booking.roomNumber,
+          startDate: booking.checkIn,
+          endDate: booking.checkOut,
         });
-        this.logger.log(`Email sent to ${email}`);
+        this.logger.log(`Email sent to ${booking.guestEmail}`);
       }
     } catch (error) {
-      this.logger.error(`Failed to send email for order ${email}: ${error}`);
+      this.logger.error(
+        `Failed to send email for order ${booking.guestEmail}: ${error}`,
+      );
     }
   }
 

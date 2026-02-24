@@ -16,7 +16,7 @@ export function getMailerConfig(
           infer: true,
         }),
       },
-      connectionTimeout: 10000,
+      connectionTimeout: 30000,
     },
     defaults: {
       from: `"Full House Hotel" ${configService.getOrThrow<string>('MAILER_LOGIN', { infer: true })}`,

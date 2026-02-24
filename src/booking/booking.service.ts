@@ -1,7 +1,7 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Booking } from './entities/booking.entity';
-import { Op } from 'sequelize';
+import { Op, Transaction } from 'sequelize';
 import dayjs from 'dayjs';
 
 @Injectable()
@@ -16,60 +16,43 @@ export class BookingService {
     entityId: number,
     checkIn: Date,
     checkOut: Date,
-    transaction?: any,
+    transaction: Transaction,
   ) {
-    const now = dayjs();
+    const now = dayjs().startOf('day');
 
-    const start = dayjs(checkIn);
-    const end = dayjs(checkOut);
+    const start = dayjs(checkIn).startOf('day');
+    const end = dayjs(checkOut).startOf('day');
 
-    if (!start.isValid() || !end.isValid()) {
-      throw new BadRequestException('Invalid date format');
-    }
+    if (!start.isValid() || !end.isValid())
+      throw new BadRequestException('Invalid date');
 
-    if (!start.isBefore(end)) {
+    if (!start.isBefore(end))
       throw new BadRequestException('Check-in must be before check-out');
-    }
 
-    if (start.isBefore(now, 'day')) {
+    if (start.isBefore(now))
       throw new BadRequestException('Cannot book in the past');
-    }
-
-    await this.bookingModel.update(
-      { status: 'cancelled' },
-      {
-        where: {
-          status: 'pending',
-          expiresAt: { [Op.lt]: now.toDate() },
-        },
-        transaction,
-      },
-    );
 
     const conflict = await this.bookingModel.findOne({
       where: {
         [entityField]: entityId,
         status: {
-          [Op.in]: ['confirmed', 'checked_in'],
+          [Op.in]: ['confirmed', 'checked_in', 'pending'],
         },
-        [Op.and]: [
-          {
-            checkIn: { [Op.lt]: end.toDate() },
-          },
-          {
-            checkOut: { [Op.gt]: start.toDate() },
-          },
-        ],
+        [Op.or]: [{ expiresAt: null }, { expiresAt: { [Op.gt]: new Date() } }],
+        checkIn: { [Op.lt]: end.toDate() },
+        checkOut: { [Op.gt]: start.toDate() },
       },
+      lock: transaction.LOCK.UPDATE,
       transaction,
     });
 
-    if (conflict) {
+    if (conflict)
       throw new BadRequestException('Already booked for selected dates');
-    }
   }
+  async createBooking(data: any, transaction?: Transaction) {
+    if (data.roomId || data.lodgeId)
+      throw new BadRequestException('Choose room OR lodge');
 
-  async createBooking(data: any, transaction?: any) {
     if (data.roomId) {
       await this.checkAvailability(
         'roomId',
@@ -90,7 +73,7 @@ export class BookingService {
       );
     }
 
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+    const expiresAt = new Date(Date.now() + 20 * 60 * 1000);
     return this.bookingModel.create(
       {
         ...data,

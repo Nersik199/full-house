@@ -10,9 +10,6 @@ import {
   Hr,
   Preview,
   Button,
-  Row,
-  Column,
-  Img,
 } from '@react-email/components';
 
 interface PaymentSuccessTemplateProps {
@@ -301,8 +298,6 @@ export function PaymentSuccessTemplate({
     </Html>
   );
 }
-
-// ── Styles ──────────────────────────────────────────────
 
 const body: React.CSSProperties = {
   backgroundColor: '#f5f0eb',

@@ -1,8 +1,12 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import dayjs from 'dayjs';
+import { Op, Transaction } from 'sequelize';
 import { InjectModel } from '@nestjs/sequelize';
 import { Booking } from './entities/booking.entity';
-import { Op, Transaction } from 'sequelize';
-import dayjs from 'dayjs';
+import { Injectable, BadRequestException } from '@nestjs/common';
+import {
+  BookingCheckAvailabilityDto,
+  CreateBookingDto,
+} from './dto/booking.dto';
 
 @Injectable()
 export class BookingService {
@@ -12,17 +16,19 @@ export class BookingService {
   ) {}
 
   async checkAvailability(
-    entityField: 'roomId' | 'lodgeId',
-    entityId: number,
-    checkIn: Date,
-    checkOut: Date,
+    dto: BookingCheckAvailabilityDto,
     transaction: Transaction,
   ) {
     const now = dayjs().startOf('day');
 
-    const start = dayjs(checkIn).startOf('day');
-    const end = dayjs(checkOut).startOf('day');
+    const start = dayjs(dto.checkIn).startOf('day');
+    const end = dayjs(dto.checkOut).startOf('day');
 
+    const nights = end.diff(start, 'day');
+
+    if (nights < 1) {
+      throw new BadRequestException('Minimum booking is 1 night');
+    }
     if (!start.isValid() || !end.isValid())
       throw new BadRequestException('Invalid date');
 
@@ -34,7 +40,7 @@ export class BookingService {
 
     const conflict = await this.bookingModel.findOne({
       where: {
-        [entityField]: entityId,
+        [dto.entityField]: dto.entityId,
         status: {
           [Op.in]: ['confirmed', 'checked_in', 'pending'],
         },
@@ -49,34 +55,36 @@ export class BookingService {
     if (conflict)
       throw new BadRequestException('Already booked for selected dates');
   }
-  async createBooking(data: any, transaction?: Transaction) {
-    if (data.roomId || data.lodgeId)
-      throw new BadRequestException('Choose room OR lodge');
-
-    if (data.roomId) {
+  async createBooking(dto: CreateBookingDto, transaction: Transaction) {
+    if (dto.roomId) {
       await this.checkAvailability(
-        'roomId',
-        data.roomId,
-        new Date(data.checkIn),
-        new Date(data.checkOut),
+        {
+          entityField: 'roomId',
+          entityId: dto.roomId,
+          checkIn: new Date(dto.checkIn),
+          checkOut: new Date(dto.checkOut),
+        },
         transaction,
       );
     }
 
-    if (data.lodgeId) {
+    if (dto.lodgeId) {
       await this.checkAvailability(
-        'lodgeId',
-        data.lodgeId,
-        new Date(data.checkIn),
-        new Date(data.checkOut),
+        {
+          entityField: 'lodgeId',
+          entityId: dto.lodgeId,
+          checkIn: new Date(dto.checkIn),
+          checkOut: new Date(dto.checkOut),
+        },
         transaction,
       );
     }
 
     const expiresAt = new Date(Date.now() + 20 * 60 * 1000);
+
     return this.bookingModel.create(
       {
-        ...data,
+        ...dto,
         status: 'pending',
         expiresAt,
       },

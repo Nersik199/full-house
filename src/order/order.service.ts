@@ -1,14 +1,20 @@
 import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
+import { Order } from './entities/order.entity';
 import { PaymentService } from '@/payment/payment.service';
 import { RoomService } from '@/room/room.service';
 import { Injectable } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/sequelize';
-import { Order } from './entities/order.entity';
 import { RoomCreatedOrderDto } from './dto/roomCreatedOrder.dto';
 import { LodgeService } from '@/lodge/lodge.service';
 import { LodgeCreatedOrderDto } from './dto/lodgeCreatedOrder.dto';
 import { BookingService } from '@/booking/booking.service';
 import { Sequelize } from 'sequelize';
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+dayjs.tz.setDefault('Europe/Moscow');
 
 @Injectable()
 export class OrderService {
@@ -26,12 +32,10 @@ export class OrderService {
     startDate: Date,
     endDate: Date,
   ): number {
-    const start = dayjs(startDate);
-    const end = dayjs(endDate);
+    const start = dayjs(startDate).startOf('day');
+    const end = dayjs(endDate).startOf('day');
 
-    const hours = end.diff(start, 'hour');
-
-    const days = Math.max(1, Math.ceil(hours / 24));
+    const days = Math.max(1, end.diff(start, 'day'));
 
     return roomPrice * days;
   }
@@ -51,11 +55,11 @@ export class OrderService {
         {
           roomId: room.id,
           guestName: dto.customerName,
-          guestPhone: dto.customerPhone,
-          guestEmail: dto.customerEmail,
+          guestPhone: dto.customerPhone.trim(),
+          guestEmail: dto.customerEmail.trim(),
           roomNumber: room.roomNumber,
-          checkIn: dto.startDate,
-          checkOut: dto.endDate,
+          checkIn: dayjs(dto.startDate).startOf('day').utc().toDate(),
+          checkOut: dayjs(dto.endDate).startOf('day').utc().toDate(),
           source: 'online',
         },
         transaction,
@@ -103,11 +107,11 @@ export class OrderService {
         {
           lodgeId: lodge.id,
           guestName: dto.customerName,
-          guestPhone: dto.customerPhone,
-          guestEmail: dto.customerEmail,
+          guestPhone: dto.customerPhone.trim(),
+          guestEmail: dto.customerEmail.trim(),
           roomNumber: lodge.roomNumber,
-          checkIn: dto.startDate,
-          checkOut: dto.endDate,
+          checkIn: dayjs(dto.startDate).startOf('day').utc().toDate(),
+          checkOut: dayjs(dto.endDate).startOf('day').utc().toDate(),
           source: 'online',
         },
         transaction,

@@ -9,7 +9,6 @@ import {
   IsEnum,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { PaymentMethodsEnum } from 'nestjs-yookassa';
 import { PaymentMethod } from '@/shared/enums/payment-method.enum';
 import dayjs from 'dayjs';
 export class RoomCreatedOrderDto {

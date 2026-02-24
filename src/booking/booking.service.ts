@@ -2,6 +2,7 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Booking } from './entities/booking.entity';
 import { Op } from 'sequelize';
+import dayjs from 'dayjs';
 
 @Injectable()
 export class BookingService {
@@ -17,12 +18,29 @@ export class BookingService {
     checkOut: Date,
     transaction?: any,
   ) {
+    const now = dayjs();
+
+    const start = dayjs(checkIn);
+    const end = dayjs(checkOut);
+
+    if (!start.isValid() || !end.isValid()) {
+      throw new BadRequestException('Invalid date format');
+    }
+
+    if (!start.isBefore(end)) {
+      throw new BadRequestException('Check-in must be before check-out');
+    }
+
+    if (start.isBefore(now, 'day')) {
+      throw new BadRequestException('Cannot book in the past');
+    }
+
     await this.bookingModel.update(
       { status: 'cancelled' },
       {
         where: {
           status: 'pending',
-          expiresAt: { [Op.lt]: new Date() },
+          expiresAt: { [Op.lt]: now.toDate() },
         },
         transaction,
       },
@@ -31,14 +49,21 @@ export class BookingService {
     const conflict = await this.bookingModel.findOne({
       where: {
         [entityField]: entityId,
-        checkIn: { [Op.lt]: checkOut },
-        checkOut: { [Op.gt]: checkIn },
         status: {
           [Op.in]: ['confirmed', 'checked_in'],
         },
+        [Op.and]: [
+          {
+            checkIn: { [Op.lt]: end.toDate() },
+          },
+          {
+            checkOut: { [Op.gt]: start.toDate() },
+          },
+        ],
       },
       transaction,
     });
+
     if (conflict) {
       throw new BadRequestException('Already booked for selected dates');
     }

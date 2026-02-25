@@ -9,9 +9,11 @@ import {
   IsOptional,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-
 export class LodgeCreateDto {
-  @ApiProperty({ example: 'Стандартный номер' })
+  @ApiProperty({
+    example: 'Стандартный номер',
+    description: 'Название номера (от 5 до 200 символов)',
+  })
   @IsString({ message: 'Название должно быть строкой' })
   @IsNotEmpty({ message: 'Название обязательно' })
   @Length(5, 200, {
@@ -19,7 +21,10 @@ export class LodgeCreateDto {
   })
   title: string;
 
-  @ApiProperty({ example: 'Уютный номер с видом на город' })
+  @ApiProperty({
+    example: 'Уютный номер с видом на город',
+    description: 'Подробное описание номера (от 6 до 1500 символов)',
+  })
   @IsString({ message: 'Описание должно быть строкой' })
   @IsNotEmpty({ message: 'Описание обязательно' })
   @Length(6, 1500, {
@@ -27,24 +32,36 @@ export class LodgeCreateDto {
   })
   description: string;
 
-  @ApiProperty({ example: 101 })
+  @ApiProperty({
+    example: 101,
+    description: 'Уникальный номер комнаты',
+  })
   @IsNumber({}, { message: 'Номер комнаты должен быть числом' })
   @IsNotEmpty({ message: 'Номер комнаты обязателен' })
   @Type(() => Number)
   roomNumber: number;
 
-  @ApiProperty({ example: 15000 })
+  @ApiProperty({
+    example: 15000,
+    description: 'Цена за одну ночь проживания',
+  })
   @IsNumber({}, { message: 'Цена должна быть числом' })
   @IsNotEmpty({ message: 'Цена обязательна' })
   @Type(() => Number)
   price: number;
 
-  @ApiProperty({ example: 1 })
+  @ApiProperty({
+    example: 1,
+    description: 'Количество ванных комнат в номере',
+  })
   @IsNumber({}, { message: 'Количество ванных комнат должно быть числом' })
   @Type(() => Number)
   bathroom: number;
 
-  @ApiProperty({ example: 2 })
+  @ApiProperty({
+    example: 2,
+    description: 'Максимальное количество гостей',
+  })
   @IsNumber({}, { message: 'Количество гостей должно быть числом' })
   @IsNotEmpty({ message: 'Количество гостей обязательно' })
   @Type(() => Number)
@@ -59,13 +76,19 @@ export class LodgeCreateDto {
   @Type(() => Number)
   tv: number;
 
-  @ApiProperty({ example: false })
+  @ApiProperty({
+    example: false,
+    description: 'Наличие Wi-Fi в номере (true / false)',
+  })
   @IsBoolean({ message: 'Wi-Fi должен быть логическим значением' })
   @IsOptional()
   @Type(() => Boolean)
   wifi: boolean;
 
-  @ApiProperty({ example: false })
+  @ApiProperty({
+    example: false,
+    description: 'Разрешено ли курение в номере (true / false)',
+  })
   @IsBoolean({ message: 'Поле "курение" должно быть логическим значением' })
   @IsOptional()
   @Type(() => Boolean)
@@ -75,7 +98,7 @@ export class LodgeCreateDto {
     type: 'array',
     items: { type: 'string', format: 'binary' },
     required: false,
-    description: 'Здесь можно загрузить несколько изображений номера',
+    description: 'Массив изображений номера (можно загрузить несколько файлов)',
   })
   files?: any[];
 }
@@ -86,7 +109,7 @@ export class LodgeUpdateDto extends PartialType(
   @ApiProperty({
     type: 'string',
     format: 'binary',
-    description: 'Можно загрузить одно изображение для header',
+    description: 'Изображение для домика (один файл)',
     required: false,
   })
   file?: any;

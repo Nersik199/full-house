@@ -1,14 +1,20 @@
 import { ApiProperty, PartialType } from '@nestjs/swagger';
 import { IsNotEmpty, IsString, Length } from 'class-validator';
-
 export class HeaderLodgeCreateDto {
-  @ApiProperty({ example: 'Главный заголовок номера' })
+  @ApiProperty({
+    example: 'Главный заголовок номера',
+    description: 'Основной заголовок блока header (от 5 до 200 символов)',
+  })
   @IsString({ message: 'Title должен быть строкой' })
   @IsNotEmpty({ message: 'Title обязательно' })
   @Length(5, 200, { message: 'Title должен содержать от 5 до 200 символов' })
   title: string;
 
-  @ApiProperty({ example: 'Подзаголовок с описанием номера' })
+  @ApiProperty({
+    example: 'Подзаголовок с описанием номера',
+    description:
+      'Дополнительный подзаголовок для header (от 6 до 1500 символов)',
+  })
   @IsString({ message: 'SubTitle должен быть строкой' })
   @IsNotEmpty({ message: 'SubTitle обязательно' })
   @Length(6, 1500, {
@@ -16,7 +22,11 @@ export class HeaderLodgeCreateDto {
   })
   subTitle: string;
 
-  @ApiProperty({ example: 'Подробное описание номера для гостей' })
+  @ApiProperty({
+    example: 'Подробное описание номера для гостей',
+    description:
+      'Подробное описание номера, отображаемое в header (от 6 до 1500 символов)',
+  })
   @IsString({ message: 'Description должен быть строкой' })
   @IsNotEmpty({ message: 'Description обязательно' })
   @Length(6, 1500, {
@@ -28,7 +38,7 @@ export class HeaderLodgeCreateDto {
     type: 'string',
     format: 'binary',
     required: false,
-    description: 'Можно загрузить одно изображение для header',
+    description: 'Изображение для header блока (один файл)',
   })
   file?: any;
 }

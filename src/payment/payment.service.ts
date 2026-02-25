@@ -158,11 +158,18 @@ export class PaymentService {
       await this.bookingService.cancelBooking(
         payload.object.metadata.bookingId,
       );
+
+      await this.orderModel.update(
+        { status: 'CANCELLED' },
+        { where: { id: payload.object.metadata } },
+      );
       return { status: 'canceled' };
     }
 
     return { status: 'ok' };
   }
+
+  private async ticket() {}
 
   private async processPayment(paymentObject: any) {
     const { orderId, roomNumber, bookingId } = paymentObject.metadata;

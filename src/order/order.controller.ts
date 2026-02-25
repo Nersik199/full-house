@@ -7,15 +7,18 @@ import { LodgeCreatedOrderDto } from './dto/lodgeCreatedOrder.dto';
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
-  @Post('create/room')
+  @Post('pay/room')
   async roomCreatedOrder(@Body() dto: RoomCreatedOrderDto) {
     const order = await this.orderService.roomCreatedOrder({ ...dto });
     return order;
   }
 
-  @Post('create/lodge')
+  @Post('pay/lodge')
   async lodgeCreatedOrder(@Body() dto: LodgeCreatedOrderDto) {
     const order = await this.orderService.lodgeCreatedOrder({ ...dto });
     return order;
   }
+
+  @Post('pay/ticket')
+  async ticketCreate(@Body() dto: string) {}
 }

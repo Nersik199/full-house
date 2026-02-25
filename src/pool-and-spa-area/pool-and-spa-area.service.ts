@@ -130,12 +130,17 @@ export class PoolAndSpaAreaService {
       images.push(newImg);
     }
 
-    await poolSpa.update({
-      ...dto,
-      images,
-    });
+    const [updatedCount, [updatedPoolSpa]] = await this.poolSpaModel.update(
+      { ...dto, image: images[0] },
+      {
+        where: { id },
+        returning: true,
+      },
+    );
 
-    return poolSpa;
+    if (updatedCount === 0) throw new NotFoundException('Pool-Spa not found');
+
+    return updatedPoolSpa;
   }
 
   async delete(id: number) {

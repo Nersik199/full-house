@@ -15,6 +15,7 @@ import { LibsModule } from './libs/libs.module';
 import { LodgeModule } from './lodge/lodge.module';
 import { PoolAndSpaAreaModule } from './pool-and-spa-area/pool-and-spa-area.module';
 import { BookingModule } from './booking/booking.module';
+import { HomeModule } from './home/home.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -38,6 +39,7 @@ import { BookingModule } from './booking/booking.module';
     PoolAndSpaAreaModule,
     PaymentModule,
     BookingModule,
+    HomeModule,
   ],
   providers: [],
 })

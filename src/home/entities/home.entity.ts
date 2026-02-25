@@ -1,6 +1,9 @@
-import { Column, DataType, Model } from 'sequelize-typescript';
-
-export abstract class BaseHeader extends Model {
+import { Column, DataType, Model, Table } from 'sequelize-typescript';
+@Table({
+  tableName: 'homes',
+  timestamps: true,
+})
+export class Home extends Model {
   @Column({
     type: DataType.BIGINT,
     autoIncrement: true,
@@ -16,20 +19,13 @@ export abstract class BaseHeader extends Model {
 
   @Column({
     type: DataType.STRING,
-    allowNull: true,
-    field: 'sub_title',
-  })
-  subTitle: string;
-
-  @Column({
-    type: DataType.STRING,
-    allowNull: true,
+    allowNull: false,
   })
   description: string;
 
   @Column({
     type: DataType.TEXT,
-    allowNull: false,
+    allowNull: true,
   })
   image: string;
 

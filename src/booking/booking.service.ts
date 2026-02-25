@@ -115,4 +115,15 @@ export class BookingService {
   async findOne(id: number) {
     return await this.bookingModel.findByPk(id);
   }
+
+  async ticketCreate() {
+    const x = {
+      guestName: '',
+      guestPhone: '',
+      guestEmail: '',
+      checkIn: '',
+      checkOut: '',
+      price: 1,
+    };
+  }
 }

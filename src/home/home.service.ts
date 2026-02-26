@@ -134,9 +134,9 @@ export class HomeService {
     return updatedHome;
   }
   async delete(id: number) {
-    const diningRoom = await this.homeModel.findOne({ where: { id } });
-    await diningRoom.destroy();
-    const parsedUrl = new URL(diningRoom.image);
+    const home = await this.homeModel.findOne({ where: { id } });
+    await home.destroy();
+    const parsedUrl = new URL(home.image);
     const pathOnly = parsedUrl.pathname;
     await this.filesService.delete(pathOnly);
     return { message: 'Home successfully deleted' };

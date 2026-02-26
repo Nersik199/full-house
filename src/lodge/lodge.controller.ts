@@ -20,6 +20,7 @@ import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { CurrentAdmin } from '@/user/decorators/user.decorator';
 import { HeaderLodgeCreateDto, HeaderLodgeUpdateDto } from './dto/header.dto';
 import { LodgeCreateDto, LodgeUpdateDto } from './dto/lodge.dto';
+import { CreateBookingWalkInDto } from '@/lodge/dto/lodge.booking.walkIn.dto';
 
 @Controller('lodge')
 export class LodgeController {
@@ -110,6 +111,14 @@ export class LodgeController {
     @UploadedFile() file?: Express.Multer.File,
   ) {
     return await this.lodgeService.update(id, dto, urlId, file);
+  }
+
+  @ApiBearerAuth('Authorization')
+  @Auth()
+  @Post('admin/walk-in')
+  @HttpCode(HttpStatus.OK)
+  async roomBookingWalkIn(@Body() dto: CreateBookingWalkInDto) {
+    return await this.lodgeService.lodgeBookingWalkIn(dto);
   }
 
   @ApiBearerAuth('Authorization')

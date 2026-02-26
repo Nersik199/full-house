@@ -169,7 +169,9 @@ export class PaymentService {
     return { status: 'ok' };
   }
 
-  private async ticket() {}
+  private async ticket() {
+    // todo
+  }
 
   private async processPayment(paymentObject: any) {
     const { orderId, roomNumber, bookingId } = paymentObject.metadata;

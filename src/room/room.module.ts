@@ -5,9 +5,14 @@ import { SequelizeModule } from '@nestjs/sequelize';
 import { Room } from './entities/room.entity';
 import { FilesModule } from '@/files/files.module';
 import { HeaderRoom } from './entities/header.entity';
+import { BookingModule } from '@/booking/booking.module';
 
 @Module({
-  imports: [SequelizeModule.forFeature([Room, HeaderRoom]), FilesModule],
+  imports: [
+    SequelizeModule.forFeature([Room, HeaderRoom]),
+    FilesModule,
+    BookingModule,
+  ],
   controllers: [RoomController],
   providers: [RoomService],
   exports: [RoomService],

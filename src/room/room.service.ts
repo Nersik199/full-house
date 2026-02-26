@@ -1,15 +1,19 @@
+import dayjs from 'dayjs';
+import { Sequelize } from 'sequelize-typescript';
 import {
   BadRequestException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { Room } from './entities/room.entity';
-import { InjectModel } from '@nestjs/sequelize';
+import { InjectConnection, InjectModel } from '@nestjs/sequelize';
 import { RoomCreateDto, RoomUpdateDto } from './dto/room.dto';
 import { FilesService } from '@/files/files.service';
 import { HeaderRoomCreateDto, HeaderRoomUpdateDto } from './dto/header.dto';
 import { HeaderRoom } from './entities/header.entity';
 import { calculatePagination } from '@/shared/utils/calculate.pagination';
+import { BookingService } from '@/booking/booking.service';
+import { CreateBookingWalkInDto } from './dto/room.booking.walkIn.dto';
 
 @Injectable()
 export class RoomService {
@@ -18,7 +22,10 @@ export class RoomService {
     private roomModel: typeof Room,
     @InjectModel(HeaderRoom)
     private readonly headerModel: typeof HeaderRoom,
+    @InjectConnection()
+    private readonly sequelize: Sequelize,
     private readonly filesService: FilesService,
+    private readonly bookingService: BookingService,
   ) {}
 
   async createHeader(dto: HeaderRoomCreateDto, file?: Express.Multer.File) {
@@ -173,5 +180,33 @@ export class RoomService {
 
     await room.destroy();
     return { message: 'Room successfully deleted' };
+  }
+
+  async roomBookingWalkIn(dto: CreateBookingWalkInDto) {
+    const transaction = await this.sequelize.transaction();
+    try {
+      const room = await this.findById(dto.roomId);
+
+      const booking = await this.bookingService.bookingWalkIn(
+        {
+          roomId: room.id,
+          guestName: dto.guestName,
+          guestPhone: dto.guestPhone.trim(),
+          guestEmail: dto.guestEmail.trim(),
+          roomNumber: room.roomNumber,
+          checkIn: dayjs(dto.checkIn).startOf('day').utc().toDate(),
+          checkOut: dayjs(dto.checkOut).startOf('day').utc().toDate(),
+          source: 'walk-in',
+        },
+        transaction,
+      );
+
+      await transaction.commit();
+
+      return booking;
+    } catch (err) {
+      await transaction.rollback();
+      throw err;
+    }
   }
 }

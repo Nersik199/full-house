@@ -22,6 +22,18 @@ export class LodgeCreateDto {
   title: string;
 
   @ApiProperty({
+    example:
+      'Вместимость — 3 человека (2 взрослых + 1 ребёнок). Цена указана за 2-х.',
+    description: 'Краткое дополнительное описание номера (необязательно)',
+  })
+  @IsString({ message: 'SubTitle должен быть строкой' })
+  @Length(5, 200, {
+    message: 'SubTitle должен содержать от 5 до 200 символов',
+  })
+  @IsOptional()
+  subTitle?: string;
+
+  @ApiProperty({
     example: 'Уютный номер с видом на город',
     description: 'Подробное описание номера (от 6 до 1500 символов)',
   })
@@ -93,6 +105,59 @@ export class LodgeCreateDto {
   @IsOptional()
   @Type(() => Boolean)
   smoking: boolean;
+
+  @ApiProperty({
+    example: false,
+    description: 'Наличие холодильника (true / false)',
+  })
+  @IsBoolean({ message: 'refrigerator должно быть логическим значением' })
+  @IsOptional()
+  @Type(() => Boolean)
+  refrigerator?: boolean;
+
+  @ApiProperty({
+    example: false,
+    description: 'Наличие кондиционера (true / false)',
+  })
+  @IsBoolean({ message: 'airConditioner должно быть логическим значением' })
+  @IsOptional()
+  @Type(() => Boolean)
+  airConditioner?: boolean;
+
+  @ApiProperty({
+    example: 2,
+    description: 'Количество кроватей в номере',
+  })
+  @IsNumber({}, { message: 'bedCount должно быть числом' })
+  @IsOptional()
+  @Type(() => Number)
+  bedCount?: number;
+
+  @ApiProperty({
+    example: 'single',
+    description: 'Тип кровати: single или double',
+  })
+  @IsString({ message: 'bedType должно быть строкой' })
+  @IsOptional()
+  bedType?: 'single' | 'double';
+
+  @ApiProperty({
+    example: false,
+    description: 'Наличие отдельной гостиной (true / false)',
+  })
+  @IsBoolean({ message: 'livingRoom должно быть логическим значением' })
+  @IsOptional()
+  @Type(() => Boolean)
+  livingRoom?: boolean;
+
+  @ApiProperty({
+    example: false,
+    description: 'Наличие столовой зоны (true / false)',
+  })
+  @IsBoolean({ message: 'diningRoom должно быть логическим значением' })
+  @IsOptional()
+  @Type(() => Boolean)
+  diningRoom?: boolean;
 
   @ApiProperty({
     type: 'array',

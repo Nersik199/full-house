@@ -1,10 +1,14 @@
+import dayjs from 'dayjs';
+import { Sequelize } from 'sequelize-typescript';
 import { FilesService } from '@/files/files.service';
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/sequelize';
+import { InjectConnection, InjectModel } from '@nestjs/sequelize';
 import { HeaderLodge } from './entities/header.entity';
 import { HeaderLodgeCreateDto, HeaderLodgeUpdateDto } from './dto/header.dto';
 import { LodgeCreateDto, LodgeUpdateDto } from './dto/lodge.dto';
 import { Lodge } from './entities/lodge.entity';
+import { BookingService } from '@/booking/booking.service';
+import { CreateBookingWalkInDto } from '@/lodge/dto/lodge.booking.walkIn.dto';
 
 @Injectable()
 export class LodgeService {
@@ -13,6 +17,9 @@ export class LodgeService {
     private lodgeModel: typeof Lodge,
     @InjectModel(HeaderLodge)
     private readonly headerModel: typeof HeaderLodge,
+    @InjectConnection()
+    private readonly sequelize: Sequelize,
+    private readonly bookingService: BookingService,
     private readonly filesService: FilesService,
   ) {}
 
@@ -83,11 +90,11 @@ export class LodgeService {
   }
 
   async findById(id: number) {
-    const room = await this.lodgeModel.findByPk(id);
-    if (!room) {
-      throw new NotFoundException(`Room with id ${id} not found`);
+    const lodge = await this.lodgeModel.findByPk(id);
+    if (!lodge) {
+      throw new NotFoundException(`Lodge with id ${id} not found`);
     }
-    return room;
+    return lodge;
   }
 
   async update(
@@ -143,6 +150,34 @@ export class LodgeService {
         },
       },
     );
+  }
+
+  async lodgeBookingWalkIn(dto: CreateBookingWalkInDto) {
+    const transaction = await this.sequelize.transaction();
+    try {
+      const lodge = await this.findById(dto.lodgeId);
+
+      const booking = await this.bookingService.bookingWalkIn(
+        {
+          lodgeId: lodge.id,
+          guestName: dto.guestName,
+          guestPhone: dto.guestPhone.trim(),
+          guestEmail: dto.guestEmail.trim(),
+          roomNumber: lodge.roomNumber,
+          checkIn: dayjs(dto.checkIn).startOf('day').utc().toDate(),
+          checkOut: dayjs(dto.checkOut).startOf('day').utc().toDate(),
+          source: 'walk-in',
+        },
+        transaction,
+      );
+
+      await transaction.commit();
+
+      return booking;
+    } catch (err) {
+      await transaction.rollback();
+      throw err;
+    }
   }
 
   async delete(id: number) {

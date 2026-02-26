@@ -55,6 +55,7 @@ export class BookingService {
     if (conflict)
       throw new BadRequestException('Already booked for selected dates');
   }
+
   async createBooking(dto: CreateBookingDto, transaction: Transaction) {
     if (dto.roomId) {
       await this.checkAvailability(
@@ -116,14 +117,49 @@ export class BookingService {
     return await this.bookingModel.findByPk(id);
   }
 
-  async ticketCreate() {
-    const x = {
-      guestName: '',
-      guestPhone: '',
-      guestEmail: '',
-      checkIn: '',
-      checkOut: '',
-      price: 1,
-    };
+  async bookingWalkIn(dto: CreateBookingDto, transaction: Transaction) {
+    if (dto.roomId) {
+      await this.checkAvailability(
+        {
+          entityField: 'roomId',
+          entityId: dto.roomId,
+          checkIn: new Date(dto.checkIn),
+          checkOut: new Date(dto.checkOut),
+        },
+        transaction,
+      );
+    }
+
+    if (dto.lodgeId) {
+      await this.checkAvailability(
+        {
+          entityField: 'lodgeId',
+          entityId: dto.lodgeId,
+          checkIn: new Date(dto.checkIn),
+          checkOut: new Date(dto.checkOut),
+        },
+        transaction,
+      );
+    }
+
+    return await this.bookingModel.create(
+      {
+        ...dto,
+        status: 'confirmed',
+        expiresAt: null,
+      },
+      { transaction },
+    );
   }
+
+  // async ticketCreate(dto: CreateBookingDto) {
+  //   const x = {
+  //     guestName: '',
+  //     guestPhone: '',
+  //     guestEmail: '',
+  //     checkIn: '',
+  //     checkOut: '',
+  //     price: 1,
+  //   };
+  // }
 }

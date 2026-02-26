@@ -20,6 +20,7 @@ import { ApiBearerAuth, ApiConsumes, ApiQuery } from '@nestjs/swagger';
 import { CurrentAdmin } from 'src/user/decorators/user.decorator';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { HeaderRoomCreateDto, HeaderRoomUpdateDto } from './dto/header.dto';
+import { CreateBookingWalkInDto } from './dto/room.booking.walkIn.dto';
 
 @Controller('room')
 export class RoomController {
@@ -110,6 +111,14 @@ export class RoomController {
     @UploadedFile() file?: Express.Multer.File,
   ) {
     return await this.roomService.update(id, dto, urlId, file);
+  }
+
+  @ApiBearerAuth('Authorization')
+  @Auth()
+  @Post('admin/walk-in')
+  @HttpCode(HttpStatus.OK)
+  async roomBookingWalkIn(@Body() dto: CreateBookingWalkInDto) {
+    return await this.roomService.roomBookingWalkIn(dto);
   }
 
   @ApiBearerAuth('Authorization')

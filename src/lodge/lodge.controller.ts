@@ -20,7 +20,7 @@ import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { CurrentAdmin } from '@/user/decorators/user.decorator';
 import { HeaderLodgeCreateDto, HeaderLodgeUpdateDto } from './dto/header.dto';
 import { LodgeCreateDto, LodgeUpdateDto } from './dto/lodge.dto';
-import { CreateBookingWalkInDto } from '@/lodge/dto/lodge.booking.walkIn.dto';
+import { CreateBookingWalkInLodgeDto } from '@/lodge/dto/lodge.booking.walkIn.dto';
 
 @Controller('lodge')
 export class LodgeController {
@@ -117,7 +117,7 @@ export class LodgeController {
   @Auth()
   @Post('admin/walk-in')
   @HttpCode(HttpStatus.OK)
-  async roomBookingWalkIn(@Body() dto: CreateBookingWalkInDto) {
+  async roomBookingWalkIn(@Body() dto: CreateBookingWalkInLodgeDto) {
     return await this.lodgeService.lodgeBookingWalkIn(dto);
   }
 

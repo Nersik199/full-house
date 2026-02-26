@@ -151,15 +151,39 @@ export class BookingService {
       { transaction },
     );
   }
+  async getStartDateAndEndDate() {
+    const bookings = await this.bookingModel.findAll({
+      where: {
+        status: {
+          [Op.in]: ['confirmed', 'checked_in'],
+        },
+      },
+      attributes: ['checkIn', 'checkOut', 'roomId'],
+    });
 
-  // async ticketCreate(dto: CreateBookingDto) {
-  //   const x = {
-  //     guestName: '',
-  //     guestPhone: '',
-  //     guestEmail: '',
-  //     checkIn: '',
-  //     checkOut: '',
-  //     price: 1,
-  //   };
-  // }
+    return bookings.map((b) => ({
+      roomId: b.roomId,
+      checkIn: b.checkIn,
+      checkOut: b.checkOut,
+    }));
+  }
+
+  async searchBooking(startDate: Date, endDate: Date) {
+    const start = dayjs(startDate).startOf('day').toDate();
+    const end = dayjs(endDate).startOf('day').toDate();
+
+    const busyRooms = await this.bookingModel.findAll({
+      where: {
+        status: {
+          [Op.in]: ['confirmed', 'checked_in'],
+        },
+        [Op.or]: [{ expiresAt: null }, { expiresAt: { [Op.gt]: new Date() } }],
+        checkIn: { [Op.lt]: end },
+        checkOut: { [Op.gt]: start },
+      },
+      attributes: ['roomId'],
+    });
+    const busyRoomIds = busyRooms.map((b) => b.roomId).filter(Boolean);
+    return busyRoomIds;
+  }
 }

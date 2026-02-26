@@ -13,6 +13,7 @@ import {
   UploadedFile,
   UploadedFiles,
   UseInterceptors,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { RoomService } from './room.service';
 import { RoomCreateDto, RoomUpdateDto } from './dto/room.dto';
@@ -65,6 +66,22 @@ export class RoomController {
   @HttpCode(HttpStatus.OK)
   async getHeader() {
     return await this.roomService.getHeader();
+  }
+
+  @Get('search')
+  async search(
+    @Query('start') startDate: string,
+    @Query('end') endDate: string,
+    @Query('member', ParseIntPipe) member?: number,
+    @Query('bedCount', ParseIntPipe) bedCount?: number,
+  ) {
+    console.log(startDate, endDate, member, bedCount);
+    return await this.roomService.search(
+      new Date(startDate),
+      new Date(endDate),
+      member,
+      bedCount,
+    );
   }
 
   @ApiBearerAuth('Authorization')
@@ -128,7 +145,4 @@ export class RoomController {
   async delete(@Param('id') id: number) {
     return await this.roomService.delete(id);
   }
-
-  @Get('search')
-  async search() {}
 }

@@ -1,5 +1,7 @@
 import dayjs from 'dayjs';
 import { Sequelize } from 'sequelize-typescript';
+import { Op, Transaction } from 'sequelize';
+
 import {
   BadRequestException,
   Injectable,
@@ -208,5 +210,28 @@ export class RoomService {
       await transaction.rollback();
       throw err;
     }
+  }
+
+  async search(
+    startDate: Date,
+    endDate: Date,
+    member?: number,
+    bedCount?: number,
+  ) {
+    //todo
+    // const data = await this.bookingService.getStartDateAndEndDate();
+    // console.log(data);
+    const busyRoomIds = await this.bookingService.searchBooking(
+      startDate,
+      endDate,
+    );
+    const availableRooms = await this.roomModel.findAll({
+      where: {
+        id: { [Op.notIn]: busyRoomIds },
+        member: member ? { [Op.gte]: member } : undefined,
+        bedCount: bedCount ? { [Op.gte]: bedCount } : undefined,
+      },
+    });
+    return availableRooms;
   }
 }

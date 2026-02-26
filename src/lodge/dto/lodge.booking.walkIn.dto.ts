@@ -3,7 +3,7 @@ import { IsDate, IsNotEmpty, IsNumber, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import dayjs from 'dayjs';
 
-export class CreateBookingWalkInDto {
+export class CreateBookingWalkInLodgeDto {
   @ApiProperty({
     example: 3,
     description: 'ID комнаты, которую гость хочет забронировать',

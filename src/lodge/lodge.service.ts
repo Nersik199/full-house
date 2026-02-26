@@ -8,7 +8,7 @@ import { HeaderLodgeCreateDto, HeaderLodgeUpdateDto } from './dto/header.dto';
 import { LodgeCreateDto, LodgeUpdateDto } from './dto/lodge.dto';
 import { Lodge } from './entities/lodge.entity';
 import { BookingService } from '@/booking/booking.service';
-import { CreateBookingWalkInDto } from '@/lodge/dto/lodge.booking.walkIn.dto';
+import { CreateBookingWalkInLodgeDto } from '@/lodge/dto/lodge.booking.walkIn.dto';
 
 @Injectable()
 export class LodgeService {
@@ -152,7 +152,7 @@ export class LodgeService {
     );
   }
 
-  async lodgeBookingWalkIn(dto: CreateBookingWalkInDto) {
+  async lodgeBookingWalkIn(dto: CreateBookingWalkInLodgeDto) {
     const transaction = await this.sequelize.transaction();
     try {
       const lodge = await this.findById(dto.lodgeId);
@@ -195,6 +195,6 @@ export class LodgeService {
     });
 
     await lodge.destroy();
-    return { message: 'Room successfully deleted' };
+    return { message: 'lodge successfully deleted' };
   }
 }

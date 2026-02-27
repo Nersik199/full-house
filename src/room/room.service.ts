@@ -219,8 +219,8 @@ export class RoomService {
     bedCount?: number,
   ) {
     //todo
-    // const data = await this.bookingService.getStartDateAndEndDate();
-    // console.log(data);
+    const data = await this.bookingService.getStartDateAndEndDate(37);
+    console.log(data);
     const busyRoomIds = await this.bookingService.searchBooking(
       startDate,
       endDate,

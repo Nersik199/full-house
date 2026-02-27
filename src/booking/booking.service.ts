@@ -151,9 +151,10 @@ export class BookingService {
       { transaction },
     );
   }
-  async getStartDateAndEndDate() {
+  async getStartDateAndEndDate(id: number) {
     const bookings = await this.bookingModel.findAll({
       where: {
+        roomId: id,
         status: {
           [Op.in]: ['confirmed', 'checked_in'],
         },

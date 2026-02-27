@@ -16,6 +16,8 @@ import { LodgeModule } from './lodge/lodge.module';
 import { PoolAndSpaAreaModule } from './pool-and-spa-area/pool-and-spa-area.module';
 import { BookingModule } from './booking/booking.module';
 import { HomeModule } from './home/home.module';
+import { CompanyProfileModule } from './company_profile/company_profile.module';
+import { StatisticsModule } from './statistics/statistics.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -40,6 +42,8 @@ import { HomeModule } from './home/home.module';
     PaymentModule,
     BookingModule,
     HomeModule,
+    CompanyProfileModule,
+    StatisticsModule,
   ],
   providers: [],
 })

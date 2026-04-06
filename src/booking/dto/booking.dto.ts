@@ -1,9 +1,12 @@
+import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   IsDate,
   IsEnum,
+  IsIn,
   IsNotEmpty,
   IsNumber,
+  IsOptional,
   IsString,
 } from 'class-validator';
 
@@ -40,6 +43,13 @@ export class CreateBookingDto {
   @Type(() => Number)
   roomId?: number;
 
+  @IsString()
+  @IsIn(['Standard', 'Comfort', 'Luxury', 'Family', 'Presidential'], {
+    message: 'Неверная категория номера',
+  })
+  @IsOptional()
+  category?: 'Standard' | 'Comfort' | 'Luxury' | 'Family' | 'Presidential';
+
   @IsNumber({}, { message: 'ID домика должно быть числом' })
   @Type(() => Number)
   lodgeId?: number;
@@ -74,4 +84,17 @@ export class CreateBookingDto {
   @IsDate({ message: 'Дата выезда должна быть корректной датой' })
   @Type(() => Date)
   checkOut: Date;
+}
+
+export class GetBookingsByDaysDto {
+  @ApiProperty({
+    description: 'Категория номера',
+    enum: ['Standard', 'Comfort', 'Luxury', 'Family', 'Presidential'],
+    example: 'Standard',
+  })
+  @IsString()
+  @IsIn(['Standard', 'Comfort', 'Luxury', 'Family', 'Presidential'], {
+    message: 'Неверная категория номера',
+  })
+  category: 'Standard' | 'Comfort' | 'Luxury' | 'Family' | 'Presidential';
 }

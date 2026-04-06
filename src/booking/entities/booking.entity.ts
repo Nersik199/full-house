@@ -46,18 +46,21 @@ export class Booking extends Model {
   @Column({
     type: DataType.STRING,
     allowNull: false,
+    field: 'guest_name',
   })
   guestName: string;
 
   @Column({
     type: DataType.STRING,
     allowNull: false,
+    field: 'guest_email',
   })
   guestPhone: string;
 
   @Column({
     type: DataType.STRING,
     allowNull: false,
+    field: 'guest_phone',
   })
   guestEmail: string;
 
@@ -71,12 +74,14 @@ export class Booking extends Model {
   @Column({
     type: DataType.DATEONLY,
     allowNull: false,
+    field: 'check_in',
   })
   checkIn: Date;
 
   @Column({
     type: DataType.DATEONLY,
     allowNull: false,
+    field: 'check_out',
   })
   checkOut: Date;
 
@@ -89,8 +94,15 @@ export class Booking extends Model {
   @Column({
     type: DataType.DATE,
     allowNull: true,
+    field: 'expires_at',
   })
   expiresAt: Date;
+
+  @Column({
+    type: DataType.STRING,
+    allowNull: true,
+  })
+  category?: string;
 
   @Column({
     type: DataType.ENUM(
@@ -103,4 +115,18 @@ export class Booking extends Model {
     defaultValue: 'pending',
   })
   status: string;
+
+  @Column({
+    type: DataType.DATE,
+    defaultValue: DataType.NOW,
+    field: 'created_at',
+  })
+  createdAt: Date;
+
+  @Column({
+    type: DataType.DATE,
+    defaultValue: DataType.NOW,
+    field: 'updated_at',
+  })
+  updatedAt: Date;
 }

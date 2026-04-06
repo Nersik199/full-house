@@ -57,6 +57,7 @@ export class OrderService {
           guestName: dto.customerName,
           guestPhone: dto.customerPhone.trim(),
           guestEmail: dto.customerEmail.trim(),
+          category: room.category,
           roomNumber: room.roomNumber,
           checkIn: dayjs(dto.startDate).startOf('day').utc().toDate(),
           checkOut: dayjs(dto.endDate).startOf('day').utc().toDate(),
@@ -140,5 +141,11 @@ export class OrderService {
       await transaction.rollback();
       throw err;
     }
+  }
+
+  async getAllStatistic() {
+    const statistic = await this.orderModel.findAll();
+
+    return statistic;
   }
 }

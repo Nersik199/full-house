@@ -5,9 +5,11 @@ import {
   Length,
   IsNumber,
   IsBoolean,
+  IsIn,
   IsOptional,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+
 export class RoomCreateDto {
   @ApiProperty({
     example: 'Стандартный номер',
@@ -44,6 +46,17 @@ export class RoomCreateDto {
   description: string;
 
   @ApiProperty({
+    example: 'Стандарт',
+    description:
+      'Категория номера:  Standard, Comfort, Luxury, Family, Presidential',
+  })
+  @IsString()
+  @IsIn(['Standard', 'Comfort', 'Luxury', 'Family', 'Presidential'], {
+    message: 'Неверная категория номера',
+  })
+  category: 'Standard' | 'Comfort' | 'Luxury' | 'Family' | 'Presidential';
+
+  @ApiProperty({
     example: 101,
     description: 'Уникальный номер комнаты',
   })
@@ -71,12 +84,21 @@ export class RoomCreateDto {
 
   @ApiProperty({
     example: 2,
-    description: 'Максимальное количество гостей',
+    description: 'Количество взрослых',
   })
-  @IsNumber({}, { message: 'Количество гостей должно быть числом' })
-  @IsNotEmpty({ message: 'Количество гостей обязательно' })
+  @IsNumber({}, { message: 'Количество взрослых должно быть числом' })
+  @IsNotEmpty({ message: 'Количество взрослых обязательно' })
   @Type(() => Number)
-  member: number;
+  adults: number;
+
+  @ApiProperty({
+    example: 1,
+    description: 'Количество детей',
+  })
+  @IsNumber({}, { message: 'Количество детей должно быть числом' })
+  @IsOptional()
+  @Type(() => Number)
+  children?: number;
 
   @ApiProperty({
     example: 1,
@@ -95,15 +117,6 @@ export class RoomCreateDto {
   @IsOptional()
   @Type(() => Boolean)
   wifi: boolean;
-
-  @ApiProperty({
-    example: false,
-    description: 'Разрешено ли курение в номере (true / false)',
-  })
-  @IsBoolean({ message: 'Поле "курение" должно быть логическим значением' })
-  @IsOptional()
-  @Type(() => Boolean)
-  smoking: boolean;
 
   @ApiProperty({
     example: false,
@@ -159,6 +172,15 @@ export class RoomCreateDto {
   diningRoom?: boolean;
 
   @ApiProperty({
+    example: false,
+    description: 'Наличие балкона (true / false)',
+  })
+  @IsBoolean({ message: 'balcony должно быть логическим значением' })
+  @IsOptional()
+  @Type(() => Boolean)
+  balcony?: boolean;
+
+  @ApiProperty({
     type: 'array',
     items: { type: 'string', format: 'binary' },
     required: false,
@@ -177,4 +199,17 @@ export class RoomUpdateDto extends PartialType(
     required: false,
   })
   file?: any;
+}
+
+export class GetAllRoomsDto {
+  @ApiProperty({
+    description: 'Категория номера',
+    enum: ['Standard', 'Comfort', 'Luxury', 'Family', 'Presidential'],
+    example: 'Standard',
+  })
+  @IsString()
+  @IsIn(['Standard', 'Comfort', 'Luxury', 'Family', 'Presidential'], {
+    message: 'Неверная категория номера',
+  })
+  category: 'Standard' | 'Comfort' | 'Luxury' | 'Family' | 'Presidential';
 }

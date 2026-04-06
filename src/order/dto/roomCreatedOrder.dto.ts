@@ -1,4 +1,4 @@
-import { ApiProperty, OmitType } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import {
   IsNotEmpty,
   IsString,
@@ -11,6 +11,7 @@ import {
 import { Type } from 'class-transformer';
 import { PaymentMethod } from '@/shared/enums/payment-method.enum';
 import dayjs from 'dayjs';
+
 export class RoomCreatedOrderDto {
   @ApiProperty({ example: 101 })
   @IsNumber({}, { message: 'Номер комнаты должен быть числом' })

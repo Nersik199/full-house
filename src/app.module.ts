@@ -18,6 +18,7 @@ import { BookingModule } from './booking/booking.module';
 import { HomeModule } from './home/home.module';
 import { CompanyProfileModule } from './company_profile/company_profile.module';
 import { StatisticsModule } from './statistics/statistics.module';
+import { TicketModule } from './ticket/ticket.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -44,6 +45,7 @@ import { StatisticsModule } from './statistics/statistics.module';
     HomeModule,
     CompanyProfileModule,
     StatisticsModule,
+    TicketModule,
   ],
   providers: [],
 })

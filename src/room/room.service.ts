@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { Room } from './entities/room.entity';
 import { InjectConnection, InjectModel } from '@nestjs/sequelize';
-import { RoomCreateDto, RoomUpdateDto } from './dto/room.dto';
+import { GetAllRoomsDto, RoomCreateDto, RoomUpdateDto } from './dto/room.dto';
 import { FilesService } from '@/files/files.service';
 import { HeaderRoomCreateDto, HeaderRoomUpdateDto } from './dto/header.dto';
 import { HeaderRoom } from './entities/header.entity';
@@ -75,10 +75,14 @@ export class RoomService {
 
   async create(dto: RoomCreateDto, files?: Express.Multer.File[]) {
     const imageUrls = await this.filesService.uploadMany(files, 'rooms');
-
+    let member: number;
     const roomNumber = await this.roomModel.findOne({
       where: { roomNumber: dto.roomNumber },
     });
+
+    if (dto.adults && dto.children) {
+      member = dto.adults + dto.children;
+    }
 
     if (roomNumber) {
       throw new BadRequestException(
@@ -88,14 +92,23 @@ export class RoomService {
 
     const room = await this.roomModel.create({
       ...dto,
+      member,
       images: imageUrls,
     });
 
     return room;
   }
 
-  async findAll(page: number, limit: number) {
-    const total = await this.roomModel.count();
+  async findAll(page: number, limit: number, dto?: GetAllRoomsDto) {
+    const whereCondition: any = {};
+
+    if (dto?.category) {
+      whereCondition.category = dto.category;
+    }
+
+    const total = await this.roomModel.count({
+      where: whereCondition,
+    });
 
     const { maxPageCount, offset } = calculatePagination(
       Number(page),
@@ -104,12 +117,13 @@ export class RoomService {
     );
 
     const rooms = await this.roomModel.findAll({
+      where: whereCondition,
       order: [['created_at', 'DESC']],
       limit: Number(limit),
       offset,
     });
 
-    if (!rooms.length) {
+    if (!rooms.length && total === 0) {
       throw new NotFoundException('No rooms found');
     }
 
@@ -215,23 +229,45 @@ export class RoomService {
   async search(
     startDate: Date,
     endDate: Date,
-    member?: number,
-    bedCount?: number,
+    adults?: number,
+    children?: number,
   ) {
-    //todo
-    const data = await this.bookingService.getStartDateAndEndDate(37);
-    console.log(data);
-    const busyRoomIds = await this.bookingService.searchBooking(
-      startDate,
-      endDate,
-    );
+    const start = dayjs(startDate).startOf('day').toDate();
+    const end = dayjs(endDate).startOf('day').toDate();
+    const totalNeeded = (Number(adults) || 0) + (Number(children) || 0);
+
+    const occupiedData = await this.bookingService.findAllOccupied(start, end);
+    const occupiedRoomIds = occupiedData
+      .map((b) => b.roomId)
+      .filter((id) => !!id);
+
     const availableRooms = await this.roomModel.findAll({
       where: {
-        id: { [Op.notIn]: busyRoomIds },
-        member: member ? { [Op.gte]: member } : undefined,
-        bedCount: bedCount ? { [Op.gte]: bedCount } : undefined,
+        id: {
+          [Op.notIn]: occupiedRoomIds.length ? occupiedRoomIds : [0],
+        },
       },
+      order: [['price', 'ASC']],
     });
-    return availableRooms;
+
+    const results = [];
+    const suggested = [];
+
+    availableRooms.forEach((room) => {
+      if (totalNeeded > 0 && room.member >= totalNeeded) {
+        results.push(room);
+      } else {
+        suggested.push(room);
+      }
+    });
+
+    if (totalNeeded === 0) {
+      return { results: availableRooms, suggested: [] };
+    }
+
+    return {
+      results,
+      suggested,
+    };
   }
 }

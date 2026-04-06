@@ -16,8 +16,14 @@ import {
   ParseIntPipe,
 } from '@nestjs/common';
 import { RoomService } from './room.service';
-import { RoomCreateDto, RoomUpdateDto } from './dto/room.dto';
-import { ApiBearerAuth, ApiConsumes, ApiQuery } from '@nestjs/swagger';
+import { GetAllRoomsDto, RoomCreateDto, RoomUpdateDto } from './dto/room.dto';
+import {
+  ApiBearerAuth,
+  ApiConsumes,
+  ApiOperation,
+  ApiQuery,
+  ApiResponse,
+} from '@nestjs/swagger';
 import { CurrentAdmin } from 'src/user/decorators/user.decorator';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { HeaderRoomCreateDto, HeaderRoomUpdateDto } from './dto/header.dto';
@@ -72,15 +78,14 @@ export class RoomController {
   async search(
     @Query('start') startDate: string,
     @Query('end') endDate: string,
-    @Query('member', ParseIntPipe) member?: number,
-    @Query('bedCount', ParseIntPipe) bedCount?: number,
+    @Query('adults', ParseIntPipe) adults?: number,
+    @Query('children', ParseIntPipe) children?: number,
   ) {
-    console.log(startDate, endDate, member, bedCount);
     return await this.roomService.search(
       new Date(startDate),
       new Date(endDate),
-      member,
-      bedCount,
+      adults,
+      children,
     );
   }
 
@@ -100,8 +105,17 @@ export class RoomController {
 
   @Get('all')
   @HttpCode(HttpStatus.OK)
-  async findAll(@Query('page') page: number, @Query('limit') limit: number) {
-    return await this.roomService.findAll(page, limit);
+  @ApiOperation({ summary: 'Получить бронирования по дням для категории' })
+  @ApiResponse({
+    status: 200,
+    description: 'Список бронирований с массивом дат',
+  })
+  async findAll(
+    @Query('page') page: number,
+    @Query('limit') limit: number,
+    @Query() dto?: GetAllRoomsDto,
+  ) {
+    return await this.roomService.findAll(page, limit, dto);
   }
 
   @Get(':id')

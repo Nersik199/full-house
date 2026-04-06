@@ -31,6 +31,19 @@ export class Room extends Model {
   subTitle: string;
 
   @Column({
+    type: DataType.ENUM(
+      'Standard',
+      'Comfort',
+      'Luxury',
+      'Family',
+      'Presidential',
+    ),
+    allowNull: false,
+    defaultValue: 'Standard',
+    field: 'category',
+  })
+  category: 'Standard' | 'Comfort' | 'Luxury' | 'Family' | 'Presidential';
+  @Column({
     type: DataType.INTEGER,
     allowNull: false,
   })
@@ -79,13 +92,6 @@ export class Room extends Model {
 
   @Column({
     type: DataType.BOOLEAN,
-    allowNull: false,
-    defaultValue: false,
-  })
-  smoking: boolean;
-
-  @Column({
-    type: DataType.BOOLEAN,
     defaultValue: false,
   })
   refrigerator: boolean;
@@ -126,6 +132,12 @@ export class Room extends Model {
   diningRoom: boolean;
 
   @Column({
+    type: DataType.BOOLEAN,
+    defaultValue: false,
+  })
+  balcony?: boolean;
+
+  @Column({
     type: DataType.DATE,
     defaultValue: DataType.NOW,
     field: 'created_at',
@@ -139,25 +151,3 @@ export class Room extends Model {
   })
   updatedAt: Date;
 }
-
-// const roomFieldsTranslation = {
-//   id: 'Идентификатор комнаты (ID)',
-//   title: 'Название комнаты',
-//   description: 'Описание комнаты',
-//   price: 'Цена',
-//   wifi: 'Наличие Wi-Fi (да / нет)',
-//   member: 'Количество человек (вместимость)',
-//   images: 'Изображения комнаты',
-//   roomNumber: 'Номер комнаты',
-//   bathroom: 'Количество ванных комнат',
-//   tv: 'Количество телевизоров',
-//   smoking: 'Разрешено ли курение (да / нет)',
-//   refrigerator: 'Наличие холодильника (да / нет)',
-//   airConditioner: 'Наличие кондиционера (да / нет)',
-//   bedCount: 'Количество кроватей',
-//   bedType: 'Тип кровати (односпальная / двуспальная)',
-//   livingRoom: 'Наличие гостиной (да / нет)',
-//   diningRoom: 'Наличие столовой (да / нет)',
-//   createdAt: 'Дата создания записи',
-//   updatedAt: 'Дата обновления записи',
-// };

@@ -3,9 +3,12 @@ import { Op, Transaction } from 'sequelize';
 import { InjectModel } from '@nestjs/sequelize';
 import { Booking } from './entities/booking.entity';
 import { Injectable, BadRequestException } from '@nestjs/common';
+import { calculatePagination } from '@/shared/utils/calculate.pagination';
+
 import {
   BookingCheckAvailabilityDto,
   CreateBookingDto,
+  GetBookingsByDaysDto,
 } from './dto/booking.dto';
 
 @Injectable()
@@ -151,40 +154,94 @@ export class BookingService {
       { transaction },
     );
   }
-  async getStartDateAndEndDate(id: number) {
+
+  async getBookingsByDays(dto: GetBookingsByDaysDto) {
+    const today = dayjs().startOf('day').toDate();
+
     const bookings = await this.bookingModel.findAll({
       where: {
-        roomId: id,
-        status: {
-          [Op.in]: ['confirmed', 'checked_in'],
+        category: dto.category,
+        status: 'confirmed',
+        checkOut: {
+          [Op.gte]: today,
         },
       },
-      attributes: ['checkIn', 'checkOut', 'roomId'],
+
+      attributes: [
+        'id',
+        'room_number',
+        'check_in',
+        'check_out',
+        'status',
+        'source',
+      ],
+      order: [['checkIn', 'ASC']],
     });
 
-    return bookings.map((b) => ({
-      roomId: b.roomId,
-      checkIn: b.checkIn,
-      checkOut: b.checkOut,
-    }));
+    return bookings.map((b) => {
+      const booking = b.get({ plain: true });
+      const dayList = [];
+
+      let current = dayjs(booking.check_in);
+      const end = dayjs(booking.check_out);
+      if (!current.isValid() || !end.isValid()) {
+        return null;
+      }
+
+      while (current.isBefore(end) || current.isSame(end, 'day')) {
+        dayList.push(current.format('YYYY-MM-DD'));
+        current = current.add(1, 'day');
+      }
+
+      return {
+        id: String(booking.id),
+        roomNumber: booking.roomNumber,
+        day: dayList,
+        status: booking.status,
+        source: booking.source,
+      };
+    });
   }
 
-  async searchBooking(startDate: Date, endDate: Date) {
-    const start = dayjs(startDate).startOf('day').toDate();
-    const end = dayjs(endDate).startOf('day').toDate();
+  async allBookingsAdmin(limit: number, page: number) {
+    const total = await this.bookingModel.count();
 
-    const busyRooms = await this.bookingModel.findAll({
+    const { maxPageCount, offset } = calculatePagination(
+      Number(page),
+      Number(limit),
+      total,
+    );
+    const bookings = await this.bookingModel.findAll({
+      order: [['createdAt', 'DESC']],
+      limit: Number(limit),
+      offset,
+    });
+
+    return {
+      data: bookings,
+      meta: {
+        total,
+        page: Number(page),
+        limit: Number(limit),
+        maxPageCount,
+      },
+    };
+  }
+
+  async findAllOccupied(start: Date, end: Date) {
+    return await this.bookingModel.findAll({
+      attributes: ['roomId'],
       where: {
         status: {
-          [Op.in]: ['confirmed', 'checked_in'],
+          [Op.in]: ['confirmed', 'checked_in', 'pending'],
         },
         [Op.or]: [{ expiresAt: null }, { expiresAt: { [Op.gt]: new Date() } }],
         checkIn: { [Op.lt]: end },
         checkOut: { [Op.gt]: start },
       },
-      attributes: ['roomId'],
+      raw: true,
     });
-    const busyRoomIds = busyRooms.map((b) => b.roomId).filter(Boolean);
-    return busyRoomIds;
   }
+
+  async searchBooking() {}
 }

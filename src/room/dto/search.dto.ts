@@ -28,13 +28,4 @@ export class SearchBookingDto {
   @IsInt()
   @Min(1)
   member?: number;
-
-  @ApiPropertyOptional({
-    description: 'Количество спальных мест (необязательно)',
-    example: 1,
-  })
-  @IsOptional()
-  @IsInt()
-  @Min(1)
-  bedCount?: number;
 }

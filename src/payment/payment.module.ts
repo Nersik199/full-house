@@ -9,6 +9,7 @@ import { Order } from '@/order/entities/order.entity';
 import { RoomModule } from '@/room/room.module';
 import { LodgeModule } from '@/lodge/lodge.module';
 import { BookingModule } from '@/booking/booking.module';
+import { TicketModule } from '@/ticket/ticket.module';
 
 @Module({
   controllers: [PaymentController],
@@ -23,6 +24,7 @@ import { BookingModule } from '@/booking/booking.module';
     RoomModule,
     LodgeModule,
     BookingModule,
+    TicketModule,
   ],
   providers: [PaymentService],
   exports: [PaymentService],

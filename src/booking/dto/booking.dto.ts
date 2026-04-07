@@ -13,6 +13,7 @@ import {
 export enum EntityField {
   ROOM = 'roomId',
   LODGE = 'lodgeId',
+  TICKET = 'ticketId',
 }
 
 export class BookingCheckAvailabilityDto {
@@ -43,16 +44,20 @@ export class CreateBookingDto {
   @Type(() => Number)
   roomId?: number;
 
+  @IsNumber({}, { message: 'ID домика должно быть числом' })
+  @Type(() => Number)
+  lodgeId?: number;
+
+  @IsNumber({}, { message: 'ID билета должно быть числом' })
+  @Type(() => Number)
+  ticketId?: number;
+
   @IsString()
   @IsIn(['Standard', 'Comfort', 'Luxury', 'Family', 'Presidential'], {
     message: 'Неверная категория номера',
   })
   @IsOptional()
   category?: 'Standard' | 'Comfort' | 'Luxury' | 'Family' | 'Presidential';
-
-  @IsNumber({}, { message: 'ID домика должно быть числом' })
-  @Type(() => Number)
-  lodgeId?: number;
 
   @IsNotEmpty({ message: 'Имя гостя обязательно' })
   @IsString({ message: 'Имя гостя должно быть строкой' })
@@ -66,10 +71,10 @@ export class CreateBookingDto {
   @IsString({ message: 'Email гостя должен быть строкой' })
   guestEmail: string;
 
-  @IsNotEmpty({ message: 'Номер комнаты обязателен' })
   @IsNumber({}, { message: 'Номер комнаты должен быть числом' })
+  @IsOptional()
   @Type(() => Number)
-  roomNumber: number;
+  roomNumber?: number;
 
   @IsNotEmpty({ message: 'Источник бронирования обязателен' })
   @IsString({ message: 'Источник бронирования должен быть строкой' })

@@ -22,6 +22,12 @@ export class BookingService {
     dto: BookingCheckAvailabilityDto,
     transaction: Transaction,
   ) {
+    if (dto.entityField === 'ticketId') {
+      if (dayjs(dto.checkIn).isBefore(dayjs().startOf('day'))) {
+        throw new BadRequestException('Cannot book in the past');
+      }
+      return;
+    }
     const now = dayjs().startOf('day');
 
     const start = dayjs(dto.checkIn).startOf('day');
@@ -77,6 +83,18 @@ export class BookingService {
         {
           entityField: 'lodgeId',
           entityId: dto.lodgeId,
+          checkIn: new Date(dto.checkIn),
+          checkOut: new Date(dto.checkOut),
+        },
+        transaction,
+      );
+    }
+
+    if (dto.ticketId) {
+      await this.checkAvailability(
+        {
+          entityField: 'ticketId',
+          entityId: dto.ticketId,
           checkIn: new Date(dto.checkIn),
           checkOut: new Date(dto.checkOut),
         },

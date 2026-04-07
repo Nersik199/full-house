@@ -2,6 +2,7 @@ import { Body, Controller, Post, Query } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { RoomCreatedOrderDto } from './dto/roomCreatedOrder.dto';
 import { LodgeCreatedOrderDto } from './dto/lodgeCreatedOrder.dto';
+import { TicketCreatedOrderDto } from './dto/ticketCreatedOrder.dto';
 
 @Controller('order')
 export class OrderController {
@@ -20,5 +21,8 @@ export class OrderController {
   }
 
   @Post('pay/ticket')
-  async ticketCreate(@Body() dto: string) {}
+  async ticketCreate(@Body() dto: TicketCreatedOrderDto) {
+    const order = await this.orderService.ticketCreatedOrder({ ...dto });
+    return order;
+  }
 }

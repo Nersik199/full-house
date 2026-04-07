@@ -22,6 +22,7 @@ import { InjectModel } from '@nestjs/sequelize';
 
 import { Order } from '@/order/entities/order.entity';
 import { BookingService } from '@/booking/booking.service';
+import { TicketService } from '@/ticket/ticket.service';
 
 @Injectable()
 export class PaymentService {
@@ -34,6 +35,7 @@ export class PaymentService {
     private readonly configService: ConfigService,
     private readonly mailService: MailService,
     private readonly bookingService: BookingService,
+    private readonly ticketService: TicketService,
     @InjectModel(Order) private readonly orderModel: typeof Order,
   ) {
     this.FRONTEND_URL = this.configService.getOrThrow<string>(
@@ -151,6 +153,7 @@ export class PaymentService {
     }
 
     if (payload.event === 'payment.succeeded') {
+      //TODO: handle ticket orders here, currently it only processes room bookings
       return await this.processPayment(payload.object);
     }
 
@@ -169,8 +172,8 @@ export class PaymentService {
     return { status: 'ok' };
   }
 
-  private async ticket() {
-    // todo
+  private async ticket(id: number) {
+    //TODO: implement this method to return ticket info for email template
   }
 
   private async processPayment(paymentObject: any) {

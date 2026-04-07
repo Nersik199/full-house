@@ -7,6 +7,7 @@ import { SequelizeModule } from '@nestjs/sequelize';
 import { Order } from './entities/order.entity';
 import { LodgeModule } from '@/lodge/lodge.module';
 import { BookingModule } from '@/booking/booking.module';
+import { TicketModule } from '@/ticket/ticket.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { BookingModule } from '@/booking/booking.module';
     BookingModule,
     RoomModule,
     LodgeModule,
+    TicketModule,
     PaymentModule,
   ],
   controllers: [OrderController],

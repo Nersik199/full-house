@@ -57,9 +57,9 @@ export class Order extends Model {
 
   @Column({
     type: DataType.INTEGER,
-    allowNull: false,
+    allowNull: true,
   })
-  member: number;
+  member?: number;
 
   @Column({
     type: DataType.DATE,

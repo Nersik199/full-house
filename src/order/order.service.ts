@@ -4,13 +4,15 @@ import timezone from 'dayjs/plugin/timezone';
 import { Order } from './entities/order.entity';
 import { PaymentService } from '@/payment/payment.service';
 import { RoomService } from '@/room/room.service';
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/sequelize';
 import { RoomCreatedOrderDto } from './dto/roomCreatedOrder.dto';
 import { LodgeService } from '@/lodge/lodge.service';
 import { LodgeCreatedOrderDto } from './dto/lodgeCreatedOrder.dto';
 import { BookingService } from '@/booking/booking.service';
 import { Sequelize } from 'sequelize';
+import { TicketService } from '@/ticket/ticket.service';
+import { TicketCreatedOrderDto } from './dto/ticketCreatedOrder.dto';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -25,6 +27,7 @@ export class OrderService {
     private bookingService: BookingService,
     private readonly roomService: RoomService,
     private readonly lodgeService: LodgeService,
+    private readonly ticketService: TicketService,
   ) {}
 
   calculateTotalAmount(
@@ -137,6 +140,58 @@ export class OrderService {
       await transaction.commit();
 
       return { orderId: order.id, paymentUrl: payment.confirmationUrl };
+    } catch (err) {
+      await transaction.rollback();
+      throw err;
+    }
+  }
+
+  async ticketCreatedOrder(dto: TicketCreatedOrderDto) {
+    const transaction = await this.sequelize.transaction();
+    try {
+      const ticket = await this.ticketService.findById(dto.ticketId);
+      const now = dayjs();
+      if (!ticket) {
+        throw new NotFoundException('Ticket not found');
+      }
+
+      const total = ticket.finalPrice * dto.quantity;
+      const order = await this.bookingService.createBooking(
+        {
+          ticketId: ticket.id,
+          guestName: dto.customerName,
+          guestPhone: dto.customerPhone.trim(),
+          guestEmail: dto.customerEmail.trim(),
+          roomNumber: null,
+          checkIn: now.startOf('day').toDate(),
+          checkOut: now.endOf('day').toDate(),
+          source: 'online',
+        },
+        transaction,
+      );
+      const createdOrder = await this.orderModel.create(
+        {
+          ...dto,
+          bookingId: order.id,
+          paymentMethod: dto.method,
+          status: 'PENDING',
+          totalAmount: total,
+        },
+        { transaction },
+      );
+
+      const payment = await this.paymentService.createPayment(
+        createdOrder,
+        dto.method,
+      );
+
+      await createdOrder.update(
+        { paymentId: payment.paymentId },
+        { transaction },
+      );
+      await transaction.commit();
+
+      return { orderId: createdOrder.id, paymentUrl: payment.confirmationUrl };
     } catch (err) {
       await transaction.rollback();
       throw err;

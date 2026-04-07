@@ -31,7 +31,28 @@ export class Ticket extends Model {
 
   @Column({
     type: DataType.INTEGER,
+    allowNull: false,
+    field: 'final_price',
+  })
+  finalPrice: number;
+
+  @Column({
+    type: DataType.INTEGER,
     allowNull: true,
   })
   discount?: number;
+
+  @Column({
+    type: DataType.DATE,
+    defaultValue: DataType.NOW,
+    field: 'created_at',
+  })
+  createdAt: Date;
+
+  @Column({
+    type: DataType.DATE,
+    defaultValue: DataType.NOW,
+    field: 'updated_at',
+  })
+  updatedAt: Date;
 }

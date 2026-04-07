@@ -8,7 +8,7 @@ import {
 } from 'sequelize-typescript';
 import { Room } from '@/room/entities/room.entity';
 import { Lodge } from '@/lodge/entities/lodge.entity';
-
+import { Ticket } from '@/ticket/entities/ticket.entity';
 @Table({
   tableName: 'bookings',
   timestamps: true,
@@ -43,6 +43,17 @@ export class Booking extends Model {
   @BelongsTo(() => Lodge)
   lodge: Lodge;
 
+  @ForeignKey(() => Ticket)
+  @Column({
+    type: DataType.BIGINT,
+    allowNull: true,
+    field: 'ticket_id',
+  })
+  ticketId: number;
+
+  @BelongsTo(() => Ticket)
+  ticket: Ticket;
+
   @Column({
     type: DataType.STRING,
     allowNull: false,
@@ -66,7 +77,7 @@ export class Booking extends Model {
 
   @Column({
     type: DataType.INTEGER,
-    allowNull: false,
+    allowNull: true,
     field: 'room_number',
   })
   roomNumber: number;

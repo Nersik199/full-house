@@ -16,7 +16,12 @@ export class InitPaymentRequest {
   @IsNumber({}, { message: 'Номер комнаты должен быть числом' })
   @IsOptional({ message: 'Номер комнаты обязателен' })
   @Type(() => Number)
-  bookingId: number;
+  bookingIds: number[];
+
+  @IsNumber({}, { message: 'Количество билетов должно быть числом' })
+  @Type(() => Number)
+  @IsOptional()
+  ticketQuantity?: number;
 
   @IsNumber({}, { message: 'Цена должна быть числом' })
   @IsNotEmpty({ message: 'Цена обязательна' })

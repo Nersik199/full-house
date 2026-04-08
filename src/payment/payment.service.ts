@@ -124,7 +124,8 @@ export class PaymentService {
       metadata: {
         email: order.customerEmail,
         orderId: order.id.toString(),
-        bookingId: order.bookingId.toString(),
+        bookingIds: order.bookingIds ? order.bookingIds.join(',') : '',
+        ticketQuantity: order.ticketQuantity?.toString() ?? '0',
       },
       receipt: {
         customer: { email: order.customerEmail },
@@ -153,7 +154,6 @@ export class PaymentService {
     }
 
     if (payload.event === 'payment.succeeded') {
-      //TODO: handle ticket orders here, currently it only processes room bookings
       return await this.processPayment(payload.object);
     }
 
@@ -172,12 +172,13 @@ export class PaymentService {
     return { status: 'ok' };
   }
 
-  private async ticket(id: number) {
-    //TODO: implement this method to return ticket info for email template
-  }
-
   private async processPayment(paymentObject: any) {
-    const { orderId, roomNumber, bookingId } = paymentObject.metadata;
+    const {
+      orderId,
+      roomNumber,
+      bookingIds: bookingIdsStr,
+      ticketQuantity,
+    } = paymentObject.metadata;
 
     if (!orderId) {
       throw new BadRequestException('orderId not found in metadata');
@@ -185,45 +186,69 @@ export class PaymentService {
 
     this.logger.log(`Payment success for order ${orderId}`);
 
+    const bookingIds = bookingIdsStr
+      ? bookingIdsStr.split(',').map(Number)
+      : [];
+
     await this.orderModel.update(
       {
-        roomNumber,
         metaData: JSON.stringify(paymentObject.metadata),
         paymentMethodData: JSON.stringify(paymentObject.payment_method),
-        status: paymentObject.status === 'succeeded' ? 'SUCCEEDED' : 'PENDING',
+        status: 'SUCCEEDED',
       },
       { where: { id: orderId } },
     );
 
-    if (bookingId) {
-      await this.bookingService.confirmBooking(bookingId);
-    }
+    if (bookingIds.length > 0) {
+      for (const id of bookingIds) {
+        const booking = await this.bookingService.findOne(id);
 
+        if (booking) {
+          await this.bookingService.confirmBooking(id);
+
+          if (booking.ticketId) {
+            await this.ticketService.updateQuantity(
+              booking.ticketId,
+              booking.ticketQuantity,
+            );
+          }
+        }
+      }
+    }
     await this.sendMail(paymentObject);
     return { status: 'processed' };
   }
 
   private async sendMail(paymentObject: any) {
-    const { bookingId } = paymentObject.metadata;
-    const booking = await this.bookingService.findOne(bookingId);
+    const { bookingIds: bookingIdsRaw } = paymentObject.metadata;
 
-    if (!booking.guestEmail) {
-      throw new BadRequestException('email not found in metadata');
-    }
+    if (!bookingIdsRaw) return;
+
+    const bookingIds =
+      typeof bookingIdsRaw === 'string'
+        ? bookingIdsRaw.split(',').map(Number)
+        : [Number(bookingIdsRaw)];
+
     try {
-      if (booking.guestEmail && booking) {
-        await this.mailService.sendPaymentSuccessEmail(booking.guestEmail, {
-          transactionId: paymentObject.id,
-          amount: paymentObject.amount,
-          roomNumber: booking.roomNumber,
-          startDate: booking.checkIn,
-          endDate: booking.checkOut,
-        });
-        this.logger.log(`Email sent to ${booking.guestEmail}`);
+      for (const bookingId of bookingIds) {
+        const booking = await this.bookingService.findOne(bookingId);
+        if (!booking.guestEmail) {
+          throw new BadRequestException('email not found in metadata');
+        }
+        if (booking.guestEmail && booking) {
+          await this.mailService.sendPaymentSuccessEmail(booking.guestEmail, {
+            transactionId: paymentObject.id,
+            amount: paymentObject.amount,
+            roomNumber: booking.roomNumber,
+            startDate: booking.checkIn,
+            endDate: booking.checkOut,
+          });
+          this.logger.log(`Email sent to ${booking.guestEmail}`);
+        }
       }
     } catch (error) {
       this.logger.error(
-        `Failed to send email for order ${booking.guestEmail}: ${error}`,
+        `Failed to send email for payment ${paymentObject.id}: ${error}`,
       );
     }
   }
@@ -239,3 +264,5 @@ export class PaymentService {
     throw new UnauthorizedException('Invalid webhook IP');
   }
 }
+
+//TODO: metadata,

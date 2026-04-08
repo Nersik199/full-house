@@ -28,6 +28,11 @@ export class BookingCheckAvailabilityDto {
   @Type(() => Number)
   entityId: number;
 
+  @IsNumber({}, { message: 'Количество билетов должно быть числом' })
+  @Type(() => Number)
+  @IsOptional()
+  ticketQuantity?: number;
+
   @IsNotEmpty({ message: 'Дата заезда обязательна' })
   @IsDate({ message: 'Дата заезда должна быть корректной датой' })
   @Type(() => Date)
@@ -51,6 +56,15 @@ export class CreateBookingDto {
   @IsNumber({}, { message: 'ID билета должно быть числом' })
   @Type(() => Number)
   ticketId?: number;
+
+  @IsNumber({}, { message: 'ID заказа должно быть числом' })
+  @Type(() => Number)
+  orderId?: number;
+
+  @IsNumber({}, { message: 'Количество билетов должно быть числом' })
+  @Type(() => Number)
+  @IsOptional()
+  ticketQuantity?: number;
 
   @IsString()
   @IsIn(['Standard', 'Comfort', 'Luxury', 'Family', 'Presidential'], {

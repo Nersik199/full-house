@@ -93,10 +93,10 @@ export class Order extends Model {
   })
   paymentMethod: string;
 
-  @Column({
-    type: DataType.BIGINT,
-    allowNull: true,
-    field: 'booking_id',
-  })
-  bookingId: number;
+  // @Column({
+  //   type: DataType.BIGINT,
+  //   allowNull: true,
+  //   field: 'booking_id',
+  // })
+  // bookingId: number;
 }

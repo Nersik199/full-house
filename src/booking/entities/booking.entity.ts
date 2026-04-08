@@ -55,6 +55,20 @@ export class Booking extends Model {
   ticket: Ticket;
 
   @Column({
+    type: DataType.INTEGER,
+    allowNull: true,
+    field: 'ticket_quantity',
+  })
+  ticketQuantity?: number;
+
+  @Column({
+    type: DataType.BIGINT,
+    allowNull: true,
+    field: 'order_id',
+  })
+  orderId?: number;
+
+  @Column({
     type: DataType.STRING,
     allowNull: false,
     field: 'guest_name',

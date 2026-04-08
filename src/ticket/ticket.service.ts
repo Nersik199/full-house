@@ -114,17 +114,24 @@ export class TicketService {
     });
   }
 
-  async updateQuantity(id: number, quantity: number) {
-    //TODO: add transaction
+  async updateQuantity(id: number, quantitySold: number) {
+    const ticket = await this.findById(id);
+
+    if (!ticket) throw new NotFoundException('Ticket not found');
+
+    if (ticket.quantity < quantitySold) {
+      throw new BadRequestException('Not enough tickets available');
+    }
+
+    const newQuantity = ticket.quantity - quantitySold;
+
     const [updatedCount, [updatedTicket]] = await this.ticketModel.update(
-      { quantity },
+      { quantity: newQuantity },
       {
         where: { id },
         returning: true,
       },
     );
-
-    if (updatedCount === 0) throw new NotFoundException('Ticket not found');
 
     return updatedTicket;
   }

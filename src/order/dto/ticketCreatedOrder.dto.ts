@@ -7,52 +7,67 @@ import {
   IsEmail,
   IsEnum,
   Min,
+  IsArray,
+  ValidateNested,
+  IsDate,
+  Matches,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { PaymentMethod } from '@/shared/enums/payment-method.enum';
 
-export class TicketCreatedOrderDto {
-  @ApiProperty({ example: 1, description: 'ID билета' })
-  @IsNumber({}, { message: 'ID билета должен быть числом' })
+class CartItemDto {
+  @ApiProperty({ example: 101, description: 'Идентификатор билета' })
+  @IsNumber({}, { message: 'ticketId должен быть числом' })
   @IsNotEmpty({ message: 'ID билета обязателен' })
-  @Type(() => Number)
   ticketId: number;
-
-  @ApiProperty({ example: 1500, description: 'Цена за один билет' })
-  @IsNumber({}, { message: 'Цена должна быть числом' })
-  @IsNotEmpty({ message: 'Цена обязательна' })
-  @Type(() => Number)
-  price: number;
 
   @ApiProperty({ example: 2, description: 'Количество билетов' })
   @IsNumber({}, { message: 'Количество должно быть числом' })
+  @Min(1, { message: 'Минимальное количество — 1' })
   @IsNotEmpty({ message: 'Количество обязательно' })
-  @Min(1, { message: 'Минимум 1 билет' })
-  @Type(() => Number)
   quantity: number;
+}
+
+export class TicketCreatedOrderDto {
+  @ApiProperty({
+    type: [CartItemDto],
+    description: 'Список выбранных билетов в корзине',
+  })
+  @IsArray({ message: 'Поле items должно быть массивом' })
+  @ValidateNested({ each: true })
+  @Type(() => CartItemDto)
+  items: CartItemDto[];
 
   @ApiProperty({
-    description: 'Способ оплаты',
+    description: 'Payment method',
     enum: PaymentMethod,
     example: PaymentMethod.BANK_CARD,
   })
   @IsEnum(PaymentMethod)
   public method: PaymentMethod;
 
-  @ApiProperty({ example: 'Александр Пушкин' })
+  @ApiProperty({ example: 'Иван Иванов', description: 'Полное имя клиента' })
   @IsString({ message: 'Имя должно быть строкой' })
-  @IsNotEmpty({ message: 'Имя гостя обязательно' })
-  @Length(2, 100, { message: 'Имя должно быть от 2 до 100 символов' })
+  @Length(2, 100, { message: 'Имя должно содержать от 2 до 100 символов' })
+  @IsNotEmpty({ message: 'Имя клиента обязательно' })
   customerName: string;
 
-  @ApiProperty({ example: 'pushkin@example.com' })
-  @IsEmail({}, { message: 'Email должен быть валидным' })
+  @ApiProperty({
+    example: 'ivan@example.com',
+    description: 'Электронная почта для связи',
+  })
+  @IsEmail({}, { message: 'Некорректный формат email' })
   @IsNotEmpty({ message: 'Email обязателен' })
   customerEmail: string;
 
-  @ApiProperty({ example: '+79991234567' })
+  @ApiProperty({
+    example: '+79001234567',
+    description: 'Контактный номер телефона',
+  })
   @IsString({ message: 'Телефон должен быть строкой' })
-  @IsNotEmpty({ message: 'Телефон обязателен' })
-  @Length(5, 20, { message: 'Телефон должен быть от 5 до 20 символов' })
+  @IsNotEmpty({ message: 'Номер телефона обязателен' })
+  @Matches(/^\+?[1-9]\d{1,14}$/, {
+    message: 'Введите корректный номер телефона в международном формате',
+  })
   customerPhone: string;
 }

@@ -72,7 +72,6 @@ export class OrderService {
       const order = await this.orderModel.create(
         {
           ...dto,
-          bookingId: booking.id,
           paymentMethod: dto.method,
           status: 'PENDING',
           totalAmount: total,
@@ -81,7 +80,7 @@ export class OrderService {
       );
 
       const payment = await this.paymentService.createPayment(
-        order,
+        { ...order.get({ plain: true }), bookingIds: [booking.id] },
         dto.method,
       );
 
@@ -124,7 +123,6 @@ export class OrderService {
       const order = await this.orderModel.create(
         {
           ...dto,
-          bookingId: booking.id,
           paymentMethod: dto.method,
           status: 'PENDING',
           totalAmount: total,
@@ -132,7 +130,7 @@ export class OrderService {
         { transaction },
       );
       const payment = await this.paymentService.createPayment(
-        order,
+        { ...order.get({ plain: true }), bookingIds: [booking.id] },
         dto.method,
       );
 
@@ -149,30 +147,20 @@ export class OrderService {
   async ticketCreatedOrder(dto: TicketCreatedOrderDto) {
     const transaction = await this.sequelize.transaction();
     try {
-      const ticket = await this.ticketService.findById(dto.ticketId);
-      const now = dayjs();
-      if (!ticket) {
-        throw new NotFoundException('Ticket not found');
+      let total = 0;
+      let bookingIds: number[] = [];
+      for (const item of dto.items) {
+        const ticket = await this.ticketService.findById(item.ticketId);
+        if (!ticket)
+          throw new NotFoundException(`Билет ${item.ticketId} не найден`);
+        total += ticket.finalPrice * item.quantity;
       }
 
-      const total = ticket.finalPrice * dto.quantity;
-      const order = await this.bookingService.createBooking(
+      const order = await this.orderModel.create(
         {
-          ticketId: ticket.id,
-          guestName: dto.customerName,
-          guestPhone: dto.customerPhone.trim(),
-          guestEmail: dto.customerEmail.trim(),
-          roomNumber: null,
-          checkIn: now.startOf('day').toDate(),
-          checkOut: now.endOf('day').toDate(),
-          source: 'online',
-        },
-        transaction,
-      );
-      const createdOrder = await this.orderModel.create(
-        {
-          ...dto,
-          bookingId: order.id,
+          customerName: dto.customerName.trim(),
+          customerEmail: dto.customerEmail.trim(),
+          customerPhone: dto.customerPhone.trim(),
           paymentMethod: dto.method,
           status: 'PENDING',
           totalAmount: total,
@@ -180,18 +168,36 @@ export class OrderService {
         { transaction },
       );
 
+      for (const item of dto.items) {
+        const ticket = await this.ticketService.findById(item.ticketId);
+
+        const booking = await this.bookingService.createBooking(
+          {
+            ticketId: ticket.id,
+            orderId: order.id,
+            ticketQuantity: item.quantity,
+            guestName: dto.customerName,
+            guestPhone: dto.customerPhone.trim(),
+            guestEmail: dto.customerEmail.trim(),
+            checkIn: dayjs(ticket.date).startOf('day').utc().toDate(),
+            checkOut: dayjs(ticket.date).endOf('day').utc().toDate(),
+            source: 'online',
+          },
+          transaction,
+        );
+
+        bookingIds.push(booking.id);
+      }
       const payment = await this.paymentService.createPayment(
-        createdOrder,
+        { ...order.get({ plain: true }), bookingIds },
         dto.method,
       );
 
-      await createdOrder.update(
-        { paymentId: payment.paymentId },
-        { transaction },
-      );
+      await order.update({ paymentId: payment.paymentId }, { transaction });
+
       await transaction.commit();
 
-      return { orderId: createdOrder.id, paymentUrl: payment.confirmationUrl };
+      return { orderId: order.id, paymentUrl: payment.confirmationUrl };
     } catch (err) {
       await transaction.rollback();
       throw err;

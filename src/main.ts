@@ -16,6 +16,12 @@ async function bootstrap() {
   const logger = new Logger(AppModule.name);
   const config = app.get(ConfigService);
 
+  app.enableCors({
+    origin: true,
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true,
+  });
+
   const sequelize = app.get(Sequelize);
   await sequelize.sync({ alter: true });
 

@@ -1,268 +1,302 @@
 import {
-  Injectable,
-  BadRequestException,
-  Logger,
-  UnauthorizedException,
+	BadRequestException,
+	Injectable,
+	Logger,
+	UnauthorizedException,
 } from '@nestjs/common';
-import {
-  ConfirmationEnum,
-  type CreatePaymentRequest,
-  CurrencyEnum,
-  PaymentMethodsEnum,
-  VatCodesEnum,
-  YookassaService,
-} from 'nestjs-yookassa';
-import CIDR from 'ip-cidr';
-
 import { ConfigService } from '@nestjs/config';
-import { MailService } from '@/libs/mail/mail.service';
-import { PaymentMethod } from '@/shared/enums/payment-method.enum';
-import { InitPaymentRequest } from './dto/payment.dto';
 import { InjectModel } from '@nestjs/sequelize';
+import CIDR from 'ip-cidr';
+import {
+	ConfirmationEnum,
+	type CreatePaymentRequest,
+	CurrencyEnum,
+	PaymentMethodsEnum,
+	VatCodesEnum,
+	YookassaService,
+} from 'nestjs-yookassa';
 
-import { Order } from '@/order/entities/order.entity';
 import { BookingService } from '@/booking/booking.service';
+import { MailService } from '@/libs/mail/mail.service';
+import { Order } from '@/order/entities/order.entity';
+import { PaymentMethod } from '@/shared/enums/payment-method.enum';
 import { TicketService } from '@/ticket/ticket.service';
+
+import { InitPaymentRequest } from './dto/payment.dto';
 
 @Injectable()
 export class PaymentService {
-  private readonly logger = new Logger(PaymentService.name);
-  private readonly FRONTEND_URL: string;
-  private readonly ALLOWED_IPS: string[];
+	private readonly logger = new Logger(PaymentService.name);
+	private readonly FRONTEND_URL: string;
+	private readonly ALLOWED_IPS: string[];
 
-  constructor(
-    private readonly yookassaService: YookassaService,
-    private readonly configService: ConfigService,
-    private readonly mailService: MailService,
-    private readonly bookingService: BookingService,
-    private readonly ticketService: TicketService,
-    @InjectModel(Order) private readonly orderModel: typeof Order,
-  ) {
-    this.FRONTEND_URL = this.configService.getOrThrow<string>(
-      'FRONTEND_REDIRECT_URL',
-    )!;
+	constructor(
+		private readonly yookassaService: YookassaService,
+		private readonly configService: ConfigService,
+		private readonly mailService: MailService,
+		private readonly bookingService: BookingService,
+		private readonly ticketService: TicketService,
+		@InjectModel(Order) private readonly orderModel: typeof Order,
+	) {
+		this.FRONTEND_URL = this.configService.getOrThrow<string>(
+			'FRONTEND_REDIRECT_URL',
+		)!;
 
-    this.ALLOWED_IPS = [
-      '185.71.76.0/27',
-      '185.71.77.0/27',
-      '77.75.153.0/25',
-      '77.75.154.128/25',
-      '77.75.156.11',
-      '77.75.156.35',
-      '2a02:5180::/32',
-    ];
-  }
+		this.ALLOWED_IPS = [
+			'185.71.76.0/27',
+			'185.71.77.0/27',
+			'77.75.153.0/25',
+			'77.75.154.128/25',
+			'77.75.156.11',
+			'77.75.156.35',
+			'2a02:5180::/32',
+		];
+	}
 
-  async createPayment(order: InitPaymentRequest, method: PaymentMethod) {
-    if (!order.customerEmail) {
-      throw new BadRequestException('Email is required');
-    }
+	async createPayment(order: InitPaymentRequest, method: PaymentMethod) {
+		if (!order.customerEmail) {
+			throw new BadRequestException('Email is required');
+		}
 
-    let providerResponse;
+		let providerResponse;
 
-    switch (method) {
-      case PaymentMethod.BANK_CARD:
-        providerResponse = await this.yookassaService.payments.create(
-          this.prepareYookassaData(order, PaymentMethodsEnum.BANK_CARD),
-        );
-        break;
-      case PaymentMethod.SBP:
-        providerResponse = await this.yookassaService.payments.create(
-          this.prepareYookassaData(order, PaymentMethodsEnum.SBP),
-        );
-        break;
-      case PaymentMethod.YOOMONEY:
-        providerResponse = await this.yookassaService.payments.create(
-          this.prepareYookassaData(order, PaymentMethodsEnum.YOOMONEY),
-        );
-        break;
-      case PaymentMethod.T_BANK:
-        providerResponse = await this.yookassaService.payments.create(
-          this.prepareYookassaData(order, PaymentMethodsEnum.T_BANK),
-        );
-        break;
-      case PaymentMethod.SBERBANK:
-        providerResponse = await this.yookassaService.payments.create(
-          this.prepareYookassaData(order, PaymentMethodsEnum.SBERBANK),
-        );
-        break;
-      default:
-        throw new BadRequestException('Unsupported payment method');
-    }
+		switch (method) {
+			case PaymentMethod.BANK_CARD:
+				providerResponse = await this.yookassaService.payments.create(
+					this.prepareYookassaData(order, PaymentMethodsEnum.BANK_CARD),
+				);
+				break;
+			case PaymentMethod.SBP:
+				providerResponse = await this.yookassaService.payments.create(
+					this.prepareYookassaData(order, PaymentMethodsEnum.SBP),
+				);
+				break;
+			case PaymentMethod.YOOMONEY:
+				providerResponse = await this.yookassaService.payments.create(
+					this.prepareYookassaData(order, PaymentMethodsEnum.YOOMONEY),
+				);
+				break;
+			case PaymentMethod.T_BANK:
+				providerResponse = await this.yookassaService.payments.create(
+					this.prepareYookassaData(order, PaymentMethodsEnum.T_BANK),
+				);
+				break;
+			case PaymentMethod.SBERBANK:
+				providerResponse = await this.yookassaService.payments.create(
+					this.prepareYookassaData(order, PaymentMethodsEnum.SBERBANK),
+				);
+				break;
+			default:
+				throw new BadRequestException('Unsupported payment method');
+		}
+		return {
+			paymentId: providerResponse.id || providerResponse.uuid,
+			confirmationUrl:
+				providerResponse.confirmation?.confirmation_url || providerResponse.url,
+			rawResponse: providerResponse,
+		};
+	}
 
-    return {
-      paymentId: providerResponse.id || providerResponse.uuid,
-      confirmationUrl:
-        providerResponse.confirmation?.confirmation_url || providerResponse.url,
-      rawResponse: providerResponse,
-    };
-  }
+	private prepareYookassaData(
+		order: InitPaymentRequest,
+		yooMethod: PaymentMethodsEnum,
+	): CreatePaymentRequest {
+		return {
+			amount: {
+				value: order.totalAmount,
+				currency: CurrencyEnum.RUB,
+			},
+			description: `Оплата заказа №${order.id}`,
+			payment_method_data: {
+				// @ts-ignore
+				type: yooMethod,
+			},
+			confirmation: {
+				type: ConfirmationEnum.REDIRECT,
+				return_url: `${this.FRONTEND_URL}/payment/success`,
+			},
+			capture: true,
+			save_payment_method: false,
+			// ...(yooMethod === 'sbp' && {
+			//   capture: true,
+			// }),
+			metadata: {
+				email: order.customerEmail,
+				orderId: order.id.toString(),
+				bookingIds: order.bookingIds ? order.bookingIds.join(',') : '',
+				ticketQuantity: order.ticketQuantity?.toString() ?? '0',
+			},
+			receipt: {
+				customer: { email: order.customerEmail },
+				items: [
+					{
+						description: 'Бронирование проживания',
+						quantity: 1,
+						amount: {
+							value: order.totalAmount,
+							currency: CurrencyEnum.RUB,
+						},
+						vat_code: VatCodesEnum.NDS_NONE,
+					},
+				],
+			},
+		};
+	}
 
-  private prepareYookassaData(
-    order: InitPaymentRequest,
-    yooMethod: PaymentMethodsEnum,
-  ): CreatePaymentRequest {
-    return {
-      amount: {
-        value: order.totalAmount,
-        currency: CurrencyEnum.RUB,
-      },
-      description: `Оплата заказа №${order.id}`,
-      payment_method_data: {
-        // @ts-ignore
-        type: yooMethod,
-      },
-      confirmation: {
-        type: ConfirmationEnum.REDIRECT,
-        return_url: `${this.FRONTEND_URL}/payment/success`,
-      },
-      capture: true,
-      save_payment_method: false,
-      // ...(yooMethod === 'sbp' && {
-      //   capture: true,
-      // }),
-      metadata: {
-        email: order.customerEmail,
-        orderId: order.id.toString(),
-        bookingIds: order.bookingIds ? order.bookingIds.join(',') : '',
-        ticketQuantity: order.ticketQuantity?.toString() ?? '0',
-      },
-      receipt: {
-        customer: { email: order.customerEmail },
-        items: [
-          {
-            description: 'Бронирование проживания',
-            quantity: 1,
-            amount: {
-              value: order.totalAmount,
-              currency: CurrencyEnum.RUB,
-            },
-            vat_code: VatCodesEnum.NDS_NONE,
-          },
-        ],
-      },
-    };
-  }
+	async handleWebhook(payload: any, ip: string) {
+		this.verifyIp(ip);
 
-  async handleWebhook(payload: any, ip: string) {
-    this.verifyIp(ip);
+		this.logger.log(`Webhook event: ${payload.event}`);
 
-    this.logger.log(`Webhook event: ${payload.event}`);
+		if (payload.event === 'payment.waiting_for_capture') {
+			return await this.yookassaService.payments.capture(payload.object.id);
+		}
 
-    if (payload.event === 'payment.waiting_for_capture') {
-      return await this.yookassaService.payments.capture(payload.object.id);
-    }
+		if (payload.event === 'payment.succeeded') {
+			return await this.processPayment(payload.object);
+		}
 
-    if (payload.event === 'payment.succeeded') {
-      return await this.processPayment(payload.object);
-    }
+		if (payload.event === 'payment.canceled') {
+			const { orderId, bookingIds: bookingIdsStr } = payload.object.metadata;
 
-    if (payload.event === 'payment.canceled') {
-      await this.bookingService.cancelBooking(
-        payload.object.metadata.bookingId,
-      );
+			if (orderId) {
+				await this.orderModel.update(
+					{ status: 'CANCELLED' },
+					{ where: { id: orderId } },
+				);
+			}
 
-      await this.orderModel.update(
-        { status: 'CANCELLED' },
-        { where: { id: payload.object.metadata } },
-      );
-      return { status: 'canceled' };
-    }
+			const bookingIds = bookingIdsStr
+				? bookingIdsStr.split(',').map(Number)
+				: [];
+			for (const id of bookingIds) {
+				await this.bookingService.cancelBooking(id);
+			}
 
-    return { status: 'ok' };
-  }
+			return { status: 'canceled' };
+		}
 
-  private async processPayment(paymentObject: any) {
-    const {
-      orderId,
-      roomNumber,
-      bookingIds: bookingIdsStr,
-      ticketQuantity,
-    } = paymentObject.metadata;
+		return { status: 'ok' };
+	}
 
-    if (!orderId) {
-      throw new BadRequestException('orderId not found in metadata');
-    }
+	private async processPayment(paymentObject: any) {
+		const { orderId, bookingIds: bookingIdsStr } = paymentObject.metadata;
 
-    this.logger.log(`Payment success for order ${orderId}`);
+		if (!orderId) {
+			throw new BadRequestException('orderId not found in metadata');
+		}
 
-    const bookingIds = bookingIdsStr
-      ? bookingIdsStr.split(',').map(Number)
-      : [];
+		this.logger.log(`Payment success for order ${orderId}`);
 
-    await this.orderModel.update(
-      {
-        metaData: JSON.stringify(paymentObject.metadata),
-        paymentMethodData: JSON.stringify(paymentObject.payment_method),
-        status: 'SUCCEEDED',
-      },
-      { where: { id: orderId } },
-    );
+		const bookingIds = bookingIdsStr
+			? bookingIdsStr.split(',').map(Number)
+			: [];
 
-    if (bookingIds.length > 0) {
-      for (const id of bookingIds) {
-        const booking = await this.bookingService.findOne(id);
+		await this.orderModel.update(
+			{
+				metaData: JSON.stringify(paymentObject.metadata),
+				paymentMethodData: JSON.stringify(paymentObject.payment_method),
+				status: 'SUCCEEDED',
+			},
+			{ where: { id: orderId } },
+		);
 
-        if (booking) {
-          await this.bookingService.confirmBooking(id);
+		if (bookingIds.length > 0) {
+			for (const id of bookingIds) {
+				const booking = await this.bookingService.findOne(id);
 
-          if (booking.ticketId) {
-            await this.ticketService.updateQuantity(
-              booking.ticketId,
-              booking.ticketQuantity,
-            );
-          }
-        }
-      }
-    }
-    await this.sendMail(paymentObject);
-    return { status: 'processed' };
-  }
+				if (booking) {
+					await this.bookingService.confirmBooking(id);
 
-  private async sendMail(paymentObject: any) {
-    const { bookingIds: bookingIdsRaw } = paymentObject.metadata;
+					if (booking.ticketId) {
+						await this.ticketService.updateQuantity(
+							booking.ticketId,
+							booking.ticketQuantity,
+						);
+					}
+				}
+			}
+		}
+		await this.sendMail(paymentObject);
+		return { status: 'processed' };
+	}
 
-    if (!bookingIdsRaw) return;
+	private async sendMail(paymentObject: any) {
+		const { bookingIds: bookingIdsRaw } = paymentObject.metadata;
 
-    const bookingIds =
-      typeof bookingIdsRaw === 'string'
-        ? bookingIdsRaw.split(',').map(Number)
-        : [Number(bookingIdsRaw)];
+		if (!bookingIdsRaw) return;
 
-    try {
-      for (const bookingId of bookingIds) {
-        const booking = await this.bookingService.findOne(bookingId);
-        if (!booking.guestEmail) {
-          throw new BadRequestException('email not found in metadata');
-        }
-        if (booking.guestEmail && booking) {
-          await this.mailService.sendPaymentSuccessEmail(booking.guestEmail, {
-            transactionId: paymentObject.id,
-            amount: paymentObject.amount,
-            roomNumber: booking.roomNumber,
-            startDate: booking.checkIn,
-            endDate: booking.checkOut,
-          });
-          this.logger.log(`Email sent to ${booking.guestEmail}`);
-        }
-      }
-    } catch (error) {
-      this.logger.error(
-        `Failed to send email for payment ${paymentObject.id}: ${error}`,
-      );
-    }
-  }
+		const bookingIds =
+			typeof bookingIdsRaw === 'string'
+				? bookingIdsRaw.split(',').map(Number)
+				: [Number(bookingIdsRaw)];
 
-  private verifyIp(ip: string) {
-    for (const range of this.ALLOWED_IPS) {
-      if (range.includes('/')) {
-        const cidr = new CIDR(range);
-        if (cidr.contains(ip)) return true;
-      } else if (range === ip) return true;
-    }
+		const ticketDates: string[] = [];
+		let totalTicketQuantity = 0;
+		let targetEmail = '';
+		let roomNumber: number | null = null;
+		let checkIn: Date | null = null;
+		let checkOut: Date | null = null;
 
-    throw new UnauthorizedException('Invalid webhook IP');
-  }
+		try {
+			for (const bookingId of bookingIds) {
+				const booking = await this.bookingService.findOne(bookingId);
+
+				if (!booking) continue;
+
+				if (!targetEmail && booking.guestEmail) {
+					targetEmail = booking.guestEmail;
+				}
+
+				if (!booking.ticketQuantity || booking.ticketQuantity === 0) {
+					roomNumber = booking.roomNumber;
+					checkIn = new Date(booking.checkIn);
+					checkOut = new Date(booking.checkOut);
+				}
+
+				if (booking.ticketQuantity && booking.ticketQuantity > 0) {
+					const dateObj = new Date(booking.checkIn);
+					ticketDates.push(dateObj.toISOString());
+					totalTicketQuantity += booking.ticketQuantity;
+
+					if (!checkIn) checkIn = dateObj;
+					if (!checkOut) checkOut = new Date(booking.checkOut);
+				}
+			}
+
+			if (targetEmail) {
+				await this.mailService.sendPaymentSuccessEmail(targetEmail, {
+					transactionId: paymentObject.id,
+					amount: paymentObject.amount,
+					ticketQuantity: totalTicketQuantity || null,
+					ticketDate: ticketDates,
+					roomNumber: roomNumber,
+					startDate: checkIn,
+					endDate: checkOut,
+				});
+				this.logger.log(`Email sent to ${targetEmail}`);
+			} else {
+				this.logger.warn(
+					`No email found for bookings: ${bookingIds.join(',')}`,
+				);
+			}
+		} catch (error) {
+			this.logger.error(
+				`Failed to send email for payment ${paymentObject.id}: ${error.message}`,
+			);
+		}
+	}
+
+	private verifyIp(ip: string) {
+		for (const range of this.ALLOWED_IPS) {
+			if (range.includes('/')) {
+				const cidr = new CIDR(range);
+				if (cidr.contains(ip)) return true;
+			} else if (range === ip) return true;
+		}
+
+		throw new UnauthorizedException('Invalid webhook IP');
+	}
 }
 
-//TODO: metadata,
+//TODO: metadata, send email, handle other events, add more payment methods

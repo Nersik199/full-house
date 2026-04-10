@@ -10,15 +10,12 @@ import {
   CreateBookingDto,
   GetBookingsByDaysDto,
 } from './dto/booking.dto';
-import { Ticket } from '@/ticket/entities/ticket.entity';
 
 @Injectable()
 export class BookingService {
   constructor(
     @InjectModel(Booking)
     private readonly bookingModel: typeof Booking,
-    @InjectModel(Ticket)
-    private readonly ticketModel: typeof Ticket,
   ) {}
 
   async checkAvailability(
@@ -265,5 +262,7 @@ export class BookingService {
     });
   }
 
-  async searchBooking() {}
+  async searchBooking() {
+    //TODO: implement search booking by guest name, phone or email
+  }
 }

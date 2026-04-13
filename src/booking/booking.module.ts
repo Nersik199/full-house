@@ -1,14 +1,18 @@
 import { Module } from '@nestjs/common';
-import { BookingService } from './booking.service';
 import { SequelizeModule } from '@nestjs/sequelize';
-import { Booking } from './entities/booking.entity';
-import { BookingController } from './booking.controller';
+
+import { Lodge } from '@/lodge/entities/lodge.entity';
+import { Room } from '@/room/entities/room.entity';
 import { Ticket } from '@/ticket/entities/ticket.entity';
 
+import { BookingController } from './booking.controller';
+import { BookingService } from './booking.service';
+import { Booking } from './entities/booking.entity';
+
 @Module({
-  imports: [SequelizeModule.forFeature([Booking, Ticket])],
-  controllers: [BookingController],
-  providers: [BookingService],
-  exports: [BookingService],
+	imports: [SequelizeModule.forFeature([Booking, Ticket, Room, Lodge])],
+	controllers: [BookingController],
+	providers: [BookingService],
+	exports: [BookingService],
 })
 export class BookingModule {}

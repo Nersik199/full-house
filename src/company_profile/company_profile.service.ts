@@ -1,58 +1,62 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
-import { CompanyProfile } from './entities/company.profile.entity';
+
 import { FilesService } from '@/files/files.service';
+
 import {
-  CompanyProfileCreateDto,
-  CompanyProfileUpdateDto,
+	CompanyProfileCreateDto,
+	CompanyProfileUpdateDto,
 } from './dto/company_profile.dto';
+import { CompanyProfile } from './entities/company.profile.entity';
 
 @Injectable()
 export class CompanyProfileService {
-  constructor(
-    @InjectModel(CompanyProfile)
-    private readonly companyProfile: typeof CompanyProfile,
-    private readonly filesService: FilesService,
-  ) {}
+	constructor(
+		@InjectModel(CompanyProfile)
+		private readonly companyProfile: typeof CompanyProfile,
+		private readonly filesService: FilesService,
+	) {}
 
-  async create(dto: CompanyProfileCreateDto, file?: Express.Multer.File) {
-    const uploaded = await this.filesService.upload(file, 'company_profile');
+	async create(dto: CompanyProfileCreateDto, file?: Express.Multer.File) {
+		const uploaded = await this.filesService.upload(file, 'company_profile');
 
-    const headerData = await this.companyProfile.create({
-      ...dto,
-      image: uploaded,
-    });
+		const headerData = await this.companyProfile.create({
+			...dto,
+			image: uploaded,
+		});
 
-    return headerData;
-  }
-  async get() {
-    const data = await this.companyProfile.findAll();
-    if (!data) throw new NotFoundException('compony info not found');
+		return headerData;
+	}
 
-    return data;
-  }
+	async get() {
+		const data = await this.companyProfile.findAll();
+		if (!data) throw new NotFoundException('compony info not found');
 
-  async update(
-    id: number,
-    urlId: string,
-    dto: CompanyProfileUpdateDto,
-    file?: Express.Multer.File,
-  ) {
-    let newImg: string;
-    if (urlId && file) {
-      await this.filesService.delete(urlId);
-      newImg = await this.filesService.upload(file, 'company_profile');
-    }
-    const [updatedCount, [updatedData]] = await this.companyProfile.update(
-      { ...dto, image: newImg },
-      {
-        where: { id },
-        returning: true,
-      },
-    );
+		return data;
+	}
 
-    if (updatedCount === 0) throw new NotFoundException('home not found');
+	async update(
+		id: number,
+		urlId: string,
+		dto: CompanyProfileUpdateDto,
+		file?: Express.Multer.File,
+	) {
+		let newImg: string;
+		if (urlId && file) {
+			await this.filesService.delete(urlId);
+			newImg = await this.filesService.upload(file, 'company_profile');
+		}
+		const [updatedCount, [updatedData]] = await this.companyProfile.update(
+			{ ...dto, image: newImg },
+			{
+				where: { id },
+				returning: true,
+			},
+		);
 
-    return updatedData;
-  }
+		if (updatedCount === 0)
+			throw new NotFoundException('company profile not found');
+
+		return updatedData;
+	}
 }

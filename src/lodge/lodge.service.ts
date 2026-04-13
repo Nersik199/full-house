@@ -26,6 +26,19 @@ export class LodgeService {
 		private readonly filesService: FilesService,
 	) {}
 
+	calculateTotalAmount(
+		roomPrice: number,
+		startDate: Date,
+		endDate: Date,
+	): number {
+		const start = dayjs(startDate).startOf('day');
+		const end = dayjs(endDate).startOf('day');
+
+		const days = Math.max(1, end.diff(start, 'day'));
+
+		return roomPrice * days;
+	}
+
 	async createHeader(dto: HeaderLodgeCreateDto, file?: Express.Multer.File) {
 		const uploaded = await this.filesService.upload(file, 'header');
 
@@ -158,10 +171,15 @@ export class LodgeService {
 		const transaction = await this.sequelize.transaction();
 		try {
 			const lodge = await this.findById(dto.lodgeId);
-
+			const total = this.calculateTotalAmount(
+				lodge.price,
+				dto.checkIn,
+				dto.checkOut,
+			);
 			const booking = await this.bookingService.bookingWalkIn(
 				{
 					lodgeId: lodge.id,
+					totalPrice: total,
 					guestName: dto.guestName,
 					guestPhone: dto.guestPhone.trim(),
 					guestEmail: dto.guestEmail.trim(),

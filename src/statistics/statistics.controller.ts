@@ -1,17 +1,21 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, HttpCode, HttpStatus, Query } from '@nestjs/common';
+import { ApiBearerAuth } from '@nestjs/swagger';
+
+import { Auth } from '@/auth/decorators/auth.decorators';
+
 import { StatisticsService } from './statistics.service';
 
 @Controller('statistics')
 export class StatisticsController {
-  constructor(private readonly statisticsService: StatisticsService) {}
+	constructor(private readonly statisticsService: StatisticsService) {}
 
-  @Get('all')
-  async getAllStatistic() {
-    return await this.statisticsService.getAllStatistics();
-  }
-
-  @Get('bookings')
-  async getStatisticBooking() {
-    return await this.statisticsService.getStatisticBooking();
-  }
+	@ApiBearerAuth('Authorization')
+	@Auth()
+	@HttpCode(HttpStatus.OK)
+	@Get('')
+	async getAllStatistic() {
+		// @Query('startDate') startDate?: string,
+		// @Query('endDate') endDate?: string,
+		return await this.statisticsService.getAllStatistics();
+	}
 }

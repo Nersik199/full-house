@@ -56,9 +56,15 @@ export class OrderService {
 				dto.endDate,
 			);
 
+			if (dto.member > room.member) {
+				throw Error;
+			}
+
 			const booking = await this.bookingService.createBooking(
 				{
 					roomId: room.id,
+					totalPrice: total,
+					member: dto.member,
 					guestName: dto.customerName,
 					guestPhone: dto.customerPhone.trim(),
 					guestEmail: dto.customerEmail.trim(),
@@ -108,9 +114,15 @@ export class OrderService {
 				dto.endDate,
 			);
 
+			if (dto.member > lodge.member) {
+				throw Error;
+			}
+
 			const booking = await this.bookingService.createBooking(
 				{
 					lodgeId: lodge.id,
+					totalPrice: total,
+					member: dto.member,
 					guestName: dto.customerName,
 					guestPhone: dto.customerPhone.trim(),
 					guestEmail: dto.customerEmail.trim(),
@@ -172,11 +184,12 @@ export class OrderService {
 
 			for (const item of dto.items) {
 				const ticket = await this.ticketService.findById(item.ticketId);
-
+				// total += ticket.finalPrice * item.quantity;
 				const booking = await this.bookingService.createBooking(
 					{
 						ticketId: ticket.id,
 						orderId: order.id,
+						totalPrice: total,
 						ticketQuantity: item.quantity,
 						guestName: dto.customerName,
 						guestPhone: dto.customerPhone.trim(),

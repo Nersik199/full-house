@@ -1,273 +1,291 @@
-import dayjs from 'dayjs';
-import { Sequelize } from 'sequelize-typescript';
-import { Op, Transaction } from 'sequelize';
-
 import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
+	BadRequestException,
+	Injectable,
+	NotFoundException,
 } from '@nestjs/common';
-import { Room } from './entities/room.entity';
 import { InjectConnection, InjectModel } from '@nestjs/sequelize';
-import { GetAllRoomsDto, RoomCreateDto, RoomUpdateDto } from './dto/room.dto';
-import { FilesService } from '@/files/files.service';
-import { HeaderRoomCreateDto, HeaderRoomUpdateDto } from './dto/header.dto';
-import { HeaderRoom } from './entities/header.entity';
-import { calculatePagination } from '@/shared/utils/calculate.pagination';
+import dayjs from 'dayjs';
+import { Op, Transaction } from 'sequelize';
+import { Sequelize } from 'sequelize-typescript';
+
 import { BookingService } from '@/booking/booking.service';
+import { FilesService } from '@/files/files.service';
+import { calculatePagination } from '@/shared/utils/calculate.pagination';
+
+import { HeaderRoomCreateDto, HeaderRoomUpdateDto } from './dto/header.dto';
 import { CreateBookingWalkInDto } from './dto/room.booking.walkIn.dto';
+import { GetAllRoomsDto, RoomCreateDto, RoomUpdateDto } from './dto/room.dto';
+import { HeaderRoom } from './entities/header.entity';
+import { Room } from './entities/room.entity';
 
 @Injectable()
 export class RoomService {
-  constructor(
-    @InjectModel(Room)
-    private roomModel: typeof Room,
-    @InjectModel(HeaderRoom)
-    private readonly headerModel: typeof HeaderRoom,
-    @InjectConnection()
-    private readonly sequelize: Sequelize,
-    private readonly filesService: FilesService,
-    private readonly bookingService: BookingService,
-  ) {}
+	constructor(
+		@InjectModel(Room)
+		private roomModel: typeof Room,
+		@InjectModel(HeaderRoom)
+		private readonly headerModel: typeof HeaderRoom,
+		@InjectConnection()
+		private readonly sequelize: Sequelize,
+		private readonly filesService: FilesService,
+		private readonly bookingService: BookingService,
+	) {}
 
-  async createHeader(dto: HeaderRoomCreateDto, file?: Express.Multer.File) {
-    const uploaded = await this.filesService.upload(file, 'header');
+	calculateTotalAmount(
+		roomPrice: number,
+		startDate: Date,
+		endDate: Date,
+	): number {
+		const start = dayjs(startDate).startOf('day');
+		const end = dayjs(endDate).startOf('day');
 
-    const headerData = await this.headerModel.create({
-      ...dto,
-      image: uploaded,
-    });
+		const days = Math.max(1, end.diff(start, 'day'));
 
-    return headerData;
-  }
+		return roomPrice * days;
+	}
 
-  async getHeader() {
-    const getHeader = await this.headerModel.findAll();
-    if (!getHeader) {
-      throw new NotFoundException('header info not found');
-    }
-    return getHeader;
-  }
+	async createHeader(dto: HeaderRoomCreateDto, file?: Express.Multer.File) {
+		const uploaded = await this.filesService.upload(file, 'header');
 
-  async updateHeader(
-    id: number,
-    urlId: string,
-    dto: HeaderRoomUpdateDto,
-    file?: Express.Multer.File,
-  ) {
-    let newImg: string;
-    if (urlId && file) {
-      await this.filesService.delete(urlId);
-      newImg = await this.filesService.upload(file, 'header');
-    }
-    const [updatedCount, [updatedHeader]] = await this.headerModel.update(
-      { ...dto, image: newImg },
-      {
-        where: { id },
-        returning: true,
-      },
-    );
+		const headerData = await this.headerModel.create({
+			...dto,
+			image: uploaded,
+		});
 
-    if (updatedCount === 0) throw new NotFoundException('Room not found');
+		return headerData;
+	}
 
-    return updatedHeader;
-  }
+	async getHeader() {
+		const getHeader = await this.headerModel.findAll();
+		if (!getHeader) {
+			throw new NotFoundException('header info not found');
+		}
+		return getHeader;
+	}
 
-  async create(dto: RoomCreateDto, files?: Express.Multer.File[]) {
-    const imageUrls = await this.filesService.uploadMany(files, 'rooms');
-    let member: number;
-    const roomNumber = await this.roomModel.findOne({
-      where: { roomNumber: dto.roomNumber },
-    });
+	async updateHeader(
+		id: number,
+		urlId: string,
+		dto: HeaderRoomUpdateDto,
+		file?: Express.Multer.File,
+	) {
+		let newImg: string;
+		if (urlId && file) {
+			await this.filesService.delete(urlId);
+			newImg = await this.filesService.upload(file, 'header');
+		}
+		const [updatedCount, [updatedHeader]] = await this.headerModel.update(
+			{ ...dto, image: newImg },
+			{
+				where: { id },
+				returning: true,
+			},
+		);
 
-    if (dto.adults && dto.children) {
-      member = dto.adults + dto.children;
-    }
+		if (updatedCount === 0) throw new NotFoundException('Room not found');
 
-    if (roomNumber) {
-      throw new BadRequestException(
-        `Этот номер уже существует${dto.roomNumber}`,
-      );
-    }
+		return updatedHeader;
+	}
 
-    const room = await this.roomModel.create({
-      ...dto,
-      member,
-      images: imageUrls,
-    });
+	async create(dto: RoomCreateDto, files?: Express.Multer.File[]) {
+		const imageUrls = await this.filesService.uploadMany(files, 'rooms');
+		let member: number;
+		const roomNumber = await this.roomModel.findOne({
+			where: { roomNumber: dto.roomNumber },
+		});
 
-    return room;
-  }
+		if (dto.adults && dto.children) {
+			member = dto.adults + dto.children;
+		}
 
-  async findAll(page: number, limit: number, dto?: GetAllRoomsDto) {
-    const whereCondition: any = {};
+		if (roomNumber) {
+			throw new BadRequestException(
+				`Этот номер уже существует${dto.roomNumber}`,
+			);
+		}
 
-    if (dto?.category) {
-      whereCondition.category = dto.category;
-    }
+		const room = await this.roomModel.create({
+			...dto,
+			member,
+			images: imageUrls,
+		});
 
-    const total = await this.roomModel.count({
-      where: whereCondition,
-    });
+		return room;
+	}
 
-    const { maxPageCount, offset } = calculatePagination(
-      Number(page),
-      Number(limit),
-      total,
-    );
+	async findAll(page: number, limit: number, dto?: GetAllRoomsDto) {
+		const whereCondition: any = {};
 
-    const rooms = await this.roomModel.findAll({
-      where: whereCondition,
-      order: [['created_at', 'DESC']],
-      limit: Number(limit),
-      offset,
-    });
+		if (dto?.category) {
+			whereCondition.category = dto.category;
+		}
 
-    if (!rooms.length && total === 0) {
-      throw new NotFoundException('No rooms found');
-    }
+		const total = await this.roomModel.count({
+			where: whereCondition,
+		});
 
-    return {
-      data: rooms,
-      meta: {
-        total,
-        page: Number(page),
-        limit: Number(limit),
-        maxPageCount,
-      },
-    };
-  }
+		const { maxPageCount, offset } = calculatePagination(
+			Number(page),
+			Number(limit),
+			total,
+		);
 
-  async findById(id: number) {
-    const room = await this.roomModel.findByPk(id);
-    if (!room) {
-      throw new NotFoundException(`Room with id ${id} not found`);
-    }
-    return room;
-  }
+		const rooms = await this.roomModel.findAll({
+			where: whereCondition,
+			order: [['created_at', 'DESC']],
+			limit: Number(limit),
+			offset,
+		});
 
-  async update(
-    id: number,
-    dto: RoomUpdateDto,
-    urlId: string,
-    file?: Express.Multer.File,
-  ) {
-    const room = await this.roomModel.findByPk(id);
+		if (!rooms.length && total === 0) {
+			throw new NotFoundException('No rooms found');
+		}
 
-    if (!room) {
-      throw new NotFoundException('Room not found');
-    }
+		return {
+			data: rooms,
+			meta: {
+				total,
+				page: Number(page),
+				limit: Number(limit),
+				maxPageCount,
+			},
+		};
+	}
 
-    let images: string[] = Array.isArray(room.images) ? [...room.images] : [];
+	async findById(id: number) {
+		const room = await this.roomModel.findByPk(id);
+		if (!room) {
+			throw new NotFoundException(`Room with id ${id} not found`);
+		}
+		return room;
+	}
 
-    if (file) {
-      const targetKey = urlId.startsWith('/') ? urlId.slice(1) : urlId;
+	async update(
+		id: number,
+		dto: RoomUpdateDto,
+		urlId: string,
+		file?: Express.Multer.File,
+	) {
+		const room = await this.roomModel.findByPk(id);
 
-      await this.filesService.delete(targetKey);
+		if (!room) {
+			throw new NotFoundException('Room not found');
+		}
 
-      images = images.filter((img) => {
-        const imgKey = this.filesService.extractKey(img);
-        return imgKey !== targetKey;
-      });
+		let images: string[] = Array.isArray(room.images) ? [...room.images] : [];
 
-      const newImg = await this.filesService.upload(file, 'rooms');
-      images.push(newImg);
-    }
+		if (file) {
+			const targetKey = urlId.startsWith('/') ? urlId.slice(1) : urlId;
 
-    await room.update({
-      ...dto,
-      images,
-    });
+			await this.filesService.delete(targetKey);
 
-    return room;
-  }
+			images = images.filter(img => {
+				const imgKey = this.filesService.extractKey(img);
+				return imgKey !== targetKey;
+			});
 
-  async delete(id: number) {
-    const room = await this.roomModel.findOne({ where: { id } });
+			const newImg = await this.filesService.upload(file, 'rooms');
+			images.push(newImg);
+		}
 
-    const image: string[] = Array.isArray(room.images) ? [...room.images] : [];
+		await room.update({
+			...dto,
+			images,
+		});
 
-    image.forEach(async (img) => {
-      const parsedUrl = new URL(img);
+		return room;
+	}
 
-      const pathOnly = parsedUrl.pathname;
-      await this.filesService.delete(pathOnly);
-    });
+	async delete(id: number) {
+		const room = await this.roomModel.findOne({ where: { id } });
 
-    await room.destroy();
-    return { message: 'Room successfully deleted' };
-  }
+		const image: string[] = Array.isArray(room.images) ? [...room.images] : [];
 
-  async roomBookingWalkIn(dto: CreateBookingWalkInDto) {
-    const transaction = await this.sequelize.transaction();
-    try {
-      const room = await this.findById(dto.roomId);
+		image.forEach(async img => {
+			const parsedUrl = new URL(img);
 
-      const booking = await this.bookingService.bookingWalkIn(
-        {
-          roomId: room.id,
-          guestName: dto.guestName,
-          guestPhone: dto.guestPhone.trim(),
-          guestEmail: dto.guestEmail.trim(),
-          roomNumber: room.roomNumber,
-          checkIn: dayjs(dto.checkIn).startOf('day').utc().toDate(),
-          checkOut: dayjs(dto.checkOut).startOf('day').utc().toDate(),
-          source: 'walk-in',
-        },
-        transaction,
-      );
+			const pathOnly = parsedUrl.pathname;
+			await this.filesService.delete(pathOnly);
+		});
 
-      await transaction.commit();
+		await room.destroy();
+		return { message: 'Room successfully deleted' };
+	}
 
-      return booking;
-    } catch (err) {
-      await transaction.rollback();
-      throw err;
-    }
-  }
+	async roomBookingWalkIn(dto: CreateBookingWalkInDto) {
+		const transaction = await this.sequelize.transaction();
 
-  async search(
-    startDate: Date,
-    endDate: Date,
-    adults?: number,
-    children?: number,
-  ) {
-    const start = dayjs(startDate).startOf('day').toDate();
-    const end = dayjs(endDate).startOf('day').toDate();
-    const totalNeeded = (Number(adults) || 0) + (Number(children) || 0);
+		const room = await this.findById(dto.roomId);
+		const total = this.calculateTotalAmount(
+			room.price,
+			dto.checkIn,
+			dto.checkOut,
+		);
+		try {
+			const booking = await this.bookingService.bookingWalkIn(
+				{
+					roomId: room.id,
+					totalPrice: total,
+					guestName: dto.guestName,
+					guestPhone: dto.guestPhone.trim(),
+					guestEmail: dto.guestEmail.trim(),
+					roomNumber: room.roomNumber,
+					checkIn: dayjs(dto.checkIn).startOf('day').utc().toDate(),
+					checkOut: dayjs(dto.checkOut).startOf('day').utc().toDate(),
+					source: 'walk-in',
+				},
+				transaction,
+			);
 
-    const occupiedData = await this.bookingService.findAllOccupied(start, end);
-    const occupiedRoomIds = occupiedData
-      .map((b) => b.roomId)
-      .filter((id) => !!id);
+			await transaction.commit();
 
-    const availableRooms = await this.roomModel.findAll({
-      where: {
-        id: {
-          [Op.notIn]: occupiedRoomIds.length ? occupiedRoomIds : [0],
-        },
-      },
-      order: [['price', 'ASC']],
-    });
+			return booking;
+		} catch (err) {
+			await transaction.rollback();
+			throw err;
+		}
+	}
 
-    const results = [];
-    const suggested = [];
+	async search(
+		startDate: Date,
+		endDate: Date,
+		adults?: number,
+		children?: number,
+	) {
+		const start = dayjs(startDate).startOf('day').toDate();
+		const end = dayjs(endDate).startOf('day').toDate();
+		const totalNeeded = (Number(adults) || 0) + (Number(children) || 0);
 
-    availableRooms.forEach((room) => {
-      if (totalNeeded > 0 && room.member >= totalNeeded) {
-        results.push(room);
-      } else {
-        suggested.push(room);
-      }
-    });
+		const occupiedData = await this.bookingService.findAllOccupied(start, end);
+		const occupiedRoomIds = occupiedData.map(b => b.roomId).filter(id => !!id);
 
-    if (totalNeeded === 0) {
-      return { results: availableRooms, suggested: [] };
-    }
+		const availableRooms = await this.roomModel.findAll({
+			where: {
+				id: {
+					[Op.notIn]: occupiedRoomIds.length ? occupiedRoomIds : [0],
+				},
+			},
+			order: [['price', 'ASC']],
+		});
 
-    return {
-      results,
-      suggested,
-    };
-  }
+		const results = [];
+		const suggested = [];
+
+		availableRooms.forEach(room => {
+			if (totalNeeded > 0 && room.member >= totalNeeded) {
+				results.push(room);
+			} else {
+				suggested.push(room);
+			}
+		});
+
+		if (totalNeeded === 0) {
+			return { results: availableRooms, suggested: [] };
+		}
+
+		return {
+			results,
+			suggested,
+		};
+	}
 }

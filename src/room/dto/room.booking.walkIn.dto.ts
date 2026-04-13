@@ -63,6 +63,8 @@ export class CreateBookingWalkInDto {
   @Type(() => Date)
   checkIn: Date;
 
+
+
   @ApiProperty({
     example: dayjs().add(3, 'day').toISOString(),
     description: 'Дата выезда (формат YYYY-MM-DD)',

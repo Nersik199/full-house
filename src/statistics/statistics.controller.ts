@@ -16,6 +16,6 @@ export class StatisticsController {
 	async getAllStatistic() {
 		// @Query('startDate') startDate?: string,
 		// @Query('endDate') endDate?: string,
-		return await this.statisticsService.getAllStatistics();
+		// return await this.statisticsService.getAllStatistics();
 	}
 }

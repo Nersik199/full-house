@@ -13,9 +13,14 @@ export class StatisticsController {
 	@Auth()
 	@HttpCode(HttpStatus.OK)
 	@Get('')
-	async getAllStatistic() {
-		// @Query('startDate') startDate?: string,
-		// @Query('endDate') endDate?: string,
-		// return await this.statisticsService.getAllStatistics();
+	async getAllStatistic(
+		@Query('startDate') startDate?: string,
+		@Query('endDate') endDate?: string,
+	) {
+		return await Promise.all([
+			this.statisticsService.getStatisticHotels(startDate, endDate),
+			this.statisticsService.getStatisticLodge(),
+			this.statisticsService.getStatisticSpa(),
+		]);
 	}
 }

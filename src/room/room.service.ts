@@ -56,7 +56,7 @@ export class RoomService {
 	}
 
 	async getHeader() {
-		const getHeader = await this.headerModel.findAll();
+		const getHeader = await this.headerModel.findOne();
 		if (!getHeader) {
 			throw new NotFoundException('header info not found');
 		}

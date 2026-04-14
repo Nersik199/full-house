@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+	BadRequestException,
+	Injectable,
+	NotFoundException,
+} from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/sequelize';
 import dayjs from 'dayjs';
 import { Sequelize } from 'sequelize-typescript';
@@ -51,7 +55,7 @@ export class LodgeService {
 	}
 
 	async getHeader() {
-		const getHeader = await this.headerModel.findAll();
+		const getHeader = await this.headerModel.findOne();
 		if (!getHeader) {
 			throw new NotFoundException('header info not found');
 		}
@@ -84,6 +88,16 @@ export class LodgeService {
 
 	async create(dto: LodgeCreateDto, files?: Express.Multer.File[]) {
 		const imageUrls = await this.filesService.uploadMany(files, 'lodge');
+
+		const londgNumber = await this.lodgeModel.findOne({
+			where: { roomNumber: dto.roomNumber },
+		});
+
+		if (londgNumber) {
+			throw new BadRequestException(
+				`Этот номер уже существует ${dto.roomNumber}`,
+			);
+		}
 
 		const lodge = await this.lodgeModel.create({
 			...dto,

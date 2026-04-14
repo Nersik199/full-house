@@ -29,7 +29,7 @@ export class CompanyProfileService {
 	}
 
 	async get() {
-		const data = await this.companyProfile.findAll();
+		const data = await this.companyProfile.findOne();
 		if (!data) throw new NotFoundException('compony info not found');
 
 		return data;

@@ -44,7 +44,7 @@ export class TicketService {
 	}
 
 	async getHeader() {
-		const getHeader = await this.ticketHeader.findAll();
+		const getHeader = await this.ticketHeader.findOne();
 		if (!getHeader) {
 			throw new NotFoundException('header info not found');
 		}

@@ -1,0 +1,37 @@
+version: '3.9'
+
+name: full-house
+
+services:
+  postgres:
+    container_name: postgres
+    image: postgres:18
+    restart: always
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./data/postgresql:/var/lib/postgresql
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+      interval: 2s
+      timeout: 1s
+      retries: 100
+
+  backend:
+    build:
+      context:  ./backend
+      dockerfile: loc.Dockerfile
+    restart: on-failure
+    env_file:
+      - ./.env.loc
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./backend/src:/app/src
+    depends_on:
+      postgres:
+        condition: service_healthy

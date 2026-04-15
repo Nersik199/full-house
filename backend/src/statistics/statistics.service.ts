@@ -8,7 +8,6 @@ import { Booking } from '@/booking/entities/booking.entity';
 import { Lodge } from '@/lodge/entities/lodge.entity';
 import { Order } from '@/order/entities/order.entity';
 import { Room } from '@/room/entities/room.entity';
-import { Ticket } from '@/ticket/entities/ticket.entity';
 
 dayjs.extend(isBetween);
 
@@ -19,18 +18,16 @@ export class StatisticsService {
 		@InjectModel(Booking) private readonly bookingModel: typeof Booking,
 		@InjectModel(Room) private readonly roomModel: typeof Room,
 		@InjectModel(Lodge) private readonly lodgeModel: typeof Lodge,
-		@InjectModel(Ticket) private readonly ticketModel: typeof Ticket,
 	) {}
 
 	async getStatisticHotels(startDate?: string, endDate?: string) {
 		const today = dayjs().format('YYYY-MM-DD');
 
 		const whereClause: any = { status: 'SUCCEEDED' };
-		if (startDate) {
-			whereClause.createdAt[Op.gte] = dayjs(startDate.trim()).toDate();
-		}
-		if (endDate) {
-			whereClause.createdAt[Op.lte] = dayjs(endDate.trim()).toDate();
+		if (startDate || endDate) {
+			whereClause.createdAt = {};
+			if (startDate) whereClause.createdAt[Op.gte] = startDate;
+			if (endDate) whereClause.createdAt[Op.lte] = endDate;
 		}
 
 		const totalRoomsCount = await this.roomModel.count();
@@ -93,7 +90,6 @@ export class StatisticsService {
 			})),
 		};
 	}
-
 	async getStatisticSpa() {
 		const today = dayjs().format('YYYY-MM-DD');
 
@@ -132,7 +128,6 @@ export class StatisticsService {
 			externalVisitors,
 		};
 	}
-
 	async getStatisticLodge() {
 		const dateStr = dayjs().format('YYYY-MM-DD');
 

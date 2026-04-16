@@ -6,6 +6,6 @@
   "author": "Nersik199 <militosyan13@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "start:local": "docker compose -f ./docker-compose.yml up"
+    "start:local": "docker compose -f docker-compose.loc.yml up"
   }
 }

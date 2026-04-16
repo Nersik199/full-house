@@ -7,12 +7,12 @@ import {
 } from '@aws-sdk/client-s3';
 import { randomUUID } from 'crypto';
 import { ConfigService } from '@nestjs/config';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import sharp from 'sharp';
 import multer from 'multer';
 
 @Injectable()
 export class FilesService {
+  private readonly S3_PUBLIC_DOMAIN: string;
   private readonly S3_REGION: string;
   private readonly S3_ENDPOINT: string;
   private readonly S3_ACCESS_KEY_ID: string;
@@ -23,6 +23,7 @@ export class FilesService {
   private readonly bucket: string;
 
   constructor(private readonly configService: ConfigService) {
+    this.S3_PUBLIC_DOMAIN = configService.getOrThrow<string>('S3_PUBLIC_DOMAIN');
     this.S3_REGION = configService.getOrThrow<string>('S3_REGION');
     this.S3_ENDPOINT = configService.getOrThrow<string>('S3_ENDPOINT');
     this.S3_ACCESS_KEY_ID =
@@ -48,6 +49,7 @@ export class FilesService {
     return pathname.startsWith('/') ? pathname.slice(1) : pathname;
   }
 
+
   async uploadMany(
     files?: Express.Multer.File[],
     folder = 'uploads',
@@ -63,7 +65,8 @@ export class FilesService {
     maxSizeMB: number = 10,
     maxWidth: number = 1200,
   ): Promise<string> {
-    const filename = `${randomUUID()}-${file.originalname}`;
+    const safeFileName = file.originalname.replace(/\s+/g, '_');
+    const filename = `${randomUUID()}-${safeFileName}`;
     const key = `${folder}/${filename}`;
 
     try {
@@ -93,15 +96,9 @@ export class FilesService {
           Key: key,
           Body: buffer,
           ContentType: file.mimetype,
-          ACL: 'public-read',
         }),
       );
-
-      const command = new GetObjectCommand({ Bucket: this.bucket, Key: key });
-
-      const url = await getSignedUrl(this.s3, command);
-
-      return url;
+      return `https://${this.S3_PUBLIC_DOMAIN}/${key}`;
     } catch (error) {
       console.error('S3 upload error:', error);
       throw error;

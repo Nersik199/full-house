@@ -1,4 +1,4 @@
-import { ApiProperty, OmitType, PartialType } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional, OmitType, PartialType } from '@nestjs/swagger';
 import {
   IsNotEmpty,
   IsString,
@@ -22,6 +22,10 @@ export class RoomCreateDto {
   })
   title: string;
 
+  @ApiPropertyOptional({
+  example: 1000,
+  description: 'Краткое дополнительное описание номера (необязательно)',
+})
   @ApiProperty({
     example:
       'Вместимость — 3 человека (2 взрослых + 1 ребёнок). Цена указана за 2-х.',
@@ -46,7 +50,7 @@ export class RoomCreateDto {
   description: string;
 
   @ApiProperty({
-    example: 'Стандарт',
+    example: 'Standard',
     description:
       'Категория номера:  Standard, Comfort, Luxury, Family, Presidential',
   })
@@ -75,6 +79,10 @@ export class RoomCreateDto {
   price: number;
 
 
+  @ApiPropertyOptional({
+  example: 1000,
+  description: 'Цена за один час проживания',
+})
   @ApiProperty({
     example: 1000,
     description: 'Цена за один час проживания',

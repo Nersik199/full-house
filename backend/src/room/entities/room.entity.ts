@@ -49,6 +49,13 @@ export class Room extends Model {
   })
   price: number;
 
+   @Column({
+    type: DataType.INTEGER,
+    allowNull: true,
+  })
+  hourlyPrice?: number;
+
+
   @Column({
     type: DataType.BOOLEAN,
     defaultValue: true,

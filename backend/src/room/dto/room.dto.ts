@@ -74,6 +74,16 @@ export class RoomCreateDto {
   @Type(() => Number)
   price: number;
 
+
+  @ApiProperty({
+    example: 1000,
+    description: 'Цена за один час проживания',
+  })
+  @IsNumber({}, { message: 'Цена должна быть числом' })
+  @IsOptional({ message: 'Цена за один час проживания не обязателна' })
+  @Type(() => Number)
+  hourlyPrice?: number;
+
   @ApiProperty({
     example: 1,
     description: 'Количество ванных комнат в номере',

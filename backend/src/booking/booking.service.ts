@@ -56,7 +56,7 @@ export class BookingService {
 			where: {
 				[dto.entityField]: dto.entityId,
 				status: {
-					[Op.in]: ['confirmed', 'checked_in', 'pending'],
+					[Op.in]: ['confirmed', 'checked_in',],
 				},
 				[Op.or]: [{ expiresAt: null }, { expiresAt: { [Op.gt]: new Date() } }],
 				checkIn: { [Op.lt]: end.toDate() },

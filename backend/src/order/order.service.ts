@@ -184,7 +184,6 @@ export class OrderService {
 
 			for (const item of dto.items) {
 				const ticket = await this.ticketService.findById(item.ticketId);
-				// total += ticket.finalPrice * item.quantity;
 				const booking = await this.bookingService.createBooking(
 					{
 						ticketId: ticket.id,

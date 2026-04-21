@@ -105,11 +105,6 @@ export class RoomController {
 
   @Get('all')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Получить бронирования по дням для категории' })
-  @ApiResponse({
-    status: 200,
-    description: 'Список бронирований с массивом дат',
-  })
   async findAll(
     @Query('page') page: number,
     @Query('limit') limit: number,

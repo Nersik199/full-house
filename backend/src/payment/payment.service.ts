@@ -106,7 +106,7 @@ export class PaymentService {
 				value: order.totalAmount,
 				currency: CurrencyEnum.RUB,
 			},
-			description: `Оплата заказа №${order.id}`,
+			description: 'Услуги бронирования',
 			payment_method_data: {
 				// @ts-ignore
 				type: yooMethod,
@@ -130,7 +130,7 @@ export class PaymentService {
 				customer: { email: order.customerEmail },
 				items: [
 					{
-						description: 'Бронирование проживания',
+						description: 'Услуги бронирования',
 						quantity: 1,
 						amount: {
 							value: order.totalAmount,
@@ -298,5 +298,3 @@ export class PaymentService {
 		throw new UnauthorizedException('Invalid webhook IP');
 	}
 }
-
-//TODO: metadata, send email, handle other events, add more payment methods

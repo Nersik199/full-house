@@ -1,4 +1,12 @@
-import { Controller, Get, HttpCode, HttpStatus, Query } from '@nestjs/common';
+import {
+	Controller,
+	DefaultValuePipe,
+	Get,
+	HttpCode,
+	HttpStatus,
+	ParseIntPipe,
+	Query,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
 import { Auth } from '@/auth/decorators/auth.decorators';
@@ -26,8 +34,8 @@ export class BookingController {
 	@HttpCode(HttpStatus.OK)
 	@Get('/admin')
 	async allBookingsForAdmin(
-		@Query('limit') limit: number,
-		@Query('page') page: number,
+		@Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+		@Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
 		@Query() dto: GetAllBookings,
 	) {
 		return await this.bookingService.allBookingsAdmin(limit, page, dto);

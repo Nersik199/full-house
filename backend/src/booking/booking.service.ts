@@ -194,6 +194,8 @@ export class BookingService {
 			attributes: [
 				'id',
 				'room_number',
+				'room_id',
+				'lodge_id',
 				'check_in',
 				'check_out',
 				'status',
@@ -218,7 +220,8 @@ export class BookingService {
 			}
 
 			return {
-				id: String(booking.id),
+				roomId: booking.roomId,
+				lodgeId: booking.lodgeId,
 				roomNumber: booking.roomNumber,
 				day: dayList,
 				status: booking.status,

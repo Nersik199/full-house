@@ -295,7 +295,7 @@ export function PaymentSuccessTemplate({
 							<tr>
 								<td align="center">
 									<Button
-										href="mailto:Fullhouseleninavan@gmail.com"
+										href="mailto:fullhouseleninavan@gmail.com"
 										style={secondaryButton}
 									>
 										{'Написать на Email'}

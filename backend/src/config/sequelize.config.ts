@@ -14,12 +14,5 @@ export async function SequelizeConfig(
 		autoLoadModels: true,
 		logging: false,
 		synchronize: true,
-		// ssl: true,
-		// dialectOptions: {
-		//   ssl: {
-		//     require: true,
-		//     rejectUnauthorized: false,
-		//   },
-		// },
 	};
 }

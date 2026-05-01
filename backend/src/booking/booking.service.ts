@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import dayjs from 'dayjs';
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import { Op, Transaction } from 'sequelize';
 
 import { Lodge } from '@/lodge/entities/lodge.entity';
@@ -15,6 +16,8 @@ import {
 	GetBookingsByDaysDto,
 } from './dto/booking.dto';
 import { Booking } from './entities/booking.entity';
+
+dayjs.extend(isSameOrBefore);
 
 @Injectable()
 export class BookingService {
@@ -204,30 +207,34 @@ export class BookingService {
 			order: [['checkIn', 'ASC']],
 		});
 
-		return bookings.map(b => {
-			const booking = b.get({ plain: true });
-			const dayList = [];
+		return bookings
+			.map(b => {
+				const booking = b.get({ plain: true });
 
-			let current = dayjs(booking.check_in);
-			const end = dayjs(booking.check_out);
-			if (!current.isValid() || !end.isValid()) {
-				return null;
-			}
+				let current = dayjs(booking.check_in);
+				const end = dayjs(booking.check_out);
 
-			while (current.isBefore(end) || current.isSame(end, 'day')) {
-				dayList.push(current.format('YYYY-MM-DD'));
-				current = current.add(1, 'day');
-			}
+				if (!current.isValid() || !end.isValid() || end.isBefore(current)) {
+					return null;
+				}
 
-			return {
-				roomId: booking.roomId,
-				lodgeId: booking.lodgeId,
-				roomNumber: booking.roomNumber,
-				day: dayList,
-				status: booking.status,
-				source: booking.source,
-			};
-		});
+				const dayList = [];
+
+				while (current.isSameOrBefore(end, 'day')) {
+					dayList.push(current.format('YYYY-MM-DD'));
+					current = current.add(1, 'day');
+				}
+
+				return {
+					roomId: booking.roomId,
+					lodgeId: booking.lodgeId,
+					roomNumber: booking.roomNumber,
+					day: dayList,
+					status: booking.status,
+					source: booking.source,
+				};
+			})
+			.filter(Boolean);
 	}
 
 	async allBookingsAdmin(limit: number, page: number, dto: GetAllBookings) {

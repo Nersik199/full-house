@@ -28,16 +28,8 @@ export class BookingController {
 	async allBookingsForAdmin(
 		@Query('limit') limit: number,
 		@Query('page') page: number,
-		@Query() type: GetAllBookings,
+		@Query() dto: GetAllBookings,
 	) {
-		return await this.bookingService.allBookingsAdmin(limit, page, type);
-	}
-
-	@ApiBearerAuth('Authorization')
-	@Auth()
-	@HttpCode(HttpStatus.OK)
-	@Get('/search')
-	async search(@Query('query') query: string) {
-		return await this.bookingService.searchBooking(query);
+		return await this.bookingService.allBookingsAdmin(limit, page, dto);
 	}
 }

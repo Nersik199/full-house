@@ -56,7 +56,7 @@ export class BookingService {
 			where: {
 				[dto.entityField]: dto.entityId,
 				status: {
-					[Op.in]: ['confirmed', 'checked_in',],
+					[Op.in]: ['confirmed', 'checked_in'],
 				},
 				[Op.or]: [{ expiresAt: null }, { expiresAt: { [Op.gt]: new Date() } }],
 				checkIn: { [Op.lt]: end.toDate() },
@@ -238,6 +238,14 @@ export class BookingService {
 			whereClause.lodgeId = { [Op.ne]: null };
 		}
 
+		if (dto.query) {
+			whereClause[Op.or] = [
+				{ guestName: { [Op.iLike]: `%${dto.query}%` } },
+				{ guestPhone: { [Op.iLike]: `%${dto.query}%` } },
+				{ guestEmail: { [Op.iLike]: `%${dto.query}%` } },
+			];
+		}
+
 		const total = await this.bookingModel.count({ where: whereClause });
 
 		const { maxPageCount, offset } = calculatePagination(
@@ -289,20 +297,6 @@ export class BookingService {
 				checkOut: { [Op.gt]: start },
 			},
 			raw: true,
-		});
-	}
-
-	async searchBooking(query: string) {
-		return await this.bookingModel.findAll({
-			where: {
-				[Op.or]: [
-					{ guestName: { [Op.iLike]: `%${query}%` } },
-					{ guestPhone: { [Op.iLike]: `%${query}%` } },
-					{ guestEmail: { [Op.iLike]: `%${query}%` } },
-				],
-			},
-			order: [['createdAt', 'DESC']],
-			limit: 10,
 		});
 	}
 }

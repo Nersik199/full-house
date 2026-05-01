@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
 	IsDate,
@@ -139,4 +139,12 @@ export class GetAllBookings {
 		message: 'Неверная тип',
 	})
 	type: 'room' | 'ticket' | 'lodge';
+
+	@ApiPropertyOptional({
+		example: 'John',
+		description: 'Поиск по имени, телефону или email',
+	})
+	@IsOptional()
+	@IsString()
+	query?: string;
 }

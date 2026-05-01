@@ -246,27 +246,52 @@ export class RoomService {
 		}
 	}
 
-	async search(
-		startDate: Date,
-		endDate: Date,
-		adults?: number,
-		children?: number,
-	) {
-		const start = dayjs(startDate).startOf('day').toDate();
-		const end = dayjs(endDate).startOf('day').toDate();
-		const totalNeeded = (Number(adults) || 0) + (Number(children) || 0);
+	async search(startDate?: string, endDate?: string, adults = 0, children = 0) {
+		const totalNeeded = adults + children;
 
-		const occupiedData = await this.bookingService.findAllOccupied(start, end);
-		const occupiedRoomIds = occupiedData.map(b => b.roomId).filter(id => !!id);
+		const hasDates = startDate && endDate;
+
+		let occupiedRoomIds: number[] = [];
+
+		if (hasDates) {
+			const start = dayjs(startDate).startOf('day').toDate();
+			const end = dayjs(endDate).startOf('day').toDate();
+
+			if (
+				!startDate ||
+				!endDate ||
+				!dayjs(startDate).isValid() ||
+				!dayjs(endDate).isValid()
+			) {
+				throw new BadRequestException('Invalid date');
+			}
+
+			const occupiedData = await this.bookingService.findAllOccupied(
+				start,
+				end,
+			);
+			occupiedRoomIds = occupiedData.map(b => b.roomId).filter(Boolean);
+		}
+
+		const where: any = {};
+
+		if (occupiedRoomIds.length) {
+			where.id = {
+				[Op.notIn]: occupiedRoomIds,
+			};
+		}
 
 		const availableRooms = await this.roomModel.findAll({
-			where: {
-				id: {
-					[Op.notIn]: occupiedRoomIds.length ? occupiedRoomIds : [0],
-				},
-			},
+			where,
 			order: [['price', 'ASC']],
 		});
+
+		if (!hasDates && totalNeeded === 0) {
+			return {
+				results: availableRooms,
+				suggested: [],
+			};
+		}
 
 		const results = [];
 		const suggested = [];
@@ -278,10 +303,6 @@ export class RoomService {
 				suggested.push(room);
 			}
 		});
-
-		if (totalNeeded === 0) {
-			return { results: availableRooms, suggested: [] };
-		}
 
 		return {
 			results,

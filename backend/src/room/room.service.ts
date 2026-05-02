@@ -69,22 +69,28 @@ export class RoomService {
 		dto: HeaderRoomUpdateDto,
 		file?: Express.Multer.File,
 	) {
-		let newImg: string;
-		if (urlId && file) {
-			await this.filesService.delete(urlId);
-			newImg = await this.filesService.upload(file, 'header');
+		if (!file || !urlId) {
+			throw new BadRequestException(
+				'Для обновления заголовка необходимо предоставить и файл, и urlId',
+			);
 		}
-		const [updatedCount, [updatedHeader]] = await this.headerModel.update(
-			{ ...dto, image: newImg },
-			{
-				where: { id },
-				returning: true,
-			},
-		);
 
-		if (updatedCount === 0) throw new NotFoundException('Room not found');
+		const header = await this.headerModel.findByPk(id);
+		if (!header) {
+			throw new NotFoundException('Room item not found');
+		}
 
-		return updatedHeader;
+		const targetKey = this.filesService.extractKey(urlId);
+		await this.filesService.delete(targetKey);
+
+		const newImg = await this.filesService.upload(file, 'header');
+
+		await header.update({
+			...dto,
+			image: newImg,
+		});
+
+		return header;
 	}
 
 	async create(dto: RoomCreateDto, files?: Express.Multer.File[]) {
@@ -115,6 +121,8 @@ export class RoomService {
 
 	async findAll(page: number, limit: number, dto?: GetAllRoomsDto) {
 		const whereCondition: any = {};
+		const safePage = Number(page) > 0 ? Number(page) : 1;
+		const safeLimit = Number(limit) > 0 ? Number(limit) : 10;
 
 		if (dto?.category) {
 			whereCondition.category = dto.category;
@@ -125,8 +133,8 @@ export class RoomService {
 		});
 
 		const { maxPageCount, offset } = calculatePagination(
-			Number(page),
-			Number(limit),
+			Number(safePage),
+			Number(safeLimit),
 			total,
 		);
 
@@ -163,7 +171,7 @@ export class RoomService {
 	async update(
 		id: number,
 		dto: RoomUpdateDto,
-		urlId: string,
+		urlId?: string,
 		file?: Express.Multer.File,
 	) {
 		const room = await this.roomModel.findByPk(id);
@@ -175,15 +183,16 @@ export class RoomService {
 		let images: string[] = Array.isArray(room.images) ? [...room.images] : [];
 
 		if (file) {
-			const targetKey = urlId.startsWith('/') ? urlId.slice(1) : urlId;
+			if (urlId) {
+				const targetKey = this.filesService.extractKey(urlId);
 
-			await this.filesService.delete(targetKey);
+				await this.filesService.delete(targetKey);
 
-			images = images.filter(img => {
-				const imgKey = this.filesService.extractKey(img);
-				return imgKey !== targetKey;
-			});
-
+				images = images.filter(img => {
+					const imgKey = this.filesService.extractKey(img);
+					return imgKey !== targetKey;
+				});
+			}
 			const newImg = await this.filesService.upload(file, 'rooms');
 			images.push(newImg);
 		}
@@ -197,16 +206,26 @@ export class RoomService {
 	}
 
 	async delete(id: number) {
-		const room = await this.roomModel.findOne({ where: { id } });
+		const room = await this.roomModel.findByPk(id);
 
-		const image: string[] = Array.isArray(room.images) ? [...room.images] : [];
+		if (!room) {
+			throw new NotFoundException('Room not found');
+		}
 
-		image.forEach(async img => {
-			const parsedUrl = new URL(img);
+		const images: string[] = Array.isArray(room.images) ? [...room.images] : [];
 
-			const pathOnly = parsedUrl.pathname;
-			await this.filesService.delete(pathOnly);
-		});
+		if (images.length > 0) {
+			await Promise.all(
+				images.map(async img => {
+					try {
+						const key = this.filesService.extractKey(img);
+						await this.filesService.delete(key);
+					} catch (err) {
+						console.error(`Ошибка при удалении фото ${img}:`, err);
+					}
+				}),
+			);
+		}
 
 		await room.destroy();
 		return { message: 'Room successfully deleted' };

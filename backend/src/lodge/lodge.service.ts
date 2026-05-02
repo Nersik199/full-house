@@ -68,22 +68,28 @@ export class LodgeService {
 		dto: HeaderLodgeUpdateDto,
 		file?: Express.Multer.File,
 	) {
-		let newImg: string;
-		if (urlId && file) {
-			await this.filesService.delete(urlId);
-			newImg = await this.filesService.upload(file, 'header');
+		if (!file || !urlId) {
+			throw new BadRequestException(
+				'Для обновления заголовка необходимо предоставить и файл, и urlId',
+			);
 		}
-		const [updatedCount, [updatedHeader]] = await this.headerModel.update(
-			{ ...dto, image: newImg },
-			{
-				where: { id },
-				returning: true,
-			},
-		);
 
-		if (updatedCount === 0) throw new NotFoundException('Lodge not found');
+		const header = await this.headerModel.findByPk(id);
+		if (!header) {
+			throw new NotFoundException('Lodges item not found');
+		}
 
-		return updatedHeader;
+		const targetKey = this.filesService.extractKey(urlId);
+		await this.filesService.delete(targetKey);
+
+		const newImg = await this.filesService.upload(file, 'header');
+
+		await header.update({
+			...dto,
+			image: newImg,
+		});
+
+		return header;
 	}
 
 	async create(dto: LodgeCreateDto, files?: Express.Multer.File[]) {
@@ -108,17 +114,20 @@ export class LodgeService {
 	}
 
 	async findAll(page: number, limit: number) {
+		const safePage = Number(page) > 0 ? Number(page) : 1;
+		const safeLimit = Number(limit) > 0 ? Number(limit) : 10;
+
 		const total = await this.lodgeModel.count();
 
 		const { maxPageCount, offset } = calculatePagination(
-			Number(page),
-			Number(limit),
+			safePage,
+			safeLimit,
 			total,
 		);
 
 		const lodges = await this.lodgeModel.findAll({
 			order: [['created_at', 'DESC']],
-			limit: Number(limit),
+			limit: safeLimit,
 			offset,
 		});
 
@@ -130,8 +139,8 @@ export class LodgeService {
 			data: lodges,
 			meta: {
 				total,
-				page: Number(page),
-				limit: Number(limit),
+				page: safePage,
+				limit: safeLimit,
 				maxPageCount,
 			},
 		};
@@ -160,19 +169,19 @@ export class LodgeService {
 		let images: string[] = Array.isArray(lodge.images) ? [...lodge.images] : [];
 
 		if (file) {
-			const targetKey = urlId.startsWith('/') ? urlId.slice(1) : urlId;
+			if (urlId) {
+				const targetKey = this.filesService.extractKey(urlId);
 
-			await this.filesService.delete(targetKey);
+				await this.filesService.delete(targetKey);
 
-			images = images.filter(img => {
-				const imgKey = this.filesService.extractKey(img);
-				return imgKey !== targetKey;
-			});
-
+				images = images.filter(img => {
+					const imgKey = this.filesService.extractKey(img);
+					return imgKey !== targetKey;
+				});
+			}
 			const newImg = await this.filesService.upload(file, 'lodge');
 			images.push(newImg);
 		}
-
 		await lodge.update({
 			...dto,
 			images,
@@ -217,15 +226,21 @@ export class LodgeService {
 	async delete(id: number) {
 		const lodge = await this.lodgeModel.findOne({ where: { id } });
 
-		const image: string[] = Array.isArray(lodge.images)
+		const images: string[] = Array.isArray(lodge.images)
 			? [...lodge.images]
 			: [];
 
-		for (const img of image) {
-			const parsedUrl = new URL(img);
-
-			const pathOnly = parsedUrl.pathname;
-			await this.filesService.delete(pathOnly);
+		if (images.length > 0) {
+			await Promise.all(
+				images.map(async img => {
+					try {
+						const key = this.filesService.extractKey(img);
+						await this.filesService.delete(key);
+					} catch (err) {
+						console.error(`Ошибка при удалении фото ${img}:`, err);
+					}
+				}),
+			);
 		}
 
 		await lodge.destroy();

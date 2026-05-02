@@ -1,6 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+	BadRequestException,
+	Injectable,
+	NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 
+import { AboutUsHeader } from '@/about_us/entities/about_us.header.entity';
 import { FilesService } from '@/files/files.service';
 
 import { AboutUsCreateDto, AboutUsUpdateDto } from './dto/about_us.createDto';
@@ -15,13 +20,15 @@ export class AboutUsService {
 	constructor(
 		@InjectModel(AboutUs)
 		private readonly aboutUsModel: typeof AboutUs,
+		@InjectModel(AboutUsHeader)
+		private readonly headerModel: typeof AboutUsHeader,
 		private readonly filesService: FilesService,
 	) {}
 
 	async createHeader(dto: HeaderAboutUsCreateDto, file?: Express.Multer.File) {
 		const uploaded = await this.filesService.upload(file, 'header');
 
-		const headerData = await this.aboutUsModel.create({
+		const headerData = await this.headerModel.create({
 			...dto,
 			image: uploaded,
 		});
@@ -30,7 +37,7 @@ export class AboutUsService {
 	}
 
 	async getHeader() {
-		const getHeader = await this.aboutUsModel.findOne();
+		const getHeader = await this.headerModel.findOne();
 		if (!getHeader) {
 			throw new NotFoundException('header info not found');
 		}
@@ -43,22 +50,28 @@ export class AboutUsService {
 		dto: HeaderAboutUsUpdateDto,
 		file?: Express.Multer.File,
 	) {
-		let newImg: string;
-		if (urlId && file) {
-			await this.filesService.delete(urlId);
-			newImg = await this.filesService.upload(file, 'header');
+		if (!file || !urlId) {
+			throw new BadRequestException(
+				'Для обновления заголовка необходимо предоставить и файл, и urlId',
+			);
 		}
-		const [updatedCount, [updatedHeader]] = await this.aboutUsModel.update(
-			{ ...dto, image: newImg },
-			{
-				where: { id },
-				returning: true,
-			},
-		);
 
-		if (updatedCount === 0) throw new NotFoundException('About-Us not found');
+		const header = await this.headerModel.findByPk(id);
+		if (!header) {
+			throw new NotFoundException('About-Us item not found');
+		}
 
-		return updatedHeader;
+		const targetKey = this.filesService.extractKey(urlId);
+		await this.filesService.delete(targetKey);
+
+		const newImg = await this.filesService.upload(file, 'header');
+
+		await header.update({
+			...dto,
+			image: newImg,
+		});
+
+		return header;
 	}
 
 	async create(dto: AboutUsCreateDto, file?: Express.Multer.File) {

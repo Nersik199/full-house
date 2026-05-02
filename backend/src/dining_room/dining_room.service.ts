@@ -1,7 +1,12 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+	BadRequestException,
+	Injectable,
+	NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 
 import { HeaderAboutUsUpdateDto } from '@/about_us/dto/header.dto';
+import { DiningRoomHeader } from '@/dining_room/entities/dining_room.header.entity';
 import { FilesService } from '@/files/files.service';
 
 import {
@@ -16,6 +21,8 @@ export class DiningRoomService {
 	constructor(
 		@InjectModel(DiningRoom)
 		private readonly diningRoomModel: typeof DiningRoom,
+		@InjectModel(DiningRoomHeader)
+		private readonly headerModel: typeof DiningRoomHeader,
 		private readonly filesService: FilesService,
 	) {}
 
@@ -25,7 +32,7 @@ export class DiningRoomService {
 	) {
 		const uploaded = await this.filesService.upload(file, 'header');
 
-		const headerData = await this.diningRoomModel.create({
+		const headerData = await this.headerModel.create({
 			...dto,
 			image: uploaded,
 		});
@@ -34,7 +41,7 @@ export class DiningRoomService {
 	}
 
 	async getHeader() {
-		const getHeader = await this.diningRoomModel.findOne();
+		const getHeader = await this.headerModel.findOne();
 		if (!getHeader) {
 			throw new NotFoundException('header info not found');
 		}
@@ -47,22 +54,28 @@ export class DiningRoomService {
 		dto: HeaderAboutUsUpdateDto,
 		file?: Express.Multer.File,
 	) {
-		let newImg: string;
-		if (urlId && file) {
-			await this.filesService.delete(urlId);
-			newImg = await this.filesService.upload(file, 'header');
+		if (!file || !urlId) {
+			throw new BadRequestException(
+				'Для обновления заголовка необходимо предоставить и файл, и urlId',
+			);
 		}
-		const [updatedCount, [updatedHeader]] = await this.diningRoomModel.update(
-			{ ...dto, image: newImg },
-			{
-				where: { id },
-				returning: true,
-			},
-		);
 
-		if (updatedCount === 0) throw new NotFoundException('About-Us not found');
+		const header = await this.headerModel.findByPk(id);
+		if (!header) {
+			throw new NotFoundException('Dining room item not found');
+		}
 
-		return updatedHeader;
+		const targetKey = this.filesService.extractKey(urlId);
+		await this.filesService.delete(targetKey);
+
+		const newImg = await this.filesService.upload(file, 'header');
+
+		await header.update({
+			...dto,
+			image: newImg,
+		});
+
+		return header;
 	}
 
 	async create(dto: DiningRoomCreateDto, file?: Express.Multer.File) {

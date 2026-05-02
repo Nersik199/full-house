@@ -20,7 +20,7 @@ export class TicketService {
 	constructor(
 		@InjectModel(Ticket) private readonly ticketModel: typeof Ticket,
 		@InjectModel(TicketHeader)
-		private readonly ticketHeader: typeof TicketHeader,
+		private readonly headerModel: typeof TicketHeader,
 		private readonly filesService: FilesService,
 	) {}
 
@@ -35,7 +35,7 @@ export class TicketService {
 	async createHeader(dto: HeaderTicketCreateDto, file?: Express.Multer.File) {
 		const uploaded = await this.filesService.upload(file, 'header');
 
-		const headerData = await this.ticketHeader.create({
+		const headerData = await this.headerModel.create({
 			...dto,
 			image: uploaded,
 		});
@@ -44,7 +44,7 @@ export class TicketService {
 	}
 
 	async getHeader() {
-		const getHeader = await this.ticketHeader.findOne();
+		const getHeader = await this.headerModel.findOne();
 		if (!getHeader) {
 			throw new NotFoundException('header info not found');
 		}
@@ -57,22 +57,28 @@ export class TicketService {
 		dto: HeaderTicketUpdateDto,
 		file?: Express.Multer.File,
 	) {
-		let newImg: string;
-		if (urlId && file) {
-			await this.filesService.delete(urlId);
-			newImg = await this.filesService.upload(file, 'header');
+		if (!file || !urlId) {
+			throw new BadRequestException(
+				'Для обновления заголовка необходимо предоставить и файл, и urlId',
+			);
 		}
-		const [updatedCount, [updatedHeader]] = await this.ticketHeader.update(
-			{ ...dto, image: newImg },
-			{
-				where: { id },
-				returning: true,
-			},
-		);
 
-		if (updatedCount === 0) throw new NotFoundException('Ticket not found');
+		const header = await this.headerModel.findByPk(id);
+		if (!header) {
+			throw new NotFoundException('Ticket item not found');
+		}
 
-		return updatedHeader;
+		const targetKey = this.filesService.extractKey(urlId);
+		await this.filesService.delete(targetKey);
+
+		const newImg = await this.filesService.upload(file, 'header');
+
+		await header.update({
+			...dto,
+			image: newImg,
+		});
+
+		return header;
 	}
 
 	async setTicketsForDate(dto: CreateTicketDto) {

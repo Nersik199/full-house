@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+	BadRequestException,
+	Injectable,
+	NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 
 import { FilesService } from '@/files/files.service';
@@ -49,22 +53,28 @@ export class PoolAndSpaAreaService {
 		dto: HeaderPoolSpaUpdateDto,
 		file?: Express.Multer.File,
 	) {
-		let newImg: string;
-		if (urlId && file) {
-			await this.filesService.delete(urlId);
-			newImg = await this.filesService.upload(file, 'header');
+		if (!file || !urlId) {
+			throw new BadRequestException(
+				'Для обновления заголовка необходимо предоставить и файл, и urlId',
+			);
 		}
-		const [updatedCount, [updatedHeader]] = await this.headerModel.update(
-			{ ...dto, image: newImg },
-			{
-				where: { id },
-				returning: true,
-			},
-		);
 
-		if (updatedCount === 0) throw new NotFoundException('Header not found');
+		const header = await this.headerModel.findByPk(id);
+		if (!header) {
+			throw new NotFoundException('Pool Spa item not found');
+		}
 
-		return updatedHeader;
+		const targetKey = this.filesService.extractKey(urlId);
+		await this.filesService.delete(targetKey);
+
+		const newImg = await this.filesService.upload(file, 'header');
+
+		await header.update({
+			...dto,
+			image: newImg,
+		});
+
+		return header;
 	}
 
 	async create(dto: PoolSpaCreateDto, file?: Express.Multer.File) {
@@ -173,25 +183,31 @@ export class PoolAndSpaAreaService {
 		return slider;
 	}
 
-	async updateSlider(id: number, urlId: string, file?: Express.Multer.File) {
+	async updateSlider(id: number, urlId?: string, file?: Express.Multer.File) {
 		const slider = await this.sliderImageModel.findByPk(id);
 
 		if (!slider) {
-			throw new NotFoundException('Pool Spa not found');
+			throw new NotFoundException('Slider images not found');
 		}
 
 		let images: string[] = Array.isArray(slider.images)
 			? [...slider.images]
 			: [];
 
-		const targetKey = urlId.startsWith('/') ? urlId.slice(1) : urlId;
+		if (urlId) {
+			const targetKey = this.filesService.extractKey(urlId);
 
-		await this.filesService.delete(targetKey);
+			try {
+				await this.filesService.delete(targetKey);
 
-		images = images.filter(img => {
-			const imgKey = this.filesService.extractKey(img);
-			return imgKey !== targetKey;
-		});
+				images = images.filter(img => {
+					const imgKey = this.filesService.extractKey(img);
+					return imgKey !== targetKey;
+				});
+			} catch (error) {
+				console.error('Ошибка при удалении старого файла:', error);
+			}
+		}
 
 		if (file) {
 			const newImg = await this.filesService.upload(file, 'pool-spa/slider');

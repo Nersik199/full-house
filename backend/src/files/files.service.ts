@@ -1,122 +1,121 @@
-import { Injectable } from '@nestjs/common';
 import {
-  S3Client,
-  PutObjectCommand,
-  GetObjectCommand,
-  DeleteObjectCommand,
+	DeleteObjectCommand,
+	GetObjectCommand,
+	PutObjectCommand,
+	S3Client,
 } from '@aws-sdk/client-s3';
-import { randomUUID } from 'crypto';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import sharp from 'sharp';
+import { randomUUID } from 'crypto';
 import multer from 'multer';
+import sharp from 'sharp';
 
 @Injectable()
 export class FilesService {
-  private readonly S3_PUBLIC_DOMAIN: string;
-  private readonly S3_REGION: string;
-  private readonly S3_ENDPOINT: string;
-  private readonly S3_ACCESS_KEY_ID: string;
-  private readonly S3_SECRET_ACCESS_KEY: string;
-  private readonly S3_BUCKET_NAME: string;
+	private readonly S3_PUBLIC_DOMAIN: string;
+	private readonly S3_REGION: string;
+	private readonly S3_ENDPOINT: string;
+	private readonly S3_ACCESS_KEY_ID: string;
+	private readonly S3_SECRET_ACCESS_KEY: string;
+	private readonly S3_BUCKET_NAME: string;
 
-  private readonly s3: S3Client;
-  private readonly bucket: string;
+	private readonly s3: S3Client;
+	private readonly bucket: string;
 
-  constructor(private readonly configService: ConfigService) {
-    this.S3_PUBLIC_DOMAIN = configService.getOrThrow<string>('S3_PUBLIC_DOMAIN');
-    this.S3_REGION = configService.getOrThrow<string>('S3_REGION');
-    this.S3_ENDPOINT = configService.getOrThrow<string>('S3_ENDPOINT');
-    this.S3_ACCESS_KEY_ID =
-      configService.getOrThrow<string>('S3_ACCESS_KEY_ID');
-    this.S3_SECRET_ACCESS_KEY = configService.getOrThrow<string>(
-      'S3_SECRET_ACCESS_KEY',
-    );
-    this.S3_BUCKET_NAME = configService.getOrThrow<string>('S3_BUCKET_NAME');
-    this.s3 = new S3Client({
-      endpoint: this.S3_ENDPOINT,
-      credentials: {
-        accessKeyId: this.S3_ACCESS_KEY_ID,
-        secretAccessKey: this.S3_SECRET_ACCESS_KEY,
-      },
-      region: this.S3_REGION,
-    });
-    this.bucket = this.S3_BUCKET_NAME;
-  }
+	constructor(private readonly configService: ConfigService) {
+		this.S3_PUBLIC_DOMAIN =
+			configService.getOrThrow<string>('S3_PUBLIC_DOMAIN');
+		this.S3_REGION = configService.getOrThrow<string>('S3_REGION');
+		this.S3_ENDPOINT = configService.getOrThrow<string>('S3_ENDPOINT');
+		this.S3_ACCESS_KEY_ID =
+			configService.getOrThrow<string>('S3_ACCESS_KEY_ID');
+		this.S3_SECRET_ACCESS_KEY = configService.getOrThrow<string>(
+			'S3_SECRET_ACCESS_KEY',
+		);
+		this.S3_BUCKET_NAME = configService.getOrThrow<string>('S3_BUCKET_NAME');
+		this.s3 = new S3Client({
+			endpoint: this.S3_ENDPOINT,
+			credentials: {
+				accessKeyId: this.S3_ACCESS_KEY_ID,
+				secretAccessKey: this.S3_SECRET_ACCESS_KEY,
+			},
+			region: this.S3_REGION,
+		});
+		this.bucket = this.S3_BUCKET_NAME;
+	}
 
-  extractKey(url: string): string {
-    const cleanUrl = url.split('?')[0];
-    const pathname = new URL(cleanUrl).pathname;
-    return pathname.startsWith('/') ? pathname.slice(1) : pathname;
-  }
+	extractKey(url: string): string {
+		const cleanUrl = url.split('?')[0];
+		const pathname = new URL(cleanUrl).pathname;
+		return pathname.startsWith('/') ? pathname.slice(1) : pathname;
+	}
 
+	async uploadMany(
+		files?: Express.Multer.File[],
+		folder = 'uploads',
+	): Promise<string[]> {
+		if (!files?.length) return [];
 
-  async uploadMany(
-    files?: Express.Multer.File[],
-    folder = 'uploads',
-  ): Promise<string[]> {
-    if (!files?.length) return [];
+		return Promise.all(files.map(file => this.upload(file, folder)));
+	}
 
-    return Promise.all(files.map((file) => this.upload(file, folder)));
-  }
+	async upload(
+		file: Express.Multer.File,
+		folder = 'uploads',
+		maxSizeMB: number = 10,
+		maxWidth: number = 1200,
+	): Promise<string> {
+		const safeFileName = file.originalname.replace(/\s+/g, '_');
+		const filename = `${randomUUID()}-${safeFileName}`;
+		const key = `${folder}/${filename}`;
 
-  async upload(
-    file: Express.Multer.File,
-    folder = 'uploads',
-    maxSizeMB: number = 10,
-    maxWidth: number = 1200,
-  ): Promise<string> {
-    const safeFileName = file.originalname.replace(/\s+/g, '_');
-    const filename = `${randomUUID()}-${safeFileName}`;
-    const key = `${folder}/${filename}`;
+		try {
+			let buffer = file.buffer;
 
-    try {
-      let buffer = file.buffer;
+			if (file.size > maxSizeMB * 1024 * 1024) {
+				let quality = 90;
+				let width = maxWidth;
+				let resized = buffer;
 
-      if (file.size > maxSizeMB * 1024 * 1024) {
-        let quality = 90;
-        let width = maxWidth;
-        let resized = buffer;
+				while (resized.length > maxSizeMB * 1024 * 1024 && quality > 10) {
+					resized = await sharp(buffer)
+						.resize({ width, withoutEnlargement: true })
+						.jpeg({ quality })
+						.toBuffer();
 
-        while (resized.length > maxSizeMB * 1024 * 1024 && quality > 10) {
-          resized = await sharp(buffer)
-            .resize({ width, withoutEnlargement: true })
-            .jpeg({ quality })
-            .toBuffer();
+					width = Math.floor(width * 0.9);
+					quality = quality - 10;
+				}
 
-          width = Math.floor(width * 0.9);
-          quality = quality - 10;
-        }
+				buffer = resized;
+			}
 
-        buffer = resized;
-      }
+			await this.s3.send(
+				new PutObjectCommand({
+					Bucket: this.bucket,
+					Key: key,
+					Body: buffer,
+					ContentType: file.mimetype,
+				}),
+			);
+			return `https://${this.S3_PUBLIC_DOMAIN}/${key}`;
+		} catch (error) {
+			console.error('S3 upload error:', error);
+			throw error;
+		}
+	}
 
-      await this.s3.send(
-        new PutObjectCommand({
-          Bucket: this.bucket,
-          Key: key,
-          Body: buffer,
-          ContentType: file.mimetype,
-        }),
-      );
-      return `https://${this.S3_PUBLIC_DOMAIN}/${key}`;
-    } catch (error) {
-      console.error('S3 upload error:', error);
-      throw error;
-    }
-  }
-
-  async delete(key: string) {
-    try {
-      await this.s3.send(
-        new DeleteObjectCommand({
-          Bucket: this.S3_BUCKET_NAME,
-          Key: key,
-        }),
-      );
-      return { message: 'Файл успешно удалён' };
-    } catch (error) {
-      console.error('S3 delete error:', error);
-      throw error;
-    }
-  }
+	async delete(key: string) {
+		try {
+			await this.s3.send(
+				new DeleteObjectCommand({
+					Bucket: this.S3_BUCKET_NAME,
+					Key: key,
+				}),
+			);
+			return { message: 'Файл успешно удалён' };
+		} catch (error) {
+			console.error('S3 delete error:', error);
+		}
+	}
 }

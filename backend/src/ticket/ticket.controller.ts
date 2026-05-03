@@ -53,12 +53,12 @@ export class TicketController {
 	@HttpCode(HttpStatus.OK)
 	async updateHeader(
 		@Param('id') id: number,
-		@Query('urlId') urlId: string,
 		@CurrentAdmin('id') userId: number,
 		@Body() dto: HeaderTicketCreateDto,
+		@Query('urlId') urlId?: string,
 		@UploadedFile() file?: Express.Multer.File,
 	) {
-		return await this.ticketService.updateHeader(id, urlId, dto, file);
+		return await this.ticketService.updateHeader(id, dto, urlId, file);
 	}
 
 	@Get('header/info')

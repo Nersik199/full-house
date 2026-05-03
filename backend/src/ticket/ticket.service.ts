@@ -53,14 +53,12 @@ export class TicketService {
 
 	async updateHeader(
 		id: number,
-		urlId: string,
 		dto: HeaderTicketUpdateDto,
+		urlId?: string,
 		file?: Express.Multer.File,
 	) {
-		if (!file || !urlId) {
-			throw new BadRequestException(
-				'Для обновления заголовка необходимо предоставить и файл, и urlId',
-			);
+		if (isNaN(id)) {
+			throw new BadRequestException('Invalid ID');
 		}
 
 		const header = await this.headerModel.findByPk(id);
@@ -68,15 +66,22 @@ export class TicketService {
 			throw new NotFoundException('Ticket item not found');
 		}
 
-		const targetKey = this.filesService.extractKey(urlId);
-		await this.filesService.delete(targetKey);
+		const updateData: any = { ...dto };
 
-		const newImg = await this.filesService.upload(file, 'header');
+		if (file && urlId) {
+			try {
+				const targetKey = this.filesService.extractKey(urlId);
+				await this.filesService.delete(targetKey);
 
-		await header.update({
-			...dto,
-			image: newImg,
-		});
+				const newImg = await this.filesService.upload(file, 'header');
+
+				updateData.image = newImg;
+			} catch (error) {
+				console.error('File update error:', error);
+			}
+		}
+
+		await header.update(updateData);
 
 		return header;
 	}

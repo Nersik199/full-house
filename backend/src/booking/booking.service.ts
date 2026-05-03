@@ -185,15 +185,29 @@ export class BookingService {
 	async getBookingsByDays(dto: GetBookingsByDaysDto) {
 		const today = dayjs().startOf('day').toDate();
 
+		let categoryCondition;
+
+		if (dto.category === 'lodge') {
+			categoryCondition = {
+				[Op.and]: [
+					{ lodge_id: { [Op.ne]: null } },
+					{
+						[Op.or]: [{ category: 'lodge' }, { category: null }],
+					},
+				],
+			};
+		} else {
+			categoryCondition = { category: dto.category };
+		}
+
 		const bookings = await this.bookingModel.findAll({
 			where: {
-				category: dto.category,
+				...categoryCondition,
 				status: 'confirmed',
-				checkOut: {
+				check_out: {
 					[Op.gte]: today,
 				},
 			},
-
 			attributes: [
 				'id',
 				'room_number',
@@ -203,8 +217,9 @@ export class BookingService {
 				'check_out',
 				'status',
 				'source',
+				'category',
 			],
-			order: [['checkIn', 'ASC']],
+			order: [['check_in', 'ASC']],
 		});
 
 		return bookings
@@ -219,19 +234,20 @@ export class BookingService {
 				}
 
 				const dayList = [];
-
 				while (current.isSameOrBefore(end, 'day')) {
 					dayList.push(current.format('YYYY-MM-DD'));
 					current = current.add(1, 'day');
 				}
 
 				return {
-					roomId: booking.roomId,
-					lodgeId: booking.lodgeId,
-					roomNumber: booking.roomNumber,
+					id: booking.id,
+					roomId: booking.room_id,
+					lodgeId: booking.lodge_id,
+					roomNumber: booking.room_number,
 					day: dayList,
 					status: booking.status,
 					source: booking.source,
+					category: booking.category,
 				};
 			})
 			.filter(Boolean);

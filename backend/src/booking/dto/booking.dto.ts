@@ -119,14 +119,20 @@ export class CreateBookingDto {
 export class GetBookingsByDaysDto {
 	@ApiProperty({
 		description: 'Категория номера',
-		enum: ['Standard', 'Comfort', 'Luxury', 'Family', 'Presidential'],
+		enum: ['Standard', 'Comfort', 'Luxury', 'Family', 'Presidential', 'lodge'],
 		example: 'Standard',
 	})
 	@IsString()
-	@IsIn(['Standard', 'Comfort', 'Luxury', 'Family', 'Presidential'], {
+	@IsIn(['Standard', 'Comfort', 'Luxury', 'Family', 'Presidential', 'lodge'], {
 		message: 'Неверная категория номера',
 	})
-	category: 'Standard' | 'Comfort' | 'Luxury' | 'Family' | 'Presidential';
+	category:
+		| 'Standard'
+		| 'Comfort'
+		| 'Luxury'
+		| 'Family'
+		| 'Presidential'
+		| 'lodge';
 }
 
 export class GetAllBookings {

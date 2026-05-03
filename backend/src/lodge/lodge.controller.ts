@@ -55,12 +55,12 @@ export class LodgeController {
 	@HttpCode(HttpStatus.OK)
 	async updateHeader(
 		@Param('id') id: number,
-		@Query('urlId') urlId: string,
 		@CurrentAdmin('id') userId: number,
 		@Body() dto: HeaderLodgeUpdateDto,
+		@Query('urlId') urlId?: string,
 		@UploadedFile() file?: Express.Multer.File,
 	) {
-		return await this.lodgeService.updateHeader(id, urlId, dto, file);
+		return await this.lodgeService.updateHeader(id, dto, urlId, file);
 	}
 
 	@Get('header/info')

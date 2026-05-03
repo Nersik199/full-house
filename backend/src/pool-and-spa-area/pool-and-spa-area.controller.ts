@@ -63,12 +63,12 @@ export class PoolAndSpaAreaController {
 	@HttpCode(HttpStatus.OK)
 	async updateHeader(
 		@Param('id') id: number,
-		@Query('urlId') urlId: string,
 		@CurrentAdmin('id') userId: number,
 		@Body() dto: HeaderPoolSpaUpdateDto,
+		@Query('urlId') urlId?: string,
 		@UploadedFile() file?: Express.Multer.File,
 	) {
-		return await this.poolAndSpaAreaService.updateHeader(id, urlId, dto, file);
+		return await this.poolAndSpaAreaService.updateHeader(id, dto, urlId, file);
 	}
 
 	@Get('header/info')

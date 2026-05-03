@@ -6,7 +6,6 @@ import {
 	HttpCode,
 	HttpStatus,
 	Param,
-	ParseIntPipe,
 	Post,
 	Put,
 	Query,
@@ -15,13 +14,7 @@ import {
 	UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
-import {
-	ApiBearerAuth,
-	ApiConsumes,
-	ApiOperation,
-	ApiQuery,
-	ApiResponse,
-} from '@nestjs/swagger';
+import { ApiBearerAuth, ApiConsumes, ApiQuery } from '@nestjs/swagger';
 import { Auth } from 'src/auth/decorators/auth.decorators';
 import { CurrentAdmin } from 'src/user/decorators/user.decorator';
 
@@ -61,12 +54,12 @@ export class RoomController {
 	@HttpCode(HttpStatus.OK)
 	async updateHeader(
 		@Param('id') id: number,
-		@Query('urlId') urlId: string,
 		@CurrentAdmin('id') userId: number,
 		@Body() dto: HeaderRoomUpdateDto,
+		@Query('urlId') urlId?: string,
 		@UploadedFile() file?: Express.Multer.File,
 	) {
-		return await this.roomService.updateHeader(id, urlId, dto, file);
+		return await this.roomService.updateHeader(id, dto, urlId, file);
 	}
 
 	@Get('header/info')
@@ -133,7 +126,7 @@ export class RoomController {
 	async update(
 		@Body() dto: RoomUpdateDto,
 		@Param('id') id: number,
-		@Query('urlId') urlId: string,
+		@Query('urlId') urlId?: string,
 		@UploadedFile() file?: Express.Multer.File,
 	) {
 		return await this.roomService.update(id, dto, urlId, file);

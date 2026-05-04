@@ -313,7 +313,7 @@ export class BookingService {
 
 	async findAllOccupied(start: Date, end: Date) {
 		return await this.bookingModel.findAll({
-			attributes: ['roomId'],
+			attributes: ['room_id'],
 			where: {
 				status: {
 					[Op.in]: ['confirmed', 'checked_in', 'pending'],

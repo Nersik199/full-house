@@ -270,67 +270,72 @@ export class RoomService {
 		}
 	}
 
-	async search(startDate?: string, endDate?: string, adults = 0, children = 0) {
+	async search(
+		startDate?: string,
+		endDate?: string,
+		adults = 0,
+		children = 0,
+		bathRoom?: boolean,
+		diningRoom?: boolean,
+		balcony?: boolean,
+	) {
 		const totalNeeded = adults + children;
+		let excludedRoomIds: any[] = [];
 
-		const hasDates = startDate && endDate;
-
-		let occupiedRoomIds: number[] = [];
-
-		if (hasDates) {
-			const start = dayjs(startDate).startOf('day').toDate();
-			const end = dayjs(endDate).startOf('day').toDate();
+		if (startDate && endDate) {
+			const start = dayjs(startDate).startOf('day');
+			const end = dayjs(endDate).startOf('day');
 
 			if (
-				!startDate ||
-				!endDate ||
-				!dayjs(startDate).isValid() ||
-				!dayjs(endDate).isValid()
+				!start.isValid() ||
+				!end.isValid() ||
+				end.isBefore(start) ||
+				end.isSame(start)
 			) {
-				throw new BadRequestException('Invalid date');
+				throw new BadRequestException('Invalid date range');
 			}
 
 			const occupiedData = await this.bookingService.findAllOccupied(
-				start,
-				end,
+				start.toDate(),
+				end.toDate(),
 			);
-			occupiedRoomIds = occupiedData.map(b => b.roomId).filter(Boolean);
+
+			excludedRoomIds = occupiedData
+				.map((b: any) => b.room_id || b.roomId)
+				.filter(Boolean)
+				.map(id => String(id));
 		}
 
 		const where: any = {};
 
-		if (occupiedRoomIds.length) {
-			where.id = {
-				[Op.notIn]: occupiedRoomIds,
-			};
+		if (excludedRoomIds.length > 0) {
+			where.id = { [Op.notIn]: excludedRoomIds };
 		}
+
+		if (bathRoom) where.bath_room = { [Op.gt]: 0 };
+		if (diningRoom) where.dining_room = { [Op.gt]: 0 };
+		if (balcony) where.balcony = { [Op.gt]: 0 };
 
 		const availableRooms = await this.roomModel.findAll({
 			where,
 			order: [['price', 'ASC']],
 		});
 
-		if (!hasDates && totalNeeded === 0) {
-			return {
-				results: availableRooms,
-				suggested: [],
-			};
-		}
-
 		const results = [];
 		const suggested = [];
 
 		availableRooms.forEach(room => {
-			if (totalNeeded > 0 && room.member >= totalNeeded) {
-				results.push(room);
+			if (totalNeeded > 0) {
+				if (room.member >= totalNeeded) {
+					results.push(room);
+				} else {
+					suggested.push(room);
+				}
 			} else {
-				suggested.push(room);
+				results.push(room);
 			}
 		});
 
-		return {
-			results,
-			suggested,
-		};
+		return { results, suggested };
 	}
 }

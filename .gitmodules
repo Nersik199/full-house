@@ -1,0 +1,6 @@
+[submodule "frontend"]
+	path = frontend
+	url = git@github.com:Koryun-V/full.git
+[submodule "frontend-admin"]
+	path = frontend-admin
+	url = git@github.com:Koryun-V/full-admin.git

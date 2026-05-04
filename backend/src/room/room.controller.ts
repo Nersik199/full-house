@@ -74,12 +74,18 @@ export class RoomController {
 		@Query('end') endDate?: string,
 		@Query('adults') adults?: string,
 		@Query('children') children?: string,
+		@Query('bathRoom') bathRoom?: string,
+		@Query('diningRoom') diningRoom?: string,
+		@Query('balcony') balcony?: string,
 	) {
 		return this.roomService.search(
 			startDate,
 			endDate,
 			Number(adults) || 0,
 			Number(children) || 0,
+			bathRoom === 'true',
+			diningRoom === 'true',
+			balcony === 'true',
 		);
 	}
 	@ApiBearerAuth('Authorization')

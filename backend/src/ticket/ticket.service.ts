@@ -166,21 +166,39 @@ export class TicketService {
 		);
 
 		const tickets = await this.ticketModel.findAll({
-			order: [['created_at', 'DESC']],
-			limit: Number(limit),
+			order: [
+				['date', 'DESC'],
+				['createdAt', 'DESC'],
+			],
+			limit: safeLimit,
 			offset,
 		});
 
 		if (!tickets.length) {
-			throw new NotFoundException('Ticket not found');
+			throw new NotFoundException('Tickets not found');
 		}
 
+		const groupedData = tickets.reduce(
+			(acc, ticket) => {
+				const dateKey = dayjs(ticket.date).format('YYYY-MM-DD');
+
+				if (!acc[dateKey]) {
+					acc[dateKey] = [];
+				}
+
+				acc[dateKey].push(ticket);
+
+				return acc;
+			},
+			{} as Record<string, any[]>,
+		);
+
 		return {
-			data: tickets,
+			data: groupedData,
 			meta: {
 				total,
-				page: Number(page),
-				limit: Number(limit),
+				page: safePage,
+				limit: safeLimit,
 				maxPageCount,
 			},
 		};

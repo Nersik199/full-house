@@ -83,7 +83,7 @@ export class TicketController {
 	@ApiBearerAuth('Authorization')
 	@Auth()
 	@HttpCode(HttpStatus.OK)
-	@Get('all')
+	@Get('admin/all')
 	async getAllTickets(
 		@Query('limit') limit?: number,
 		@Query('page') page?: number,

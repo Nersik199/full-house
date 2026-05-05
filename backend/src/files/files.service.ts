@@ -1,13 +1,12 @@
 import {
 	DeleteObjectCommand,
-	GetObjectCommand,
 	PutObjectCommand,
 	S3Client,
 } from '@aws-sdk/client-s3';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'crypto';
-import multer from 'multer';
+// import multer from 'multer';
 import sharp from 'sharp';
 
 @Injectable()
@@ -65,8 +64,14 @@ export class FilesService {
 		maxSizeMB: number = 10,
 		maxWidth: number = 1200,
 	): Promise<string> {
-		const safeFileName = file.originalname.replace(/\s+/g, '_');
-		const filename = `${randomUUID()}-${safeFileName}`;
+		const rawExtension = file.originalname.split('.').pop() || '';
+		const cleanExtension = rawExtension
+			.replace(/[^a-z0-9]/gi, '')
+			.toLowerCase();
+
+		const filename = cleanExtension
+			? `${randomUUID()}.${cleanExtension}`
+			: randomUUID();
 		const key = `${folder}/${filename}`;
 
 		try {

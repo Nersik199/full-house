@@ -18,6 +18,8 @@ import { ApiBearerAuth, ApiConsumes, ApiQuery } from '@nestjs/swagger';
 import { Auth } from 'src/auth/decorators/auth.decorators';
 import { CurrentAdmin } from 'src/user/decorators/user.decorator';
 
+import { SearchRoomDto } from '@/room/dto/room.search.dto';
+
 import { HeaderRoomCreateDto, HeaderRoomUpdateDto } from './dto/header.dto';
 import { CreateBookingWalkInDto } from './dto/room.booking.walkIn.dto';
 import { GetAllRoomsDto, RoomCreateDto, RoomUpdateDto } from './dto/room.dto';
@@ -69,25 +71,10 @@ export class RoomController {
 	}
 
 	@Get('search')
-	async search(
-		@Query('start') startDate?: string,
-		@Query('end') endDate?: string,
-		@Query('adults') adults?: string,
-		@Query('children') children?: string,
-		@Query('bathRoom') bathRoom?: string,
-		@Query('diningRoom') diningRoom?: string,
-		@Query('balcony') balcony?: string,
-	) {
-		return this.roomService.search(
-			startDate,
-			endDate,
-			Number(adults) || 0,
-			Number(children) || 0,
-			bathRoom === 'true',
-			diningRoom === 'true',
-			balcony === 'true',
-		);
+	async search(@Query() query: SearchRoomDto) {
+		return this.roomService.search(query);
 	}
+
 	@ApiBearerAuth('Authorization')
 	@Auth()
 	@Post('admin/create')

@@ -10,6 +10,7 @@ import { Sequelize } from 'sequelize-typescript';
 
 import { BookingService } from '@/booking/booking.service';
 import { FilesService } from '@/files/files.service';
+import { SearchRoomDto } from '@/room/dto/room.search.dto';
 import { calculatePagination } from '@/shared/utils/calculate.pagination';
 
 import { HeaderRoomCreateDto, HeaderRoomUpdateDto } from './dto/header.dto';
@@ -270,39 +271,36 @@ export class RoomService {
 		}
 	}
 
-	async search(
-		startDate?: string,
-		endDate?: string,
-		adults = 0,
-		children = 0,
-		bathRoom?: boolean,
-		diningRoom?: boolean,
-		balcony?: boolean,
-	) {
-		const totalNeeded = adults + children;
-		let excludedRoomIds: any[] = [];
+	async search(query: SearchRoomDto) {
+		const { start, end, adults, children, bathRoom, diningRoom, balcony } =
+			query;
+		const totalNeeded = (adults || 0) + (children || 0);
+		let excludedRoomIds: string[] = [];
 
-		if (startDate && endDate) {
-			const start = dayjs(startDate).startOf('day');
-			const end = dayjs(endDate).startOf('day');
+		if (start && end) {
+			const startDate = dayjs(start).startOf('day');
+			const endDate = dayjs(end).startOf('day');
 
-			if (
-				!start.isValid() ||
-				!end.isValid() ||
-				end.isBefore(start) ||
-				end.isSame(start)
-			) {
-				throw new BadRequestException('Invalid date range');
+			if (!startDate.isValid() || !endDate.isValid()) {
+				throw new BadRequestException('Неверный формат дат');
+			}
+			if (endDate.isBefore(startDate) || endDate.isSame(startDate)) {
+				throw new BadRequestException(
+					'Дата выезда должна быть позже даты заезда',
+				);
 			}
 
-			const occupiedData = await this.bookingService.findAllOccupied(
-				start.toDate(),
-				end.toDate(),
+			const occupiedData = await this.bookingService.findAllOccupiedForSearch(
+				startDate.toDate(),
+				endDate.toDate(),
 			);
 
 			excludedRoomIds = occupiedData
-				.map((b: any) => b.room_id || b.roomId)
-				.filter(Boolean)
+				.map((b: any) => {
+					const id = b.room_id || b.roomId || (b.get ? b.get('room_id') : null);
+					return id;
+				})
+				.filter(id => id !== null && id !== undefined)
 				.map(id => String(id));
 		}
 
@@ -312,9 +310,15 @@ export class RoomService {
 			where.id = { [Op.notIn]: excludedRoomIds };
 		}
 
-		if (bathRoom) where.bath_room = { [Op.gt]: 0 };
-		if (diningRoom) where.dining_room = { [Op.gt]: 0 };
-		if (balcony) where.balcony = { [Op.gt]: 0 };
+		if (bathRoom) {
+			where.bath_room = { [Op.gt]: 0 };
+		}
+		if (diningRoom) {
+			where.dining_room = { [Op.gt]: 0 };
+		}
+		if (balcony) {
+			where.balcony = { [Op.gt]: 0 };
+		}
 
 		const availableRooms = await this.roomModel.findAll({
 			where,

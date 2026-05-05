@@ -4,15 +4,17 @@ import {
 	OmitType,
 	PartialType,
 } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
 	IsBoolean,
+	IsDateString,
 	IsIn,
 	IsNotEmpty,
 	IsNumber,
 	IsOptional,
 	IsString,
 	Length,
+	Min,
 } from 'class-validator';
 
 export class RoomCreateDto {

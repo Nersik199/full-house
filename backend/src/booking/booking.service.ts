@@ -325,4 +325,19 @@ export class BookingService {
 			raw: true,
 		});
 	}
+
+	async findAllOccupiedForSearch(start: Date, end: Date) {
+		return await this.bookingModel.findAll({
+			where: {
+				status: { [Op.ne]: 'cancelled' },
+				[Op.or]: [
+					{
+						check_in: { [Op.lt]: end },
+						check_out: { [Op.gt]: start },
+					},
+				],
+			},
+			attributes: ['room_id'],
+		});
+	}
 }

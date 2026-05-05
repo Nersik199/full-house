@@ -33,7 +33,9 @@ export class HomeService {
 	}
 
 	async getHeader() {
-		const getHeader = await this.headerModel.findOne();
+		const getHeader = await this.headerModel.findOne({
+			where: { id: 1 },
+		});
 		if (!getHeader) {
 			throw new NotFoundException('header info not found');
 		}

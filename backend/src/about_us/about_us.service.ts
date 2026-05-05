@@ -37,7 +37,9 @@ export class AboutUsService {
 	}
 
 	async getHeader() {
-		const getHeader = await this.headerModel.findOne();
+		const getHeader = await this.headerModel.findOne({
+			where: { id: 1 },
+		});
 		if (!getHeader) {
 			throw new NotFoundException('header info not found');
 		}
@@ -96,7 +98,7 @@ export class AboutUsService {
 		});
 
 		if (!menus || menus.length === 0) {
-			throw new NotFoundException('No rooms found');
+			throw new NotFoundException('No found about us');
 		}
 
 		return menus;
@@ -105,7 +107,7 @@ export class AboutUsService {
 	async findById(id: number) {
 		const menu = await this.aboutUsModel.findByPk(id);
 		if (!menu) {
-			throw new NotFoundException(`menu with id ${id} not found`);
+			throw new NotFoundException(`about us with id ${id} not found`);
 		}
 		return menu;
 	}

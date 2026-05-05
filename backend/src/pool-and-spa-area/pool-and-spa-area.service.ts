@@ -30,6 +30,7 @@ export class PoolAndSpaAreaService {
 
 	async createHeader(dto: HeaderPoolSpaCreateDto, file?: Express.Multer.File) {
 		const uploaded = await this.filesService.upload(file, 'header');
+		const count = await this.headerModel.count();
 
 		const headerData = await this.headerModel.create({
 			...dto,
@@ -40,7 +41,9 @@ export class PoolAndSpaAreaService {
 	}
 
 	async getHeader() {
-		const getHeader = await this.headerModel.findOne();
+		const getHeader = await this.headerModel.findOne({
+			where: { id: 1 },
+		});
 		if (!getHeader) {
 			throw new NotFoundException('header info not found');
 		}

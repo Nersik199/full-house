@@ -156,9 +156,12 @@ export class TicketService {
 	async getAllTickets(page: number, limit: number) {
 		const total = await this.ticketModel.count();
 
+		const safePage = Number(page) > 0 ? Number(page) : 1;
+		const safeLimit = Number(limit) > 0 ? Number(limit) : 10;
+
 		const { maxPageCount, offset } = calculatePagination(
-			Number(page),
-			Number(limit),
+			safePage,
+			safeLimit,
 			total,
 		);
 

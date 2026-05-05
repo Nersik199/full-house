@@ -74,6 +74,7 @@ export class AboutUsController {
 	@Auth()
 	@Post('admin/create')
 	@ApiConsumes('multipart/form-data')
+	@UseInterceptors(FileInterceptor('file'))
 	@HttpCode(HttpStatus.OK)
 	async create(
 		@CurrentAdmin('role') role: string,
@@ -109,7 +110,7 @@ export class AboutUsController {
 	async update(
 		@Body() dto: AboutUsUpdateDto,
 		@Param('id') id: number,
-		@Query('urlId') urlId: string,
+		@Query('urlId') urlId?: string,
 		@UploadedFile() file?: Express.Multer.File,
 	) {
 		return await this.aboutUsService.update(id, dto, urlId, file);

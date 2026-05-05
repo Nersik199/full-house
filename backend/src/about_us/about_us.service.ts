@@ -80,18 +80,14 @@ export class AboutUsService {
 	}
 
 	async create(dto: AboutUsCreateDto, file?: Express.Multer.File) {
-		try {
-			const uploaded = await this.filesService.upload(file, 'about-us');
+		const uploaded = await this.filesService.upload(file, 'about-us');
 
-			const aboutAs = await this.aboutUsModel.create({
-				...dto,
-				image: uploaded,
-			});
+		const aboutAs = await this.aboutUsModel.create({
+			...dto,
+			image: uploaded,
+		});
 
-			return aboutAs;
-		} catch (error) {
-			console.log(error);
-		}
+		return aboutAs;
 	}
 
 	async findAll() {
@@ -117,37 +113,31 @@ export class AboutUsService {
 	async update(
 		id: number,
 		dto: AboutUsUpdateDto,
-		urlId: string,
+		urlId?: string,
 		file?: Express.Multer.File,
 	) {
 		const aboutUs = await this.aboutUsModel.findByPk(id);
 
 		if (!aboutUs) {
-			throw new NotFoundException('Room not found');
+			throw new NotFoundException('About us not found');
 		}
 
-		let images: string[] = Array.isArray(aboutUs.image)
-			? [...aboutUs.image]
-			: [];
+		const updateData: any = { ...dto };
 
-		if (file) {
-			const targetKey = urlId.startsWith('/') ? urlId.slice(1) : urlId;
+		if (file && urlId) {
+			try {
+				const targetKey = this.filesService.extractKey(urlId);
+				await this.filesService.delete(targetKey);
 
-			await this.filesService.delete(targetKey);
+				const newImg = await this.filesService.upload(file, 'header');
 
-			images = images.filter(img => {
-				const imgKey = this.filesService.extractKey(img);
-				return imgKey !== targetKey;
-			});
-
-			const newImg = await this.filesService.upload(file, 'about-us');
-			images.push(newImg);
+				updateData.image = newImg;
+			} catch (error) {
+				console.error('File update error:', error);
+			}
 		}
 
-		await aboutUs.update({
-			...dto,
-			images,
-		});
+		await aboutUs.update(updateData);
 
 		return aboutUs;
 	}

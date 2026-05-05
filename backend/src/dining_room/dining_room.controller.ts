@@ -104,7 +104,7 @@ export class DiningRoomController {
 	async update(
 		@Body() dto: DiningRoomUpdateDto,
 		@Param('id') id: number,
-		@Query('urlId') urlId: string,
+		@Query('urlId') urlId?: string,
 		@UploadedFile() file?: Express.Multer.File,
 	) {
 		return await this.diningRoomService.update(id, dto, urlId, file);

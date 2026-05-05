@@ -130,28 +130,22 @@ export class DiningRoomService {
 			throw new NotFoundException('Dining room not found');
 		}
 
-		let images: string[] = Array.isArray(diningRoom.image)
-			? [...diningRoom.image]
-			: [];
+		const updateData: any = { ...dto };
 
-		if (file) {
-			const targetKey = urlId.startsWith('/') ? urlId.slice(1) : urlId;
+		if (file && urlId) {
+			try {
+				const targetKey = this.filesService.extractKey(urlId);
+				await this.filesService.delete(targetKey);
 
-			await this.filesService.delete(targetKey);
+				const newImg = await this.filesService.upload(file, 'header');
 
-			images = images.filter(img => {
-				const imgKey = this.filesService.extractKey(img);
-				return imgKey !== targetKey;
-			});
-
-			const newImg = await this.filesService.upload(file, 'dining-room');
-			images.push(newImg);
+				updateData.image = newImg;
+			} catch (error) {
+				console.error('File update error:', error);
+			}
 		}
 
-		await diningRoom.update({
-			...dto,
-			images,
-		});
+		await diningRoom.update(updateData);
 
 		return diningRoom;
 	}

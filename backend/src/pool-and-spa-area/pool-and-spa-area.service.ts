@@ -120,7 +120,7 @@ export class PoolAndSpaAreaService {
 	async update(
 		id: number,
 		dto: PoolSpaUpdateDto,
-		urlId: string,
+		urlId?: string,
 		file?: Express.Multer.File,
 	) {
 		const poolSpa = await this.poolSpaModel.findByPk(id);

@@ -85,8 +85,8 @@ export class LodgeController {
 
 	@Get('all')
 	@HttpCode(HttpStatus.OK)
-	async findAll(@Query('limit') limit: number, @Query('page') page: number) {
-		return await this.lodgeService.findAll(limit, page);
+	async findAll(@Query('page') page: number, @Query('limit') limit: number) {
+		return await this.lodgeService.findAll(page, limit);
 	}
 
 	@Get(':id')

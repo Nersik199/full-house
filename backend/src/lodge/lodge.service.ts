@@ -10,6 +10,7 @@ import { Sequelize } from 'sequelize-typescript';
 import { BookingService } from '@/booking/booking.service';
 import { FilesService } from '@/files/files.service';
 import { CreateBookingWalkInLodgeDto } from '@/lodge/dto/lodge.booking.walkIn.dto';
+import { GetAllRoomsDto } from '@/room/dto/room.dto';
 import { calculatePagination } from '@/shared/utils/calculate.pagination';
 
 import { HeaderLodgeCreateDto, HeaderLodgeUpdateDto } from './dto/header.dto';
@@ -125,8 +126,8 @@ export class LodgeService {
 		const total = await this.lodgeModel.count();
 
 		const { maxPageCount, offset } = calculatePagination(
-			safePage,
-			safeLimit,
+			Number(safePage),
+			Number(safeLimit),
 			total,
 		);
 
@@ -136,8 +137,8 @@ export class LodgeService {
 			offset,
 		});
 
-		if (!lodges.length) {
-			throw new NotFoundException('Lodges not found');
+		if (!lodges.length && total === 0) {
+			throw new NotFoundException('No lodge found');
 		}
 
 		return {

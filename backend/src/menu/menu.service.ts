@@ -138,19 +138,22 @@ export class MenuService {
 			throw new NotFoundException('Menu not found');
 		}
 
-		let image: string = menu.image || '';
+		const updateData: any = { ...dto };
+
 		if (file && urlId) {
-			const targetKey = urlId.startsWith('/') ? urlId.slice(1) : urlId;
+			try {
+				const targetKey = this.filesService.extractKey(urlId);
+				await this.filesService.delete(targetKey);
 
-			await this.filesService.delete(targetKey);
+				const newImg = await this.filesService.upload(file, 'header');
 
-			image = await this.filesService.upload(file, 'menu');
+				updateData.image = newImg;
+			} catch (error) {
+				console.error('File update error:', error);
+			}
 		}
 
-		await menu.update({
-			...dto,
-			image,
-		});
+		await menu.update(updateData);
 
 		return menu;
 	}

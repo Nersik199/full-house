@@ -19,6 +19,7 @@ import { Auth } from 'src/auth/decorators/auth.decorators';
 import { CurrentAdmin } from 'src/user/decorators/user.decorator';
 
 import { SearchRoomDto } from '@/room/dto/room.search.dto';
+import { DecodeUrlPipe } from '@/shared/pipes/decode-url.pipe';
 
 import { HeaderRoomCreateDto, HeaderRoomUpdateDto } from './dto/header.dto';
 import { CreateBookingWalkInDto } from './dto/room.booking.walkIn.dto';
@@ -58,7 +59,7 @@ export class RoomController {
 		@Param('id') id: number,
 		@CurrentAdmin('id') userId: number,
 		@Body() dto: HeaderRoomUpdateDto,
-		@Query('urlId') urlId?: string,
+		@Query('urlId', DecodeUrlPipe) urlId?: string,
 		@UploadedFile() file?: Express.Multer.File,
 	) {
 		return await this.roomService.updateHeader(id, dto, urlId, file);
@@ -119,7 +120,7 @@ export class RoomController {
 	async update(
 		@Body() dto: RoomUpdateDto,
 		@Param('id') id: number,
-		@Query('urlId') urlId?: string,
+		@Query('urlId', DecodeUrlPipe) urlId?: string,
 		@UploadedFile() file?: Express.Multer.File,
 	) {
 		return await this.roomService.update(id, dto, urlId, file);

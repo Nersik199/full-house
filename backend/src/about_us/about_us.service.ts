@@ -60,10 +60,11 @@ export class AboutUsService {
 		if (!header) {
 			throw new NotFoundException('About us item not found');
 		}
+		const decodedUrlId = urlId ? decodeURIComponent(urlId) : undefined;
 
 		const updateData: any = { ...dto };
 
-		if (file && urlId) {
+		if (file && decodedUrlId) {
 			try {
 				const targetKey = this.filesService.extractKey(urlId);
 				await this.filesService.delete(targetKey);

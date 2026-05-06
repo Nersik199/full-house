@@ -6,6 +6,8 @@ import {
 import { InjectModel } from '@nestjs/sequelize';
 
 import { FilesService } from '@/files/files.service';
+import { ContactFormDto } from '@/home/dto/contact.form.dto';
+import { MailService } from '@/libs/mail/mail.service';
 
 import { HeaderHomeCreateDto, HeaderHomeUpdateDto } from './dto/header.dto';
 import { HomeCreateDto, HomeUpdateDto } from './dto/home.dto';
@@ -20,6 +22,7 @@ export class HomeService {
 		@InjectModel(HeaderHome)
 		private readonly headerModel: typeof HeaderHome,
 		private readonly filesService: FilesService,
+		private readonly mailerService: MailService,
 	) {}
 	async createHeader(dto: HeaderHomeCreateDto, file?: Express.Multer.File) {
 		const uploaded = await this.filesService.upload(file, 'header');
@@ -152,6 +155,26 @@ export class HomeService {
 
 		return updatedHome;
 	}
+
+	async sendContactMessage(dto: ContactFormDto) {
+		const htmlContent = `
+      <h3>Новое сообщение из формы обратной связи</h3>
+      <p><b>Отправитель:</b> ${dto.firstName} ${dto.lastName}</p>
+      <p><b>Email:</b> ${dto.email}</p>
+      <p><b>Телефон:</b> ${dto.phone}</p>
+      <p><b>Сообщение:</b> ${dto.message}</p>
+    `;
+
+		await this.mailerService.sendMail({
+			// to: 'fullhouseleninavan@gmail.com',
+			to: 'militosyan13@gmail.com',
+			subject: 'Новая заявка с сайта',
+			html: htmlContent,
+		});
+
+		return { success: true, message: 'Сообщение отправлено' };
+	}
+
 	async delete(id: number) {
 		const home = await this.homeModel.findOne({ where: { id } });
 		await home.destroy();

@@ -16,6 +16,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiConsumes, ApiQuery } from '@nestjs/swagger';
 
 import { Auth } from '@/auth/decorators/auth.decorators';
+import { ContactFormDto } from '@/home/dto/contact.form.dto';
 import { DecodeUrlPipe } from '@/shared/pipes/decode-url.pipe';
 import { CurrentAdmin } from '@/user/decorators/user.decorator';
 
@@ -108,6 +109,12 @@ export class HomeController {
 		@UploadedFile() file?: Express.Multer.File,
 	) {
 		return await this.homeService.update(id, dto, urlId, file);
+	}
+
+	@Post('send')
+	@HttpCode(HttpStatus.OK)
+	async sendMessage(@Body() dto: ContactFormDto) {
+		return await this.homeService.sendContactMessage(dto);
 	}
 
 	@ApiBearerAuth('Authorization')

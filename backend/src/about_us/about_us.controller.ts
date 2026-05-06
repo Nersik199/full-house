@@ -16,6 +16,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiConsumes, ApiQuery } from '@nestjs/swagger';
 
 import { Auth } from '@/auth/decorators/auth.decorators';
+import { DecodeUrlPipe } from '@/shared/pipes/decode-url.pipe';
 import { CurrentAdmin } from '@/user/decorators/user.decorator';
 
 import { AboutUsService } from './about_us.service';
@@ -58,7 +59,7 @@ export class AboutUsController {
 		@Param('id') id: number,
 		@CurrentAdmin('id') userId: number,
 		@Body() dto: HeaderAboutUsUpdateDto,
-		@Query('urlId') urlId?: string,
+		@Query('urlId', DecodeUrlPipe) urlId?: string,
 		@UploadedFile() file?: Express.Multer.File,
 	) {
 		return await this.aboutUsService.updateHeader(id, dto, urlId, file);
@@ -110,7 +111,7 @@ export class AboutUsController {
 	async update(
 		@Body() dto: AboutUsUpdateDto,
 		@Param('id') id: number,
-		@Query('urlId') urlId?: string,
+		@Query('urlId', DecodeUrlPipe) urlId?: string,
 		@UploadedFile() file?: Express.Multer.File,
 	) {
 		return await this.aboutUsService.update(id, dto, urlId, file);

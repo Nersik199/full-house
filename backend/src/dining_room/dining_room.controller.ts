@@ -14,6 +14,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiConsumes, ApiQuery } from '@nestjs/swagger';
 
 import { Auth } from '@/auth/decorators/auth.decorators';
+import { DecodeUrlPipe } from '@/shared/pipes/decode-url.pipe';
 import { CurrentAdmin } from '@/user/decorators/user.decorator';
 
 import { DiningRoomService } from './dining_room.service';
@@ -57,7 +58,7 @@ export class DiningRoomController {
 		@Param('id') id: number,
 		@CurrentAdmin('id') userId: number,
 		@Body() dto: HeaderDiningRoomUpdateDto,
-		@Query('urlId') urlId?: string,
+		@Query('urlId', DecodeUrlPipe) urlId?: string,
 		@UploadedFile() file?: Express.Multer.File,
 	) {
 		return await this.diningRoomService.updateHeader(id, dto, urlId, file);
@@ -104,7 +105,7 @@ export class DiningRoomController {
 	async update(
 		@Body() dto: DiningRoomUpdateDto,
 		@Param('id') id: number,
-		@Query('urlId') urlId?: string,
+		@Query('urlId', DecodeUrlPipe) urlId?: string,
 		@UploadedFile() file?: Express.Multer.File,
 	) {
 		return await this.diningRoomService.update(id, dto, urlId, file);

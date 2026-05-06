@@ -16,6 +16,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiConsumes, ApiQuery } from '@nestjs/swagger';
 import { Auth } from 'src/auth/decorators/auth.decorators';
 
+import { DecodeUrlPipe } from '@/shared/pipes/decode-url.pipe';
 import { CurrentAdmin } from '@/user/decorators/user.decorator';
 
 import { CreateTicketDto } from './dto/CreateTicketDto';
@@ -55,7 +56,7 @@ export class TicketController {
 		@Param('id') id: number,
 		@CurrentAdmin('id') userId: number,
 		@Body() dto: HeaderTicketCreateDto,
-		@Query('urlId') urlId?: string,
+		@Query('urlId', DecodeUrlPipe) urlId?: string,
 		@UploadedFile() file?: Express.Multer.File,
 	) {
 		return await this.ticketService.updateHeader(id, dto, urlId, file);

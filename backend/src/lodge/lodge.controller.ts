@@ -18,6 +18,7 @@ import { ApiBearerAuth, ApiConsumes, ApiQuery } from '@nestjs/swagger';
 
 import { Auth } from '@/auth/decorators/auth.decorators';
 import { CreateBookingWalkInLodgeDto } from '@/lodge/dto/lodge.booking.walkIn.dto';
+import { DecodeUrlPipe } from '@/shared/pipes/decode-url.pipe';
 import { CurrentAdmin } from '@/user/decorators/user.decorator';
 
 import { HeaderLodgeCreateDto, HeaderLodgeUpdateDto } from './dto/header.dto';
@@ -57,7 +58,7 @@ export class LodgeController {
 		@Param('id') id: number,
 		@CurrentAdmin('id') userId: number,
 		@Body() dto: HeaderLodgeUpdateDto,
-		@Query('urlId') urlId?: string,
+		@Query('urlId', DecodeUrlPipe) urlId?: string,
 		@UploadedFile() file?: Express.Multer.File,
 	) {
 		return await this.lodgeService.updateHeader(id, dto, urlId, file);
@@ -109,7 +110,7 @@ export class LodgeController {
 	async update(
 		@Body() dto: LodgeUpdateDto,
 		@Param('id') id: number,
-		@Query('urlId') urlId: string,
+		@Query('urlId', DecodeUrlPipe) urlId: string,
 		@UploadedFile() file?: Express.Multer.File,
 	) {
 		return await this.lodgeService.update(id, dto, urlId, file);

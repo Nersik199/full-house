@@ -16,6 +16,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiConsumes, ApiQuery } from '@nestjs/swagger';
 
 import { Auth } from '@/auth/decorators/auth.decorators';
+import { DecodeUrlPipe } from '@/shared/pipes/decode-url.pipe';
 import { CurrentAdmin } from '@/user/decorators/user.decorator';
 
 import { HeaderHomeCreateDto, HeaderHomeUpdateDto } from './dto/header.dto';
@@ -55,7 +56,7 @@ export class HomeController {
 		@Param('id') id: number,
 		@CurrentAdmin('id') userId: number,
 		@Body() dto: HeaderHomeUpdateDto,
-		@Query('urlId') urlId?: string,
+		@Query('urlId', DecodeUrlPipe) urlId?: string,
 		@UploadedFile() file?: Express.Multer.File,
 	) {
 		return await this.homeService.updateHeader(id, dto, urlId, file);
@@ -103,7 +104,7 @@ export class HomeController {
 	async update(
 		@Body() dto: HomeUpdateDto,
 		@Param('id') id: number,
-		@Query('urlId') urlId: string,
+		@Query('urlId', DecodeUrlPipe) urlId: string,
 		@UploadedFile() file?: Express.Multer.File,
 	) {
 		return await this.homeService.update(id, dto, urlId, file);

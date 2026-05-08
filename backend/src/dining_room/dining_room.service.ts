@@ -8,6 +8,7 @@ import { InjectModel } from '@nestjs/sequelize';
 import { HeaderAboutUsUpdateDto } from '@/about_us/dto/header.dto';
 import { DiningRoomHeader } from '@/dining_room/entities/dining_room.header.entity';
 import { FilesService } from '@/files/files.service';
+import { UpdateHeaderInterfaces } from '@/shared/interfaces/updateHeaderInterfaces';
 
 import {
 	DiningRoomCreateDto,
@@ -32,12 +33,10 @@ export class DiningRoomService {
 	) {
 		const uploaded = await this.filesService.upload(file, 'header');
 
-		const headerData = await this.headerModel.create({
+		return await this.headerModel.create({
 			...dto,
 			image: uploaded,
 		});
-
-		return headerData;
 	}
 
 	async getHeader() {
@@ -65,16 +64,14 @@ export class DiningRoomService {
 			throw new NotFoundException('Dining room item not found');
 		}
 
-		const updateData: any = { ...dto };
+		const updateData: UpdateHeaderInterfaces = { ...dto };
 
 		if (file && urlId) {
 			try {
 				const targetKey = this.filesService.extractKey(urlId);
 				await this.filesService.delete(targetKey);
 
-				const newImg = await this.filesService.upload(file, 'header');
-
-				updateData.image = newImg;
+				updateData.image = await this.filesService.upload(file, 'header');
 			} catch (error) {
 				console.error('File update error:', error);
 			}
@@ -89,12 +86,10 @@ export class DiningRoomService {
 		try {
 			const uploaded = await this.filesService.upload(file, 'dining-room');
 
-			const diningRoom = await this.diningRoomModel.create({
+			return await this.diningRoomModel.create({
 				...dto,
 				image: uploaded,
 			});
-
-			return diningRoom;
 		} catch (error) {
 			console.log(error);
 		}

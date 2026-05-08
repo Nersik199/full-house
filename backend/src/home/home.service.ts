@@ -8,6 +8,7 @@ import { InjectModel } from '@nestjs/sequelize';
 import { FilesService } from '@/files/files.service';
 import { ContactFormDto } from '@/home/dto/contact.form.dto';
 import { MailService } from '@/libs/mail/mail.service';
+import { UpdateHeaderInterfaces } from '@/shared/interfaces/updateHeaderInterfaces';
 
 import { HeaderHomeCreateDto, HeaderHomeUpdateDto } from './dto/header.dto';
 import { HomeCreateDto, HomeUpdateDto } from './dto/home.dto';
@@ -27,12 +28,10 @@ export class HomeService {
 	async createHeader(dto: HeaderHomeCreateDto, file?: Express.Multer.File) {
 		const uploaded = await this.filesService.upload(file, 'header');
 
-		const headerData = await this.headerModel.create({
+		return await this.headerModel.create({
 			...dto,
 			image: uploaded,
 		});
-
-		return headerData;
 	}
 
 	async getHeader() {
@@ -60,16 +59,14 @@ export class HomeService {
 			throw new NotFoundException('Home item not found');
 		}
 
-		const updateData: any = { ...dto };
+		const updateData: UpdateHeaderInterfaces = { ...dto };
 
 		if (file && urlId) {
 			try {
 				const targetKey = this.filesService.extractKey(urlId);
 				await this.filesService.delete(targetKey);
 
-				const newImg = await this.filesService.upload(file, 'header');
-
-				updateData.image = newImg;
+				updateData.image = await this.filesService.upload(file, 'header');
 			} catch (error) {
 				console.error('File update error:', error);
 			}
@@ -84,12 +81,10 @@ export class HomeService {
 		try {
 			const uploaded = await this.filesService.upload(file, 'home');
 
-			const home = await this.homeModel.create({
+			return await this.homeModel.create({
 				...dto,
 				image: uploaded,
 			});
-
-			return home;
 		} catch (error) {
 			console.log(error);
 		}

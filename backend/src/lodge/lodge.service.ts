@@ -10,7 +10,7 @@ import { Sequelize } from 'sequelize-typescript';
 import { BookingService } from '@/booking/booking.service';
 import { FilesService } from '@/files/files.service';
 import { CreateBookingWalkInLodgeDto } from '@/lodge/dto/lodge.booking.walkIn.dto';
-import { GetAllRoomsDto } from '@/room/dto/room.dto';
+import { UpdateHeaderInterfaces } from '@/shared/interfaces/updateHeaderInterfaces';
 import { calculatePagination } from '@/shared/utils/calculate.pagination';
 
 import { HeaderLodgeCreateDto, HeaderLodgeUpdateDto } from './dto/header.dto';
@@ -47,12 +47,10 @@ export class LodgeService {
 	async createHeader(dto: HeaderLodgeCreateDto, file?: Express.Multer.File) {
 		const uploaded = await this.filesService.upload(file, 'header');
 
-		const headerData = await this.headerModel.create({
+		return await this.headerModel.create({
 			...dto,
 			image: uploaded,
 		});
-
-		return headerData;
 	}
 
 	async getHeader() {
@@ -80,16 +78,14 @@ export class LodgeService {
 			throw new NotFoundException('Lodge item not found');
 		}
 
-		const updateData: any = { ...dto };
+		const updateData: UpdateHeaderInterfaces = { ...dto };
 
 		if (file && urlId) {
 			try {
 				const targetKey = this.filesService.extractKey(urlId);
 				await this.filesService.delete(targetKey);
 
-				const newImg = await this.filesService.upload(file, 'header');
-
-				updateData.image = newImg;
+				updateData.image = await this.filesService.upload(file, 'header');
 			} catch (error) {
 				console.error('File update error:', error);
 			}

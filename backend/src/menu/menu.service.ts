@@ -6,6 +6,7 @@ import {
 import { InjectModel } from '@nestjs/sequelize';
 
 import { FilesService } from '@/files/files.service';
+import { UpdateHeaderInterfaces } from '@/shared/interfaces/updateHeaderInterfaces';
 import { calculatePagination } from '@/shared/utils/calculate.pagination';
 
 import { HeaderMenuCreateDto, HeaderMenuUpdateDto } from './dto/header.dto';
@@ -26,12 +27,10 @@ export class MenuService {
 	async createHeader(dto: HeaderMenuCreateDto, file?: Express.Multer.File) {
 		const uploaded = await this.filesService.upload(file, 'header');
 
-		const headerData = await this.headerModel.create({
+		return await this.headerModel.create({
 			...dto,
 			image: uploaded,
 		});
-
-		return headerData;
 	}
 
 	async getHeader() {
@@ -59,16 +58,14 @@ export class MenuService {
 			throw new NotFoundException('Menu item not found');
 		}
 
-		const updateData: any = { ...dto };
+		const updateData: UpdateHeaderInterfaces = { ...dto };
 
 		if (file && urlId) {
 			try {
 				const targetKey = this.filesService.extractKey(urlId);
 				await this.filesService.delete(targetKey);
 
-				const newImg = await this.filesService.upload(file, 'header');
-
-				updateData.image = newImg;
+				updateData.image = await this.filesService.upload(file, 'header');
 			} catch (error) {
 				console.error('File update error:', error);
 			}
@@ -82,12 +79,10 @@ export class MenuService {
 	async create(dto: MenuCreateDto, file?: Express.Multer.File) {
 		const imageUrls = await this.filesService.upload(file, 'menu');
 
-		const menu = await this.menuModel.create({
+		return await this.menuModel.create({
 			...dto,
 			image: imageUrls,
 		});
-
-		return menu;
 	}
 
 	async findAll(page: number, limit: number) {

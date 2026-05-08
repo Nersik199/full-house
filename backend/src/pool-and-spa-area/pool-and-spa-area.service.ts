@@ -6,6 +6,7 @@ import {
 import { InjectModel } from '@nestjs/sequelize';
 
 import { FilesService } from '@/files/files.service';
+import { UpdateHeaderInterfaces } from '@/shared/interfaces/updateHeaderInterfaces';
 
 import {
 	HeaderPoolSpaCreateDto,
@@ -30,14 +31,11 @@ export class PoolAndSpaAreaService {
 
 	async createHeader(dto: HeaderPoolSpaCreateDto, file?: Express.Multer.File) {
 		const uploaded = await this.filesService.upload(file, 'header');
-		const count = await this.headerModel.count();
 
-		const headerData = await this.headerModel.create({
+		return await this.headerModel.create({
 			...dto,
 			image: uploaded,
 		});
-
-		return headerData;
 	}
 
 	async getHeader() {
@@ -65,16 +63,14 @@ export class PoolAndSpaAreaService {
 			throw new NotFoundException('pool-spa item not found');
 		}
 
-		const updateData: any = { ...dto };
+		const updateData: UpdateHeaderInterfaces = { ...dto };
 
 		if (file && urlId) {
 			try {
 				const targetKey = this.filesService.extractKey(urlId);
 				await this.filesService.delete(targetKey);
 
-				const newImg = await this.filesService.upload(file, 'header');
-
-				updateData.image = newImg;
+				updateData.image = await this.filesService.upload(file, 'header');
 			} catch (error) {
 				console.error('File update error:', error);
 			}
@@ -89,12 +85,10 @@ export class PoolAndSpaAreaService {
 		try {
 			const uploaded = await this.filesService.upload(file, 'pool-spa');
 
-			const poolSpa = await this.poolSpaModel.create({
+			return await this.poolSpaModel.create({
 				...dto,
 				image: uploaded,
 			});
-
-			return poolSpa;
 		} catch (error) {
 			console.log(error);
 		}
@@ -178,8 +172,7 @@ export class PoolAndSpaAreaService {
 				files,
 				'pool-spa/slider',
 			);
-			const slider = await this.sliderImageModel.create({ images });
-			return slider;
+			return await this.sliderImageModel.create({ images });
 		} catch (error) {
 			console.log(error);
 		}

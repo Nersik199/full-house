@@ -8,6 +8,7 @@ import { Booking } from '@/booking/entities/booking.entity';
 import { Lodge } from '@/lodge/entities/lodge.entity';
 import { Order } from '@/order/entities/order.entity';
 import { Room } from '@/room/entities/room.entity';
+import { TransactionWhereInput } from '@/statistics/interface/TransactionWhereInput';
 
 dayjs.extend(isBetween);
 
@@ -23,7 +24,7 @@ export class StatisticsService {
 	async getStatisticHotels(startDate?: string, endDate?: string) {
 		const today = dayjs().format('YYYY-MM-DD');
 
-		const whereClause: any = { status: 'SUCCEEDED' };
+		const whereClause: TransactionWhereInput = { status: 'SUCCEEDED' };
 		if (startDate || endDate) {
 			whereClause.createdAt = {};
 			if (startDate) whereClause.createdAt[Op.gte] = startDate;
@@ -68,7 +69,7 @@ export class StatisticsService {
 				[fn('date_trunc', 'month', col('createdAt')), 'month'],
 				[fn('sum', col('total_amount')), 'revenue'],
 			],
-			where: whereClause,
+			where: { status: 'SUCCEEDED' },
 			group: [fn('date_trunc', 'month', col('createdAt'))],
 			order: [[fn('date_trunc', 'month', col('createdAt')), 'ASC']],
 			raw: true,
@@ -90,6 +91,7 @@ export class StatisticsService {
 			})),
 		};
 	}
+
 	async getStatisticSpa() {
 		const today = dayjs().format('YYYY-MM-DD');
 

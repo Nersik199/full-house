@@ -5,12 +5,13 @@ import {
 } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/sequelize';
 import dayjs from 'dayjs';
-import { Op, Transaction } from 'sequelize';
+import { Op } from 'sequelize';
 import { Sequelize } from 'sequelize-typescript';
 
 import { BookingService } from '@/booking/booking.service';
 import { FilesService } from '@/files/files.service';
 import { SearchRoomDto } from '@/room/dto/room.search.dto';
+import { UpdateHeaderInterfaces } from '@/shared/interfaces/updateHeaderInterfaces';
 import { calculatePagination } from '@/shared/utils/calculate.pagination';
 
 import { HeaderRoomCreateDto, HeaderRoomUpdateDto } from './dto/header.dto';
@@ -48,12 +49,10 @@ export class RoomService {
 	async createHeader(dto: HeaderRoomCreateDto, file?: Express.Multer.File) {
 		const uploaded = await this.filesService.upload(file, 'header');
 
-		const headerData = await this.headerModel.create({
+		return await this.headerModel.create({
 			...dto,
 			image: uploaded,
 		});
-
-		return headerData;
 	}
 
 	async getHeader() {
@@ -81,16 +80,14 @@ export class RoomService {
 			throw new NotFoundException('Room item not found');
 		}
 
-		const updateData: any = { ...dto };
+		const updateData: UpdateHeaderInterfaces = { ...dto };
 
 		if (file && urlId) {
 			try {
 				const targetKey = this.filesService.extractKey(urlId);
 				await this.filesService.delete(targetKey);
 
-				const newImg = await this.filesService.upload(file, 'header');
-
-				updateData.image = newImg;
+				updateData.image = await this.filesService.upload(file, 'header');
 			} catch (error) {
 				console.error('File update error:', error);
 			}
@@ -118,13 +115,11 @@ export class RoomService {
 			);
 		}
 
-		const room = await this.roomModel.create({
+		return await this.roomModel.create({
 			...dto,
 			member,
 			images: imageUrls,
 		});
-
-		return room;
 	}
 
 	async findAll(page: number, limit: number, dto?: GetAllRoomsDto) {

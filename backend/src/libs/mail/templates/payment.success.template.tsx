@@ -324,7 +324,6 @@ export function PaymentSuccessTemplate({
 	);
 }
 
-// Стили остаются прежними
 const body: React.CSSProperties = {
 	backgroundColor: '#f5f0eb',
 	padding: '40px 16px',

@@ -1,6 +1,6 @@
 export interface MailerConfig {
-  host: string;
-  port: number;
-  login: string;
-  password: string;
+	MAILER_PORT: string;
+	MAILER_HOST: number;
+	MAILER_LOGIN: string;
+	MAILER_PASSWORD: string;
 }

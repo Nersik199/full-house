@@ -4,17 +4,15 @@ import {
 	OmitType,
 	PartialType,
 } from '@nestjs/swagger';
-import { Transform, Type } from 'class-transformer';
+import { Type } from 'class-transformer';
 import {
 	IsBoolean,
-	IsDateString,
 	IsIn,
 	IsNotEmpty,
 	IsNumber,
 	IsOptional,
 	IsString,
 	Length,
-	Min,
 } from 'class-validator';
 
 export class RoomCreateDto {
@@ -30,10 +28,6 @@ export class RoomCreateDto {
 	title: string;
 
 	@ApiPropertyOptional({
-		example: 1000,
-		description: 'Краткое дополнительное описание номера (необязательно)',
-	})
-	@ApiProperty({
 		example:
 			'Вместимость — 3 человека (2 взрослых + 1 ребёнок). Цена указана за 2-х.',
 		description: 'Краткое дополнительное описание номера (необязательно)',
@@ -47,12 +41,12 @@ export class RoomCreateDto {
 
 	@ApiProperty({
 		example: 'Уютный номер с видом на город',
-		description: 'Подробное описание номера (от 6 до 1500 символов)',
+		description: 'Подробное описание номера (от 5 до 1000 символов)',
 	})
 	@IsString({ message: 'Описание должно быть строкой' })
 	@IsNotEmpty({ message: 'Описание обязательно' })
-	@Length(6, 1500, {
-		message: 'Описание должно содержать от 6 до 1500 символов',
+	@Length(5, 1000, {
+		message: 'Описание должно содержать от 5 до 1000 символов',
 	})
 	description: string;
 

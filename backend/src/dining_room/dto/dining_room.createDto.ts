@@ -8,8 +8,8 @@ export class DiningRoomCreateDto {
 	})
 	@IsString({ message: 'Заголовок должен быть строкой' })
 	@IsNotEmpty({ message: 'Заголовок обязателен для заполнения' })
-	@Length(2, 255, {
-		message: 'Заголовок должен содержать от 2 до 255 символов',
+	@Length(5, 50, {
+		message: 'Заголовок должен содержать от 5 до 50 символов',
 	})
 	title: string;
 
@@ -20,7 +20,7 @@ export class DiningRoomCreateDto {
 	})
 	@IsString({ message: 'Описание должно быть строкой' })
 	@IsNotEmpty({ message: 'Описание обязательно для заполнения' })
-	@Length(6, 1500)
+	@Length(5, 500)
 	description: string;
 
 	@ApiProperty({

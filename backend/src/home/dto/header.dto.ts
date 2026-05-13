@@ -8,7 +8,7 @@ export class HeaderHomeCreateDto {
 	})
 	@IsString({ message: 'Title должен быть строкой' })
 	@IsNotEmpty({ message: 'Title обязательно' })
-	@Length(5, 200, { message: 'Title должен содержать от 5 до 200 символов' })
+	@Length(5, 100, { message: 'Title должен содержать от 5 до 100 символов' })
 	title: string;
 
 	@ApiProperty({
@@ -18,8 +18,8 @@ export class HeaderHomeCreateDto {
 	})
 	@IsString({ message: 'SubTitle должен быть строкой' })
 	@IsNotEmpty({ message: 'SubTitle обязательно' })
-	@Length(6, 1500, {
-		message: 'Sub title должен содержать от 6 до 1500 символов',
+	@Length(5, 50, {
+		message: 'Sub title должен содержать от 6 до 50 символов',
 	})
 	subTitle: string;
 
@@ -31,8 +31,8 @@ export class HeaderHomeCreateDto {
 	})
 	@IsString({ message: 'Description должен быть строкой' })
 	@IsNotEmpty({ message: 'Description обязательно' })
-	@Length(6, 1500, {
-		message: 'Description должен содержать от 6 до 1500 символов',
+	@Length(5, 300, {
+		message: 'Description должен содержать от 5 до 300 символов',
 	})
 	description: string;
 

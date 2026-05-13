@@ -9,7 +9,7 @@ export class AboutUsCreateDto {
 	})
 	@IsString({ message: 'Описание должно быть строкой' })
 	@IsNotEmpty({ message: 'Описание обязательно для заполнения' })
-	@Length(6, 1500)
+	@Length(5, 500)
 	description: string;
 
 	@ApiProperty({

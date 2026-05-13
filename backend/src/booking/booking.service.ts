@@ -218,6 +218,7 @@ export class BookingService {
 				'status',
 				'source',
 				'category',
+				'total_price',
 			],
 			order: [['check_in', 'ASC']],
 		});
@@ -239,11 +240,15 @@ export class BookingService {
 					current = current.add(1, 'day');
 				}
 
+				const pricePerDay =
+					dayList.length > 0 ? Number(booking.total_price) / dayList.length : 0;
+
 				return {
 					id: booking.id,
 					roomId: booking.room_id,
 					lodgeId: booking.lodge_id,
 					roomNumber: booking.room_number,
+					price: pricePerDay,
 					day: dayList,
 					status: booking.status,
 					source: booking.source,

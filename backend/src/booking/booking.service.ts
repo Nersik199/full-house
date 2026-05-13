@@ -218,7 +218,7 @@ export class BookingService {
 				'status',
 				'source',
 				'category',
-				'total_price', // Поле из БД
+				'total_price',
 			],
 			order: [['check_in', 'ASC']],
 		});

@@ -15,11 +15,14 @@ services:
       - "5432:5432"
     volumes:
       - ./data/postgresql:/var/lib/postgresql
+      - ./data/postgresql.conf:/etc/postgresql/postgresql.conf
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
       interval: 2s
       timeout: 1s
       retries: 100
+    command: >
+      postgres -c config_file=/etc/postgresql/postgresql.conf
 
   backend:
     build: ./backend

@@ -218,5 +218,3 @@ export class OrderService {
 		}
 	}
 }
-
-//TODO: refactor code

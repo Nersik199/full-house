@@ -53,3 +53,14 @@ services:
       - ./.env
     ports:
       - "3002:3000"
+
+  dozzle:
+    container_name: dozzle
+    image: amir20/dozzle:latest
+    restart: unless-stopped
+    environment:
+      - DOZZLE_AUTH_PROVIDER=simple
+    volumes:
+      - /var/run/docker.sock
+    ports:
+      - "3003:8080"

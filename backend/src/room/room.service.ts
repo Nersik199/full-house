@@ -251,6 +251,7 @@ export class RoomService {
 					guestName: dto.guestName,
 					guestPhone: dto.guestPhone.trim(),
 					guestEmail: dto.guestEmail.trim(),
+					category: room.category,
 					roomNumber: room.roomNumber,
 					checkIn: dayjs(dto.checkIn).startOf('day').utc().toDate(),
 					checkOut: dayjs(dto.checkOut).startOf('day').utc().toDate(),

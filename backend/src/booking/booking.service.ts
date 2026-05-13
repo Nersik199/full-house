@@ -218,7 +218,7 @@ export class BookingService {
 				'status',
 				'source',
 				'category',
-				'total_price',
+				'total_price', // Поле из БД
 			],
 			order: [['check_in', 'ASC']],
 		});
@@ -227,28 +227,34 @@ export class BookingService {
 			.map(b => {
 				const booking = b.get({ plain: true });
 
-				let current = dayjs(booking.check_in);
+				const start = dayjs(booking.check_in);
 				const end = dayjs(booking.check_out);
 
-				if (!current.isValid() || !end.isValid() || end.isBefore(current)) {
+				if (!start.isValid() || !end.isValid() || end.isBefore(start)) {
 					return null;
 				}
 
+				const nights = end.diff(start, 'day');
+
+				const pricePerNight =
+					nights > 0
+						? Math.round(Number(booking.total_price) / nights)
+						: Number(booking.total_price);
+
 				const dayList = [];
+				let current = start;
+
 				while (current.isSameOrBefore(end, 'day')) {
 					dayList.push(current.format('YYYY-MM-DD'));
 					current = current.add(1, 'day');
 				}
-
-				const pricePerDay =
-					dayList.length > 0 ? Number(booking.total_price) / dayList.length : 0;
 
 				return {
 					id: booking.id,
 					roomId: booking.room_id,
 					lodgeId: booking.lodge_id,
 					roomNumber: booking.room_number,
-					price: pricePerDay,
+					price: pricePerNight,
 					day: dayList,
 					status: booking.status,
 					source: booking.source,
@@ -257,7 +263,6 @@ export class BookingService {
 			})
 			.filter(Boolean);
 	}
-
 	async allBookingsAdmin(limit: number, page: number, dto: GetAllBookings) {
 		const whereClause: any = {};
 

@@ -19,9 +19,9 @@ export class AuthService {
 		private jwtService: JwtService,
 	) {}
 
-	async register(dto: AuthDto) {
-		return await this.usersService.create(dto);
-	}
+	// async register(dto: AuthDto) {
+	// 	return await this.usersService.create(dto);
+	// }
 
 	async validateUser(email: string, password: string) {
 		const user = await this.usersService.getByEmail(email);

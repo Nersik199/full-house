@@ -190,7 +190,7 @@ export class BookingService {
 
 	async getBookingsByDays(dto: GetBookingsByDaysDto) {
 		const startDate = dayjs().startOf('day');
-		const endDate = startDate.add(14, 'day');
+		const endDate = startDate.add(2, 'month').endOf('day');
 
 		const rangeDates: string[] = [];
 		let tmpDate = startDate;

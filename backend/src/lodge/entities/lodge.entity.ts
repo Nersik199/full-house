@@ -1,4 +1,6 @@
-import { Column, DataType, Model, Table } from 'sequelize-typescript';
+import { Column, DataType, HasMany, Model, Table } from 'sequelize-typescript';
+
+import { Booking } from '@/booking/entities/booking.entity';
 
 @Table({
 	tableName: 'lodges',
@@ -119,6 +121,9 @@ export class Lodge extends Model {
 		defaultValue: false,
 	})
 	diningRoom: boolean;
+
+	@HasMany(() => Booking, { foreignKey: 'lodgeId', as: 'bookings' })
+	bookings: Booking[];
 
 	@Column({
 		type: DataType.DATE,

@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import dayjs from 'dayjs';
+import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import { Op, Transaction } from 'sequelize';
 
@@ -18,12 +19,17 @@ import {
 import { Booking } from './entities/booking.entity';
 
 dayjs.extend(isSameOrBefore);
+dayjs.extend(isSameOrAfter);
 
 @Injectable()
 export class BookingService {
 	constructor(
 		@InjectModel(Booking)
 		private readonly bookingModel: typeof Booking,
+		@InjectModel(Room)
+		private roomModel: typeof Room,
+		@InjectModel(Lodge)
+		private lodgeModel: typeof Lodge,
 	) {}
 
 	async checkAvailability(
@@ -183,86 +189,103 @@ export class BookingService {
 	}
 
 	async getBookingsByDays(dto: GetBookingsByDaysDto) {
-		const today = dayjs().startOf('day').toDate();
+		const startDate = dayjs().startOf('day');
+		const endDate = startDate.add(14, 'day');
 
-		let categoryCondition;
-
-		if (dto.category === 'lodge') {
-			categoryCondition = {
-				[Op.and]: [
-					{ lodge_id: { [Op.ne]: null } },
-					{
-						[Op.or]: [{ category: 'lodge' }, { category: null }],
-					},
-				],
-			};
-		} else {
-			categoryCondition = { category: dto.category };
+		const rangeDates: string[] = [];
+		let tmpDate = startDate;
+		while (tmpDate.isSameOrBefore(endDate, 'day')) {
+			rangeDates.push(tmpDate.format('YYYY-MM-DD'));
+			tmpDate = tmpDate.add(1, 'day');
 		}
 
-		const bookings = await this.bookingModel.findAll({
+		const bookingInclude = {
+			model: this.bookingModel,
+			as: 'bookings',
 			where: {
-				...categoryCondition,
 				status: 'confirmed',
-				check_out: {
-					[Op.gte]: today,
-				},
+				[Op.or]: [
+					{ checkIn: { [Op.between]: [startDate.toDate(), endDate.toDate()] } },
+					{
+						checkOut: { [Op.between]: [startDate.toDate(), endDate.toDate()] },
+					},
+				],
 			},
-			attributes: [
-				'id',
-				'room_number',
-				'room_id',
-				'lodge_id',
-				'check_in',
-				'check_out',
-				'status',
-				'source',
-				'category',
-				'total_price',
-			],
-			order: [['check_in', 'ASC']],
-		});
+			required: false,
+		};
 
-		return bookings
-			.map(b => {
-				const booking = b.get({ plain: true });
+		let rooms = [];
+		let lodges = [];
 
-				const start = dayjs(booking.check_in);
-				const end = dayjs(booking.check_out);
+		if (dto.category !== 'lodge') {
+			rooms = await this.roomModel.findAll({
+				where: { category: dto.category },
+				attributes: ['id', 'roomNumber', 'category', 'price'],
+				include: [bookingInclude],
+			});
+		}
 
-				if (!start.isValid() || !end.isValid() || end.isBefore(start)) {
-					return null;
-				}
+		if (dto.category === 'lodge' || !dto.category) {
+			lodges = await this.lodgeModel.findAll({
+				attributes: ['id', 'roomNumber', 'price'],
+				include: [bookingInclude],
+			});
+		}
 
-				const nights = end.diff(start, 'day');
+		const processAccommodation = (
+			item: { get: (arg0: { plain: boolean }) => any },
+			isLodge = false,
+		) => {
+			const plainItem = item.get({ plain: true });
+			const bookings = plainItem.bookings || [];
 
-				const pricePerNight =
-					nights > 0
-						? Math.round(Number(booking.total_price) / nights)
-						: Number(booking.total_price);
+			const timeline = rangeDates.map(dateStr => {
+				const currentDay = dayjs(dateStr);
 
-				const dayList = [];
-				let current = start;
+				const foundBooking = bookings.find(b => {
+					const start = dayjs(b.checkIn);
+					const end = dayjs(b.checkOut);
+					return (
+						currentDay.isSameOrAfter(start, 'day') &&
+						currentDay.isBefore(end, 'day')
+					);
+				});
 
-				while (current.isSameOrBefore(end, 'day')) {
-					dayList.push(current.format('YYYY-MM-DD'));
-					current = current.add(1, 'day');
+				if (foundBooking) {
+					return {
+						date: dateStr,
+						status: 'occupied',
+						title: 'Занято',
+						bookingId: foundBooking.id,
+					};
 				}
 
 				return {
-					id: booking.id,
-					roomId: booking.room_id,
-					lodgeId: booking.lodge_id,
-					roomNumber: booking.room_number,
-					price: pricePerNight,
-					day: dayList,
-					status: booking.status,
-					source: booking.source,
-					category: booking.category,
+					date: dateStr,
+					status: 'free',
+					price: plainItem.price || 8000,
+					title: `${plainItem.price || 8000} ₽`,
 				};
-			})
-			.filter(Boolean);
+			});
+
+			return {
+				id: plainItem.id,
+				roomNumber: plainItem.roomNumber || plainItem.title,
+				category: plainItem.category,
+				isLodge,
+				timeline,
+			};
+		};
+
+		const formattedRooms = rooms.map(r => processAccommodation(r, false));
+		const formattedLodges = lodges.map(l => processAccommodation(l, true));
+
+		return {
+			days: rangeDates,
+			data: [...formattedRooms, ...formattedLodges],
+		};
 	}
+
 	async allBookingsAdmin(limit: number, page: number, dto: GetAllBookings) {
 		const whereClause: any = {};
 

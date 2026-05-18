@@ -83,7 +83,7 @@ export class HomeController {
 	}
 
 	@Get('all')
-	async findAll(@Query() limit: string) {
+	async findAll() {
 		return await this.homeService.findAll();
 	}
 

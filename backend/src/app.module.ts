@@ -19,6 +19,7 @@ import { HomeModule } from './home/home.module';
 import { CompanyProfileModule } from './company_profile/company_profile.module';
 import { StatisticsModule } from './statistics/statistics.module';
 import { TicketModule } from './ticket/ticket.module';
+import { CartModule } from './cart/cart.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -46,6 +47,7 @@ import { TicketModule } from './ticket/ticket.module';
     CompanyProfileModule,
     StatisticsModule,
     TicketModule,
+    CartModule,
   ],
   providers: [],
 })

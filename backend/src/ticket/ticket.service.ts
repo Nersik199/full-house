@@ -204,6 +204,24 @@ export class TicketService {
 		};
 	}
 
+	async getAvailableTicketsByIds(ids: number[]) {
+		if (!ids || ids.length === 0) {
+			return [];
+		}
+
+		const tickets = await this.ticketModel.findAll({
+			where: {
+				id: {
+					[Op.in]: ids,
+				},
+			},
+		});
+
+		const availableTickets = tickets.filter(ticket => ticket.quantity > 0);
+
+		return availableTickets;
+	}
+
 	async ticketRemove(id: number) {
 		const ticket = await this.ticketModel.findByPk(id);
 		if (!ticket) throw new NotFoundException('Ticket not found');

@@ -4,7 +4,7 @@ import {
 	OmitType,
 	PartialType,
 } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
 	IsBoolean,
 	IsNotEmpty,
@@ -99,7 +99,7 @@ export class LodgeCreateDto {
 	})
 	@IsBoolean({ message: 'Wi-Fi должен быть логическим значением' })
 	@IsOptional()
-	@Type(() => Boolean)
+	@Transform(({ value }) => value === 'true' || value === true)
 	wifi: boolean;
 
 	@ApiProperty({
@@ -108,7 +108,7 @@ export class LodgeCreateDto {
 	})
 	@IsBoolean({ message: 'Поле "курение" должно быть логическим значением' })
 	@IsOptional()
-	@Type(() => Boolean)
+	@Transform(({ value }) => value === 'true' || value === true)
 	smoking: boolean;
 
 	@ApiProperty({
@@ -117,7 +117,7 @@ export class LodgeCreateDto {
 	})
 	@IsBoolean({ message: 'refrigerator должно быть логическим значением' })
 	@IsOptional()
-	@Type(() => Boolean)
+	@Transform(({ value }) => value === 'true' || value === true)
 	refrigerator?: boolean;
 
 	@ApiProperty({
@@ -126,7 +126,7 @@ export class LodgeCreateDto {
 	})
 	@IsBoolean({ message: 'airConditioner должно быть логическим значением' })
 	@IsOptional()
-	@Type(() => Boolean)
+	@Transform(({ value }) => value === 'true' || value === true)
 	airConditioner?: boolean;
 
 	@ApiProperty({
@@ -152,7 +152,7 @@ export class LodgeCreateDto {
 	})
 	@IsBoolean({ message: 'livingRoom должно быть логическим значением' })
 	@IsOptional()
-	@Type(() => Boolean)
+	@Transform(({ value }) => value === 'true' || value === true)
 	livingRoom?: boolean;
 
 	@ApiProperty({
@@ -161,7 +161,7 @@ export class LodgeCreateDto {
 	})
 	@IsBoolean({ message: 'diningRoom должно быть логическим значением' })
 	@IsOptional()
-	@Type(() => Boolean)
+	@Transform(({ value }) => value === 'true' || value === true)
 	diningRoom?: boolean;
 
 	@ApiProperty({

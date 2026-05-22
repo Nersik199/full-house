@@ -1,7 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
-import * as argon2 from 'argon2';
-import { AuthDto } from 'src/auth/dto/auth.dto';
+
+// import * as argon2 from 'argon2';
+// import { AuthDto } from 'src/auth/dto/auth.dto';
 
 import { User } from './entities/user.entity';
 

@@ -209,17 +209,25 @@ export class TicketService {
 			return [];
 		}
 
+		const startOfToday = dayjs().startOf('day').toDate();
+		const startOfTomorrow = dayjs().add(1, 'day').startOf('day').toDate();
+
 		const tickets = await this.ticketModel.findAll({
 			where: {
 				id: {
 					[Op.in]: ids,
 				},
+				quantity: {
+					[Op.gt]: 0,
+				},
+				date: {
+					[Op.gte]: startOfToday,
+					[Op.lt]: startOfTomorrow,
+				},
 			},
 		});
 
-		const availableTickets = tickets.filter(ticket => ticket.quantity > 0);
-
-		return availableTickets;
+		return tickets;
 	}
 
 	async ticketRemove(id: number) {

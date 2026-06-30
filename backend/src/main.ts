@@ -1,12 +1,14 @@
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
 import { Logger, ValidationPipe } from '@nestjs/common';
-import { Sequelize } from 'sequelize-typescript';
-import { setupSwagger } from './shared/utils/swagger';
+import { ConfigService } from '@nestjs/config';
+import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import morgan from 'morgan';
-import { ConfigService } from '@nestjs/config';
+import { Sequelize } from 'sequelize-typescript';
+import { createAdmin } from '@/user/decorators/create.user.admin';
+import { User } from '@/user/entities/user.entity';
+import { AppModule } from './app.module';
 import { swaggerBasicAuth } from './config/loaders/swagger.basic.auth';
+import { setupSwagger } from './shared/utils/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
@@ -44,6 +46,8 @@ async function bootstrap() {
   );
   swaggerBasicAuth(app, config);
   setupSwagger(app);
+
+	await createAdmin(User, config);
 
   const port = config.getOrThrow<number>('APPLICATION_PORT');
 

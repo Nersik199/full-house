@@ -1,14 +1,5 @@
-import {
-	Controller,
-	DefaultValuePipe,
-	Get,
-	HttpCode,
-	HttpStatus,
-	ParseIntPipe,
-	Query,
-} from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
-
+import { Controller, DefaultValuePipe, Get, HttpCode, HttpStatus, Param, ParseIntPipe, Patch, Query } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
 import { Auth } from '@/auth/decorators/auth.decorators';
 
 import { BookingService } from './booking.service';
@@ -39,5 +30,14 @@ export class BookingController {
 		@Query() dto: GetAllBookings,
 	) {
 		return await this.bookingService.allBookingsAdmin(limit, page, dto);
+	}
+
+	@Patch('/:id')
+	@Auth()
+	@ApiBearerAuth('Authorization')
+	@ApiOperation({ summary: 'Отменить бронирование' })
+	@ApiParam({ name: 'id', type: Number, description: 'ID бронирования' })
+	async cancelBooking(@Param('id', ParseIntPipe) id: number) {
+		return this.bookingService.earlyCheckOut(id);
 	}
 }

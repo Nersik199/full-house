@@ -344,19 +344,13 @@ export class BookingService {
 		};
 	}
 
-	async findAllOccupied(start: Date, end: Date) {
-		return await this.bookingModel.findAll({
-			attributes: ['room_id'],
-			where: {
-				status: {
-					[Op.in]: ['confirmed', 'checked_in', 'pending'],
-				},
-				[Op.or]: [{ expiresAt: null }, { expiresAt: { [Op.gt]: new Date() } }],
-				checkIn: { [Op.lt]: end },
-				checkOut: { [Op.gt]: start },
+	async earlyCheckOut(id: number) {
+		return this.bookingModel.update(
+			{
+				status: 'checked_out',
 			},
-			raw: true,
-		});
+			{ where: { id } },
+		);
 	}
 
 	async findAllOccupiedForSearch(start: Date, end: Date) {

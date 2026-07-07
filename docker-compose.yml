@@ -53,3 +53,12 @@ services:
       - ./.env
     ports:
       - "3002:3000"
+
+  databasus:
+    container_name: databasus
+    image: databasus/databasus:latest
+    restart: unless-stopped
+    ports:
+      - "4005:4005"
+    volumes:
+      - ./databasus-data:/databasus-data

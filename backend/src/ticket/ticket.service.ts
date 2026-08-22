@@ -210,7 +210,6 @@ export class TicketService {
 		}
 
 		const startOfToday = dayjs().startOf('day').toDate();
-		const startOfTomorrow = dayjs().add(1, 'day').startOf('day').toDate();
 
 		const tickets = await this.ticketModel.findAll({
 			where: {
@@ -222,7 +221,6 @@ export class TicketService {
 				},
 				date: {
 					[Op.gte]: startOfToday,
-					[Op.lt]: startOfTomorrow,
 				},
 			},
 		});

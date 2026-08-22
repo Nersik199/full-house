@@ -1,20 +1,8 @@
-import {
-	BadRequestException,
-	Injectable,
-	Logger,
-	UnauthorizedException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/sequelize';
 import CIDR from 'ip-cidr';
-import {
-	ConfirmationEnum,
-	type CreatePaymentRequest,
-	CurrencyEnum,
-	PaymentMethodsEnum,
-	VatCodesEnum,
-	YookassaService,
-} from 'nestjs-yookassa';
+import { ConfirmationEnum, type CreatePaymentRequest, CurrencyEnum, PaymentMethodsEnum, VatCodesEnum, YookassaService } from 'nestjs-yookassa';
 
 import { BookingService } from '@/booking/booking.service';
 import { MailService } from '@/libs/mail/mail.service';
@@ -66,21 +54,19 @@ export class PaymentService {
 					this.prepareYookassaData(order, PaymentMethodsEnum.BANK_CARD),
 				);
 				break;
-			case PaymentMethod.SBP:
-				providerResponse = await this.yookassaService.payments.create(
-					this.prepareYookassaData(order, PaymentMethodsEnum.SBP),
-				);
-				break;
+
 			case PaymentMethod.YOOMONEY:
 				providerResponse = await this.yookassaService.payments.create(
 					this.prepareYookassaData(order, PaymentMethodsEnum.YOOMONEY),
 				);
 				break;
+
 			case PaymentMethod.T_BANK:
 				providerResponse = await this.yookassaService.payments.create(
 					this.prepareYookassaData(order, PaymentMethodsEnum.T_BANK),
 				);
 				break;
+
 			case PaymentMethod.SBERBANK:
 				providerResponse = await this.yookassaService.payments.create(
 					this.prepareYookassaData(order, PaymentMethodsEnum.SBERBANK),
@@ -117,9 +103,9 @@ export class PaymentService {
 			},
 			capture: true,
 			save_payment_method: false,
-			// ...(yooMethod === 'sbp' && {
-			//   capture: true,
-			// }),
+			...(yooMethod === 'sbp' && {
+			  capture: true,
+			}),
 			metadata: {
 				email: order.customerEmail,
 				orderId: order.id.toString(),

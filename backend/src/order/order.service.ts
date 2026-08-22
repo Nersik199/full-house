@@ -126,7 +126,7 @@ export class OrderService {
 					guestName: dto.customerName,
 					guestPhone: dto.customerPhone.trim(),
 					guestEmail: dto.customerEmail.trim(),
-					roomNumber: lodge.roomNumber,
+					// roomNumber: lodge.roomNumber,
 					checkIn: dayjs(dto.startDate).startOf('day').utc().toDate(),
 					checkOut: dayjs(dto.endDate).startOf('day').utc().toDate(),
 					source: 'online',

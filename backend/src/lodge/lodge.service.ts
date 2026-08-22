@@ -99,15 +99,15 @@ export class LodgeService {
 	async create(dto: LodgeCreateDto, files?: Express.Multer.File[]) {
 		const imageUrls = await this.filesService.uploadMany(files, 'lodge');
 
-		const londgNumber = await this.lodgeModel.findOne({
-			where: { roomNumber: dto.roomNumber },
-		});
+		// const londgNumber = await this.lodgeModel.findOne({
+		// 	where: { roomNumber: dto.roomNumber },
+		// });
 
-		if (londgNumber) {
-			throw new BadRequestException(
-				`Этот номер уже существует ${dto.roomNumber}`,
-			);
-		}
+		// if (londgNumber) {
+		// 	throw new BadRequestException(
+		// 		`Этот номер уже существует ${dto.roomNumber}`,
+		// 	);
+		// }
 
 		const lodge = await this.lodgeModel.create({
 			...dto,
@@ -210,7 +210,7 @@ export class LodgeService {
 					guestName: dto.guestName,
 					guestPhone: dto.guestPhone.trim(),
 					guestEmail: dto.guestEmail.trim(),
-					roomNumber: lodge.roomNumber,
+					// roomNumber: lodge.roomNumber,
 					checkIn: dayjs(dto.checkIn).startOf('day').utc().toDate(),
 					checkOut: dayjs(dto.checkOut).startOf('day').utc().toDate(),
 					source: 'walk-in',

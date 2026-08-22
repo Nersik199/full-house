@@ -57,13 +57,13 @@ export class Lodge extends Model {
 	})
 	images: JSON;
 
-	@Column({
-		type: DataType.INTEGER,
-		allowNull: false,
-		field: 'room_number',
-		unique: true,
-	})
-	roomNumber: number;
+	// @Column({
+	// 	type: DataType.INTEGER,
+	// 	allowNull: false,
+	// 	field: 'room_number',
+	// 	unique: true,
+	// })
+	// roomNumber: number;
 
 	@Column({
 		type: DataType.INTEGER,

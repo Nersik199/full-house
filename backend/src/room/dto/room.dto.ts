@@ -22,8 +22,8 @@ export class RoomCreateDto {
 	})
 	@IsString({ message: 'Название должно быть строкой' })
 	@IsNotEmpty({ message: 'Название обязательно' })
-	@Length(5, 200, {
-		message: 'Название должно содержать от 5 до 200 символов',
+	@Length(2, 50, {
+		message: 'Название должно содержать от 2 до 50 символов',
 	})
 	title: string;
 

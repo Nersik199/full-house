@@ -15,8 +15,8 @@ export class MenuCreateDto {
 	})
 	@IsString({ message: 'Название должно быть строкой' })
 	@IsNotEmpty({ message: 'Название обязательно' })
-	@Length(5, 30, {
-		message: 'Название должно содержать от 5 до 30 символов',
+	@Length(2, 50, {
+		message: 'Название должно содержать от 5 до 50 символов',
 	})
 	title: string;
 

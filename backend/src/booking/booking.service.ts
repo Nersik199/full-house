@@ -220,14 +220,14 @@ export class BookingService {
 		if (dto.category !== 'lodge') {
 			rooms = await this.roomModel.findAll({
 				where: { category: dto.category },
-				attributes: ['id', 'roomNumber', 'category', 'price'],
+				attributes: ['id', 'category', 'price'],
 				include: [bookingInclude],
 			});
 		}
 
 		if (dto.category === 'lodge' || !dto.category) {
 			lodges = await this.lodgeModel.findAll({
-				attributes: ['id', 'roomNumber', 'price'],
+				attributes: ['id', 'price'],
 				include: [bookingInclude],
 			});
 		}
@@ -328,7 +328,7 @@ export class BookingService {
 				},
 				{
 					model: Lodge,
-					attributes: ['id', 'room_number'],
+					attributes: ['id'],
 				},
 			],
 		});

@@ -37,6 +37,7 @@ export class Room extends Model {
 		type: DataType.ENUM(
 			'Standard',
 			'Comfort',
+			'JuniorSuite',
 			'Luxury',
 			'Family',
 			'Presidential',

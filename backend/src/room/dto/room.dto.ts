@@ -1,19 +1,22 @@
-import {
-	ApiProperty,
-	ApiPropertyOptional,
-	OmitType,
-	PartialType,
-} from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional, OmitType, PartialType } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
-import {
-	IsBoolean,
-	IsIn,
-	IsNotEmpty,
-	IsNumber,
-	IsOptional,
-	IsString,
-	Length,
-} from 'class-validator';
+import { IsBoolean, IsIn, IsNotEmpty, IsNumber, IsOptional, IsString, Length } from 'class-validator';
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 export class RoomCreateDto {
 	@ApiProperty({
@@ -56,10 +59,19 @@ export class RoomCreateDto {
 			'Категория номера:  Standard, Comfort, Luxury, Family, Presidential',
 	})
 	@IsString()
-	@IsIn(['Standard', 'Comfort', 'Luxury', 'Family', 'Presidential'], {
-		message: 'Неверная категория номера',
-	})
-	category: 'Standard' | 'Comfort' | 'Luxury' | 'Family' | 'Presidential';
+	@IsIn(
+		['Standard', 'Comfort', 'JuniorSuite', 'Luxury', 'Family', 'Presidential'],
+		{
+			message: 'Неверная категория номера',
+		},
+	)
+	category:
+		| 'Standard'
+		| 'Comfort'
+		| 'JuniorSuite'
+		| 'Luxury'
+		| 'Family'
+		| 'Presidential';
 
 	@ApiProperty({
 		example: 101,

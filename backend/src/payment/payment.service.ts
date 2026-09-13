@@ -4,13 +4,35 @@ import { InjectModel } from '@nestjs/sequelize';
 import CIDR from 'ip-cidr';
 import { ConfirmationEnum, type CreatePaymentRequest, CurrencyEnum, PaymentMethodsEnum, VatCodesEnum, YookassaService } from 'nestjs-yookassa';
 
+
+
 import { BookingService } from '@/booking/booking.service';
 import { MailService } from '@/libs/mail/mail.service';
 import { Order } from '@/order/entities/order.entity';
 import { PaymentMethod } from '@/shared/enums/payment-method.enum';
 import { TicketService } from '@/ticket/ticket.service';
 
+
+
 import { InitPaymentRequest } from './dto/payment.dto';
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 @Injectable()
 export class PaymentService {
@@ -104,7 +126,7 @@ export class PaymentService {
 			capture: true,
 			save_payment_method: false,
 			...(yooMethod === 'sbp' && {
-			  capture: true,
+				capture: true,
 			}),
 			metadata: {
 				email: order.customerEmail,
@@ -123,6 +145,7 @@ export class PaymentService {
 							currency: CurrencyEnum.RUB,
 						},
 						vat_code: VatCodesEnum.NDS_NONE,
+						payment_subject: 'service',
 					},
 				],
 			},

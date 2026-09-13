@@ -2,22 +2,6 @@ import { ApiProperty, ApiPropertyOptional, OmitType, PartialType } from '@nestjs
 import { Transform, Type } from 'class-transformer';
 import { IsBoolean, IsIn, IsNotEmpty, IsNumber, IsOptional, IsString, Length } from 'class-validator';
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 export class RoomCreateDto {
 	@ApiProperty({
 		example: 'Стандартный номер',

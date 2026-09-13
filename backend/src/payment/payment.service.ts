@@ -16,24 +16,6 @@ import { TicketService } from '@/ticket/ticket.service';
 
 import { InitPaymentRequest } from './dto/payment.dto';
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 @Injectable()
 export class PaymentService {
 	private readonly logger = new Logger(PaymentService.name);
@@ -145,6 +127,7 @@ export class PaymentService {
 							currency: CurrencyEnum.RUB,
 						},
 						vat_code: VatCodesEnum.NDS_NONE,
+						payment_mode: 'full_payment',
 						payment_subject: 'service',
 					},
 				],

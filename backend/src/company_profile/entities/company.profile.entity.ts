@@ -12,10 +12,10 @@ export class CompanyProfile extends Model {
 	id: number;
 	@Column({
 		type: DataType.STRING,
-		allowNull: false,
+		allowNull: true,
 		field: 'name_company',
 	})
-	nameCompany: string;
+	nameCompany?: string;
 
 	@Column({
 		type: DataType.STRING,
@@ -31,7 +31,7 @@ export class CompanyProfile extends Model {
 
 	@Column({
 		type: DataType.TEXT,
-		allowNull: false,
+		allowNull: true,
 	})
-	image: string;
+	image?: string;
 }

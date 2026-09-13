@@ -1,4 +1,4 @@
-import { ApiProperty, OmitType, PartialType } from '@nestjs/swagger';
+import { ApiProperty, PartialType } from '@nestjs/swagger';
 import {
 	IsEmail,
 	IsNotEmpty,
@@ -11,13 +11,14 @@ export class CompanyProfileCreateDto {
 	@ApiProperty({
 		example: 'ООО Ромашка',
 		description: 'Название компании (от 2 до 200 символов)',
+		required: false,
 	})
+	@IsOptional()
 	@IsString({ message: 'Название компании должно быть строкой' })
-	@IsNotEmpty({ message: 'Название компании обязательно' })
 	@Length(2, 200, {
 		message: 'Название компании должно содержать от 2 до 200 символов',
 	})
-	nameCompany: string;
+	nameCompany?: string;
 
 	@ApiProperty({
 		example: 'info@romashka.ru',
@@ -41,8 +42,10 @@ export class CompanyProfileCreateDto {
 		required: false,
 		description: 'Изображение для header блока (один файл)',
 	})
+	@IsOptional()
 	file?: any;
 }
+
 export class CompanyProfileUpdateDto extends PartialType(
 	CompanyProfileCreateDto,
 ) {}

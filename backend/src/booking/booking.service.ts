@@ -30,6 +30,8 @@ export class BookingService {
 		private roomModel: typeof Room,
 		@InjectModel(Lodge)
 		private lodgeModel: typeof Lodge,
+		@InjectModel(Ticket)
+		private ticketModel: typeof Ticket,
 	) {}
 
 	async checkAvailability(
@@ -320,9 +322,6 @@ export class BookingService {
 			offset,
 			include: [
 				{
-					model: Ticket,
-				},
-				{
 					model: Room,
 					attributes: ['id', 'room_number'],
 				},
@@ -333,8 +332,28 @@ export class BookingService {
 			],
 		});
 
+		const ticketIds = bookings
+			.map(b => b.ticketId)
+			.filter(id => id !== null && id !== undefined);
+
+		let ticketsMap = new Map();
+		if (ticketIds.length > 0) {
+			const tickets = await this.ticketModel.findAll({
+				where: { id: ticketIds },
+			});
+			ticketsMap = new Map(tickets.map(t => [t.id, t]));
+		}
+
+		const data = bookings.map(booking => {
+			const plainBooking = booking.get({ plain: true });
+			return {
+				...plainBooking,
+				ticket: ticketsMap.get(booking.ticketId) || null,
+			};
+		});
+
 		return {
-			data: bookings,
+			data,
 			meta: {
 				total,
 				page: Number(page),

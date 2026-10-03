@@ -1,6 +1,88 @@
-import { ApiProperty, ApiPropertyOptional, OmitType, PartialType } from '@nestjs/swagger';
-import { Transform, Type } from 'class-transformer';
-import { IsBoolean, IsIn, IsNotEmpty, IsNumber, IsOptional, IsString, Length } from 'class-validator';
+import {
+	ApiProperty,
+	ApiPropertyOptional,
+	OmitType,
+	PartialType,
+} from '@nestjs/swagger';
+import { plainToInstance, Transform, Type } from 'class-transformer';
+import {
+	IsArray,
+	IsBoolean,
+	IsIn,
+	IsNotEmpty,
+	IsNumber,
+	IsOptional,
+	IsString,
+	Length,
+	ValidateNested,
+} from 'class-validator';
+
+export class SleepingPlaceDto {
+	@ApiProperty({
+		example: 'single_bed',
+		enum: [
+			'single_bed',
+			'double_bed',
+			'sofa',
+			'double_sofa',
+			'one_and_half_sofa',
+			'chair',
+		],
+	})
+	@IsString()
+	@IsIn([
+		'single_bed',
+		'double_bed',
+		'sofa',
+		'double_sofa',
+		'one_and_half_sofa',
+		'chair',
+	])
+	type:
+		| 'single_bed'
+		| 'double_bed'
+		| 'sofa'
+		| 'double_sofa'
+		| 'one_and_half_sofa'
+		| 'chair';
+
+	@ApiProperty({
+		example: 2,
+	})
+	@IsNumber()
+	@Type(() => Number)
+	count: number;
+}
+
+function transformSleepingPlaces(value: any) {
+	if (value === undefined || value === null || value === '') return [];
+
+	let parsed = value;
+
+	if (typeof parsed === 'string') {
+		try {
+			parsed = JSON.parse(parsed);
+		} catch {
+			return value;
+		}
+	}
+
+	if (Array.isArray(parsed)) {
+		parsed = parsed.map(item => {
+			if (typeof item === 'string') {
+				try {
+					return JSON.parse(item);
+				} catch {
+					return item;
+				}
+			}
+			return item;
+		});
+		return parsed.map(item => plainToInstance(SleepingPlaceDto, item));
+	}
+
+	return parsed;
+}
 
 export class RoomCreateDto {
 	@ApiProperty({
@@ -40,7 +122,7 @@ export class RoomCreateDto {
 	@ApiProperty({
 		example: 'Standard',
 		description:
-			'Категория номера:  Standard, Comfort, Luxury, Family, Presidential',
+			'Категория номера: Standard, Comfort, JuniorSuite, Luxury, Family, Presidential',
 	})
 	@IsString()
 	@IsIn(
@@ -79,12 +161,8 @@ export class RoomCreateDto {
 		example: 1000,
 		description: 'Цена за один час проживания',
 	})
-	@ApiProperty({
-		example: 1000,
-		description: 'Цена за один час проживания',
-	})
 	@IsNumber({}, { message: 'Цена должна быть числом' })
-	@IsOptional({ message: 'Цена за один час проживания не обязателна' })
+	@IsOptional()
 	@Type(() => Number)
 	hourlyPrice?: number;
 
@@ -167,6 +245,19 @@ export class RoomCreateDto {
 	@IsOptional()
 	bedType?: 'single' | 'double';
 
+	@ApiPropertyOptional({
+		type: [SleepingPlaceDto],
+		example: [
+			{ type: 'single_bed', count: 2 },
+			{ type: 'sofa', count: 1 },
+		],
+		description: 'Спальные места в номере',
+	})
+	@IsOptional()
+	@Transform(({ value }) => transformSleepingPlaces(value))
+	@ValidateNested({ each: true })
+	sleepingPlaces?: SleepingPlaceDto[];
+
 	@ApiProperty({
 		example: false,
 		description: 'Наличие отдельной гостиной (true / false)',
@@ -206,11 +297,64 @@ export class RoomCreateDto {
 export class RoomUpdateDto extends PartialType(
 	OmitType(RoomCreateDto, ['files'] as const),
 ) {
-	@ApiProperty({
+	@ApiPropertyOptional({
+		type: [SleepingPlaceDto],
+		description:
+			'Массив спальных мест. Передайте новый полный массив для обновления',
+	})
+	@IsOptional()
+	@Transform(({ value }) => transformSleepingPlaces(value))
+	@ValidateNested({ each: true })
+	sleepingPlaces?: SleepingPlaceDto[];
+
+	@ApiPropertyOptional({
+		type: [String],
+		description: 'Массив URL-адресов оставшихся изображений',
+		example: [
+			'https://030672cc-252a-4845-94b8-9db9878b484d.selstorage.ru/rooms/b572e5a3-4807-45e5-aea6-f5bf0e67449a.jpg',
+			'https://030672cc-252a-4845-94b8-9db9878b484d.selstorage.ru/rooms/b572e5a3-4807-45e5-aea6-f5bf0e67449a.jpg',
+		],
+	})
+	@IsOptional()
+	@Transform(({ value }) => {
+		if (typeof value === 'string') {
+			const trimmed = value.trim();
+
+			if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+				try {
+					const parsed = JSON.parse(trimmed);
+					return Array.isArray(parsed) ? parsed : [trimmed];
+				} catch {}
+			}
+
+			if (trimmed.includes(',')) {
+				return trimmed
+					.split(',')
+					.map(item => item.trim())
+					.filter(Boolean);
+			}
+
+			return trimmed ? [trimmed] : [];
+		}
+
+		if (Array.isArray(value)) {
+			return value.flatMap(item =>
+				typeof item === 'string' && item.includes(',')
+					? item.split(',').map(i => i.trim())
+					: item,
+			);
+		}
+
+		return value;
+	})
+	@IsArray()
+	@IsString({ each: true })
+	images?: string[];
+
+	@ApiPropertyOptional({
 		type: 'string',
 		format: 'binary',
-		description: 'Изображение для номера номера (один файл)',
-		required: false,
+		description: 'Изображение для номера (один файл)',
 	})
 	file?: any;
 }

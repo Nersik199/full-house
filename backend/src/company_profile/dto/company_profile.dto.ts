@@ -37,6 +37,15 @@ export class CompanyProfileCreateDto {
 	tel: string;
 
 	@ApiProperty({
+		example: null,
+		description: 'Показывать профиль в footer',
+		required: false,
+		nullable: true,
+	})
+	@IsOptional()
+	isFooter?: boolean | null;
+
+	@ApiProperty({
 		type: 'string',
 		format: 'binary',
 		required: false,

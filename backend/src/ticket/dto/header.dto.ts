@@ -1,15 +1,16 @@
 import { ApiProperty, PartialType } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, Length } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, Length } from 'class-validator';
 
 export class HeaderTicketCreateDto {
 	@ApiProperty({
 		example: 'Билеты на выставку',
 		description: 'Основной заголовок раздела билетов',
+		required: false,
 	})
 	@IsString({ message: 'Title должен быть строкой' })
-	@IsNotEmpty({ message: 'Title обязательно' })
-	@Length(5, 100, { message: 'Title должен содержать от 5 до 100 символов' })
-	title: string;
+	@IsOptional()
+	@Length(0, 100, { message: 'Title должен содержать от 5 до 100 символов' })
+	title?: string;
 
 	@ApiProperty({
 		example: 'Выбирайте подходящий тариф и бронируйте места заранее',

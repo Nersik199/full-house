@@ -5,11 +5,12 @@ export class HeaderRoomCreateDto {
 	@ApiProperty({
 		example: 'Главный заголовок номера',
 		description: 'Основной заголовок блока header (от 5 до 100 символов)',
+		required: false,
 	})
 	@IsString({ message: 'Title должен быть строкой' })
-	@IsNotEmpty({ message: 'Title обязательно' })
-	@Length(5, 100, { message: 'Title должен содержать от 5 до 100 символов' })
-	title: string;
+	@IsOptional()
+	@Length(0, 100, { message: 'Title должен содержать от 5 до 100 символов' })
+	title?: string;
 
 	@ApiProperty({
 		example: 'Подзаголовок с описанием номера',

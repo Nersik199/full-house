@@ -9,7 +9,6 @@ import {
 
 import { Lodge } from '@/lodge/entities/lodge.entity';
 import { Room } from '@/room/entities/room.entity';
-import { Ticket } from '@/ticket/entities/ticket.entity';
 
 @Table({
 	tableName: 'bookings',
@@ -45,16 +44,12 @@ export class Booking extends Model {
 	@BelongsTo(() => Lodge)
 	lodge: Lodge;
 
-	@ForeignKey(() => Ticket)
 	@Column({
 		type: DataType.BIGINT,
 		allowNull: true,
 		field: 'ticket_id',
 	})
 	ticketId: number;
-
-	@BelongsTo(() => Ticket)
-	ticket: Ticket;
 
 	@Column({
 		type: DataType.INTEGER,

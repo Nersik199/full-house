@@ -6,6 +6,7 @@ import {
 	HttpCode,
 	HttpStatus,
 	Param,
+	ParseIntPipe,
 	Post,
 	Put,
 	Query,
@@ -14,7 +15,12 @@ import {
 	UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
-import { ApiBearerAuth, ApiConsumes, ApiQuery } from '@nestjs/swagger';
+import {
+	ApiBearerAuth,
+	ApiConsumes,
+	ApiParam,
+	ApiQuery,
+} from '@nestjs/swagger';
 import { Auth } from 'src/auth/decorators/auth.decorators';
 import { CurrentAdmin } from 'src/user/decorators/user.decorator';
 
@@ -106,10 +112,17 @@ export class RoomController {
 		return await this.roomService.findById(id);
 	}
 
+	@ApiParam({
+		name: 'id',
+		required: true,
+		type: Number,
+		description: 'ID обновляемого номера',
+	})
 	@ApiQuery({
 		name: 'urlId',
 		required: false,
 		type: String,
+		description: 'URL картинки, которую нужно заменить',
 	})
 	@ApiBearerAuth('Authorization')
 	@Auth()
@@ -118,8 +131,8 @@ export class RoomController {
 	@Put('admin/update/:id')
 	@HttpCode(HttpStatus.OK)
 	async update(
+		@Param('id', ParseIntPipe) id: number,
 		@Body() dto: RoomUpdateDto,
-		@Param('id') id: number,
 		@Query('urlId', DecodeUrlPipe) urlId?: string,
 		@UploadedFile() file?: Express.Multer.File,
 	) {

@@ -73,6 +73,19 @@ export class Room extends Model {
 	member: number;
 
 	@Column({
+		type: DataType.INTEGER,
+		allowNull: false,
+		defaultValue: 1,
+	})
+	adults: number;
+
+	@Column({
+		type: DataType.INTEGER,
+		allowNull: true,
+	})
+	children?: number;
+
+	@Column({
 		type: DataType.JSON,
 		allowNull: false,
 	})
@@ -148,6 +161,23 @@ export class Room extends Model {
 	balcony?: boolean;
 	@HasMany(() => Booking, { foreignKey: 'roomId', as: 'bookings' })
 	bookings: Booking[];
+
+	@Column({
+		type: DataType.JSON,
+		allowNull: false,
+		defaultValue: [],
+		field: 'sleeping_places',
+	})
+	sleepingPlaces: {
+		type:
+			| 'single_bed'
+			| 'double_bed'
+			| 'sofa'
+			| 'double_sofa'
+			| 'one_and_half_sofa'
+			| 'chair';
+		count: number;
+	}[];
 
 	@Column({
 		type: DataType.DATE,

@@ -1,17 +1,16 @@
 import { ApiProperty, PartialType } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, Length } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, Length } from 'class-validator';
 
 export class HeaderDiningRoomCreateDto {
 	@ApiProperty({
 		example: 'Свадебный зал',
 		description: 'Основной заголовок раздела свадебного зала',
+		required: false,
 	})
 	@IsString({ message: 'Заголовок должен быть строкой' })
-	@IsNotEmpty({ message: 'Заголовок обязателен' })
-	@Length(5, 100, {
-		message: 'Заголовок должен содержать от 5 до 100 символов',
-	})
-	title: string;
+	@IsOptional()
+	@Length(0, 100, { message: 'Title должен содержать от 5 до 100 символов' })
+	title?: string;
 
 	@ApiProperty({
 		example: 'Идеальное место для вашего свадебного торжества',

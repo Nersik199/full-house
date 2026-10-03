@@ -24,6 +24,13 @@ export class CompanyProfile extends Model {
 	mail: string;
 
 	@Column({
+		type: DataType.BOOLEAN,
+		allowNull: true,
+		field: 'is_footer',
+	})
+	isFooter: boolean | null;
+
+	@Column({
 		type: DataType.STRING,
 		allowNull: false,
 	})

@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/sequelize';
 import dayjs from 'dayjs';
+import { difference, intersection } from 'lodash';
 import { Op } from 'sequelize';
 import { Sequelize } from 'sequelize-typescript';
 
@@ -183,27 +184,82 @@ export class RoomService {
 			throw new NotFoundException('Room not found');
 		}
 
-		let images: string[] = Array.isArray(room.images) ? [...room.images] : [];
+		if (dto.roomNumber !== undefined && dto.roomNumber !== room.roomNumber) {
+			const existingRoom = await this.roomModel.findOne({
+				where: { roomNumber: dto.roomNumber },
+			});
+
+			if (existingRoom) {
+				throw new BadRequestException(
+					`Комната с номером ${dto.roomNumber} уже существует`,
+				);
+			}
+		}
+
+		const dbImages: string[] = Array.isArray(room.images)
+			? [...room.images]
+			: [];
+
+		let updatedImages: string[] = dbImages;
+
+		if (dto.images !== undefined) {
+			const dtoImagesArray = Array.isArray(dto.images)
+				? dto.images
+						.flatMap(img =>
+							typeof img === 'string' && img.includes(',')
+								? img.split(',')
+								: img,
+						)
+						.map(s => s.trim())
+				: [];
+
+			updatedImages = intersection(dbImages, dtoImagesArray);
+
+			const removedImages = difference(dbImages, dtoImagesArray);
+
+			if (removedImages.length > 0) {
+				await Promise.all(
+					removedImages.map(async imgUrl => {
+						try {
+							const key = this.filesService.extractKey(imgUrl);
+							await this.filesService.delete(key);
+						} catch (error) {
+							console.error(`Ошибка при удалении файла ${imgUrl}:`, error);
+						}
+					}),
+				);
+			}
+		}
 
 		if (file) {
 			if (urlId) {
 				const targetKey = this.filesService.extractKey(urlId);
-
 				await this.filesService.delete(targetKey);
 
-				images = images.filter(img => {
+				updatedImages = updatedImages.filter(img => {
 					const imgKey = this.filesService.extractKey(img);
 					return imgKey !== targetKey;
 				});
 			}
 			const newImg = await this.filesService.upload(file, 'rooms');
-			images.push(newImg);
+			updatedImages.push(newImg);
 		}
 
-		await room.update({
+		const adults = dto.adults ?? room.adults;
+		const children = dto.children ?? room.children;
+		const member = adults + children;
+
+		Object.assign(room, {
 			...dto,
-			images,
+			images: updatedImages,
+			member,
 		});
+
+		if (dto.sleepingPlaces !== undefined) {
+			room.changed('sleepingPlaces', true);
+		}
+
+		await room.save();
 
 		return room;
 	}

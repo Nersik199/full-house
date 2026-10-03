@@ -18,20 +18,19 @@ export class CompanyProfileService {
 	) {}
 
 	async create(dto: CompanyProfileCreateDto, file?: Express.Multer.File) {
-		const uploaded = await this.filesService.upload(file, 'company_profile');
+		const uploaded = file
+			? await this.filesService.upload(file, 'company_profile')
+			: undefined;
 
-		const headerData = await this.companyProfile.create({
+		return await this.companyProfile.create({
 			...dto,
 			image: uploaded,
 		});
-
-		return headerData;
 	}
 
 	async get() {
-		const data = await this.companyProfile.findOne();
+		const data = await this.companyProfile.findAll();
 		if (!data) throw new NotFoundException('compony info not found');
-
 		return data;
 	}
 
@@ -58,5 +57,23 @@ export class CompanyProfileService {
 			throw new NotFoundException('company profile not found');
 
 		return updatedData;
+	}
+
+	async delete(id: number) {
+		const companyProfile = await this.companyProfile.findByPk(id);
+
+		if (!companyProfile) {
+			throw new NotFoundException('company profile not found');
+		}
+
+		if (companyProfile.image) {
+			await this.filesService.delete(companyProfile.image);
+		}
+
+		await companyProfile.destroy();
+
+		return {
+			message: 'company profile successfully deleted',
+		};
 	}
 }

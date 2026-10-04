@@ -9,6 +9,7 @@ import { Sequelize } from 'sequelize-typescript';
 
 import { BookingService } from '@/booking/booking.service';
 import { FilesService } from '@/files/files.service';
+import { CreateBookingWalkInLodgeDto } from '@/lodge/dto/lodge.booking.walkIn.dto';
 import { UpdateHeaderInterfaces } from '@/shared/interfaces/updateHeaderInterfaces';
 import { calculatePagination } from '@/shared/utils/calculate.pagination';
 import { prepareUpdatedImages } from '@/shared/utils/helper';
@@ -61,6 +62,38 @@ export class LodgeService {
 			throw new NotFoundException('header info not found');
 		}
 		return getHeader;
+	}
+
+	async lodgeBookingWalkIn(dto: CreateBookingWalkInLodgeDto) {
+		const transaction = await this.sequelize.transaction();
+		try {
+			const lodge = await this.findById(dto.lodgeId);
+			const total = this.calculateTotalAmount(
+				lodge.price,
+				dto.checkIn,
+				dto.checkOut,
+			);
+			const booking = await this.bookingService.bookingWalkIn(
+				{
+					lodgeId: lodge.id,
+					totalPrice: total,
+					guestName: dto.guestName,
+					guestPhone: dto.guestPhone.trim(),
+					guestEmail: dto.guestEmail.trim(),
+					checkIn: dayjs(dto.checkIn).startOf('day').utc().toDate(),
+					checkOut: dayjs(dto.checkOut).startOf('day').utc().toDate(),
+					source: 'walk-in',
+				},
+				transaction,
+			);
+
+			await transaction.commit();
+
+			return booking;
+		} catch (err) {
+			await transaction.rollback();
+			throw err;
+		}
 	}
 
 	async updateHeader(

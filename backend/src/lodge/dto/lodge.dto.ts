@@ -4,15 +4,85 @@ import {
 	OmitType,
 	PartialType,
 } from '@nestjs/swagger';
-import { Transform, Type } from 'class-transformer';
+import { plainToInstance, Transform, Type } from 'class-transformer';
 import {
+	IsArray,
 	IsBoolean,
+	IsIn,
 	IsNotEmpty,
 	IsNumber,
 	IsOptional,
 	IsString,
 	Length,
+	ValidateNested,
 } from 'class-validator';
+
+export class SleepingPlaceDto {
+	@ApiProperty({
+		example: 'single_bed',
+		enum: [
+			'single_bed',
+			'double_bed',
+			'sofa',
+			'double_sofa',
+			'one_and_half_sofa',
+			'chair',
+		],
+	})
+	@IsString()
+	@IsIn([
+		'single_bed',
+		'double_bed',
+		'sofa',
+		'double_sofa',
+		'one_and_half_sofa',
+		'chair',
+	])
+	type:
+		| 'single_bed'
+		| 'double_bed'
+		| 'sofa'
+		| 'double_sofa'
+		| 'one_and_half_sofa'
+		| 'chair';
+
+	@ApiProperty({
+		example: 2,
+	})
+	@IsNumber()
+	@Type(() => Number)
+	count: number;
+}
+
+function transformSleepingPlaces(value: any) {
+	if (value === undefined || value === null || value === '') return [];
+
+	let parsed = value;
+
+	if (typeof parsed === 'string') {
+		try {
+			parsed = JSON.parse(parsed);
+		} catch {
+			return value;
+		}
+	}
+
+	if (Array.isArray(parsed)) {
+		parsed = parsed.map(item => {
+			if (typeof item === 'string') {
+				try {
+					return JSON.parse(item);
+				} catch {
+					return item;
+				}
+			}
+			return item;
+		});
+		return parsed.map(item => plainToInstance(SleepingPlaceDto, item));
+	}
+
+	return parsed;
+}
 
 export class LodgeCreateDto {
 	@ApiProperty({
@@ -49,14 +119,18 @@ export class LodgeCreateDto {
 	})
 	description: string;
 
-	// @ApiProperty({
-	// 	example: 101,
-	// 	description: 'Уникальный номер комнаты',
-	// })
-	// @IsNumber({}, { message: 'Номер комнаты должен быть числом' })
-	// @IsNotEmpty({ message: 'Номер комнаты обязателен' })
-	// @Type(() => Number)
-	// roomNumber: number;
+	@ApiPropertyOptional({
+		type: [SleepingPlaceDto],
+		example: [
+			{ type: 'single_bed', count: 2 },
+			{ type: 'sofa', count: 1 },
+		],
+		description: 'Спальные места в номере',
+	})
+	@IsOptional()
+	@Transform(({ value }) => transformSleepingPlaces(value))
+	@ValidateNested({ each: true })
+	sleepingPlaces?: SleepingPlaceDto[];
 
 	@ApiProperty({
 		example: 15000,
@@ -176,6 +250,60 @@ export class LodgeCreateDto {
 export class LodgeUpdateDto extends PartialType(
 	OmitType(LodgeCreateDto, ['files'] as const),
 ) {
+	@ApiPropertyOptional({
+		type: [SleepingPlaceDto],
+		description:
+			'Массив спальных мест. Передайте новый полный массив для обновления',
+	})
+	@IsOptional()
+	@Transform(({ value }) => transformSleepingPlaces(value))
+	@ValidateNested({ each: true })
+	sleepingPlaces?: SleepingPlaceDto[];
+
+	@ApiPropertyOptional({
+		type: [String],
+		description: 'Массив URL-адресов оставшихся изображений',
+		example: [
+			'https://030672cc-252a-4845-94b8-9db9878b484d.selstorage.ru/rooms/b572e5a3-4807-45e5-aea6-f5bf0e67449a.jpg',
+			'https://030672cc-252a-4845-94b8-9db9878b484d.selstorage.ru/rooms/b572e5a3-4807-45e5-aea6-f5bf0e67449a.jpg',
+		],
+	})
+	@IsOptional()
+	@Transform(({ value }) => {
+		if (typeof value === 'string') {
+			const trimmed = value.trim();
+
+			if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+				try {
+					const parsed = JSON.parse(trimmed);
+					return Array.isArray(parsed) ? parsed : [trimmed];
+				} catch {}
+			}
+
+			if (trimmed.includes(',')) {
+				return trimmed
+					.split(',')
+					.map(item => item.trim())
+					.filter(Boolean);
+			}
+
+			return trimmed ? [trimmed] : [];
+		}
+
+		if (Array.isArray(value)) {
+			return value.flatMap(item =>
+				typeof item === 'string' && item.includes(',')
+					? item.split(',').map(i => i.trim())
+					: item,
+			);
+		}
+
+		return value;
+	})
+	@IsArray()
+	@IsString({ each: true })
+	images?: string[];
+
 	@ApiProperty({
 		type: 'string',
 		format: 'binary',

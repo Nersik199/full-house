@@ -5,7 +5,6 @@ import {
 } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/sequelize';
 import dayjs from 'dayjs';
-import { difference, intersection } from 'lodash';
 import { Op } from 'sequelize';
 import { Sequelize } from 'sequelize-typescript';
 
@@ -14,6 +13,7 @@ import { FilesService } from '@/files/files.service';
 import { SearchRoomDto } from '@/room/dto/room.search.dto';
 import { UpdateHeaderInterfaces } from '@/shared/interfaces/updateHeaderInterfaces';
 import { calculatePagination } from '@/shared/utils/calculate.pagination';
+import { prepareUpdatedImages } from '@/shared/utils/helper';
 
 import { HeaderRoomCreateDto, HeaderRoomUpdateDto } from './dto/header.dto';
 import { CreateBookingWalkInDto } from './dto/room.booking.walkIn.dto';
@@ -200,40 +200,28 @@ export class RoomService {
 			? [...room.images]
 			: [];
 
-		let updatedImages: string[] = dbImages;
+		const { updatedImages: filteredImages, removedImages } =
+			prepareUpdatedImages(dbImages, dto.images);
 
-		if (dto.images !== undefined) {
-			const dtoImagesArray = Array.isArray(dto.images)
-				? dto.images
-						.flatMap(img =>
-							typeof img === 'string' && img.includes(',')
-								? img.split(',')
-								: img,
-						)
-						.map(s => s.trim())
-				: [];
+		let updatedImages: string[] = filteredImages;
 
-			updatedImages = intersection(dbImages, dtoImagesArray);
-
-			const removedImages = difference(dbImages, dtoImagesArray);
-
-			if (removedImages.length > 0) {
-				await Promise.all(
-					removedImages.map(async imgUrl => {
-						try {
-							const key = this.filesService.extractKey(imgUrl);
-							await this.filesService.delete(key);
-						} catch (error) {
-							console.error(`Ошибка при удалении файла ${imgUrl}:`, error);
-						}
-					}),
-				);
-			}
+		if (removedImages.length > 0) {
+			await Promise.all(
+				removedImages.map(async imgUrl => {
+					try {
+						const key = this.filesService.extractKey(imgUrl);
+						await this.filesService.delete(key);
+					} catch (error) {
+						console.error(`Ошибка при удалении файла ${imgUrl}:`, error);
+					}
+				}),
+			);
 		}
 
 		if (file) {
 			if (urlId) {
 				const targetKey = this.filesService.extractKey(urlId);
+
 				await this.filesService.delete(targetKey);
 
 				updatedImages = updatedImages.filter(img => {
@@ -241,7 +229,9 @@ export class RoomService {
 					return imgKey !== targetKey;
 				});
 			}
+
 			const newImg = await this.filesService.upload(file, 'rooms');
+
 			updatedImages.push(newImg);
 		}
 

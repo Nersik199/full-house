@@ -9,9 +9,9 @@ import { Sequelize } from 'sequelize-typescript';
 
 import { BookingService } from '@/booking/booking.service';
 import { FilesService } from '@/files/files.service';
-import { CreateBookingWalkInLodgeDto } from '@/lodge/dto/lodge.booking.walkIn.dto';
 import { UpdateHeaderInterfaces } from '@/shared/interfaces/updateHeaderInterfaces';
 import { calculatePagination } from '@/shared/utils/calculate.pagination';
+import { prepareUpdatedImages } from '@/shared/utils/helper';
 
 import { HeaderLodgeCreateDto, HeaderLodgeUpdateDto } from './dto/header.dto';
 import { LodgeCreateDto, LodgeUpdateDto } from './dto/lodge.dto';
@@ -99,22 +99,10 @@ export class LodgeService {
 	async create(dto: LodgeCreateDto, files?: Express.Multer.File[]) {
 		const imageUrls = await this.filesService.uploadMany(files, 'lodge');
 
-		// const londgNumber = await this.lodgeModel.findOne({
-		// 	where: { roomNumber: dto.roomNumber },
-		// });
-
-		// if (londgNumber) {
-		// 	throw new BadRequestException(
-		// 		`Этот номер уже существует ${dto.roomNumber}`,
-		// 	);
-		// }
-
-		const lodge = await this.lodgeModel.create({
+		return await this.lodgeModel.create({
 			...dto,
 			images: imageUrls,
 		});
-
-		return lodge;
 	}
 
 	async findAll(page: number, limit: number) {
@@ -170,7 +158,27 @@ export class LodgeService {
 			throw new NotFoundException('lodge not found');
 		}
 
-		let images: string[] = Array.isArray(lodge.images) ? [...lodge.images] : [];
+		const dbImages: string[] = Array.isArray(lodge.images)
+			? [...lodge.images]
+			: [];
+
+		const { updatedImages: filteredImages, removedImages } =
+			prepareUpdatedImages(dbImages, dto.images);
+
+		let updatedImages: string[] = filteredImages;
+
+		if (removedImages.length > 0) {
+			await Promise.all(
+				removedImages.map(async imgUrl => {
+					try {
+						const key = this.filesService.extractKey(imgUrl);
+						await this.filesService.delete(key);
+					} catch (error) {
+						console.error(`Ошибка при удалении файла ${imgUrl}:`, error);
+					}
+				}),
+			);
+		}
 
 		if (file) {
 			if (urlId) {
@@ -178,53 +186,29 @@ export class LodgeService {
 
 				await this.filesService.delete(targetKey);
 
-				images = images.filter(img => {
+				updatedImages = updatedImages.filter(img => {
 					const imgKey = this.filesService.extractKey(img);
 					return imgKey !== targetKey;
 				});
 			}
+
 			const newImg = await this.filesService.upload(file, 'lodge');
-			images.push(newImg);
+
+			updatedImages.push(newImg);
 		}
-		await lodge.update({
+
+		Object.assign(lodge, {
 			...dto,
-			images,
+			images: updatedImages,
 		});
 
-		return lodge;
-	}
-
-	async lodgeBookingWalkIn(dto: CreateBookingWalkInLodgeDto) {
-		const transaction = await this.sequelize.transaction();
-		try {
-			const lodge = await this.findById(dto.lodgeId);
-			const total = this.calculateTotalAmount(
-				lodge.price,
-				dto.checkIn,
-				dto.checkOut,
-			);
-			const booking = await this.bookingService.bookingWalkIn(
-				{
-					lodgeId: lodge.id,
-					totalPrice: total,
-					guestName: dto.guestName,
-					guestPhone: dto.guestPhone.trim(),
-					guestEmail: dto.guestEmail.trim(),
-					// roomNumber: lodge.roomNumber,
-					checkIn: dayjs(dto.checkIn).startOf('day').utc().toDate(),
-					checkOut: dayjs(dto.checkOut).startOf('day').utc().toDate(),
-					source: 'walk-in',
-				},
-				transaction,
-			);
-
-			await transaction.commit();
-
-			return booking;
-		} catch (err) {
-			await transaction.rollback();
-			throw err;
+		if (dto.sleepingPlaces !== undefined) {
+			lodge.changed('sleepingPlaces', true);
 		}
+
+		await lodge.save();
+
+		return lodge;
 	}
 
 	async delete(id: number) {

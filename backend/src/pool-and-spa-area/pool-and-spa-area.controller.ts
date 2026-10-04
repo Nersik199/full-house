@@ -152,7 +152,7 @@ export class PoolAndSpaAreaController {
 		@Query('urlId', DecodeUrlPipe) urlId?: string,
 		@UploadedFile() file?: Express.Multer.File,
 	) {
-		return await this.poolAndSpaAreaService.updateSlider(id, urlId, file);
+		return await this.poolAndSpaAreaService.updateSlider(id, dto, urlId, file);
 	}
 
 	@ApiBearerAuth('Authorization')

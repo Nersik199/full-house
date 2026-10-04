@@ -57,13 +57,22 @@ export class Lodge extends Model {
 	})
 	images: JSON;
 
-	// @Column({
-	// 	type: DataType.INTEGER,
-	// 	allowNull: false,
-	// 	field: 'room_number',
-	// 	unique: true,
-	// })
-	// roomNumber: number;
+	@Column({
+		type: DataType.JSON,
+		allowNull: false,
+		defaultValue: [],
+		field: 'sleeping_places',
+	})
+	sleepingPlaces: {
+		type:
+			| 'single_bed'
+			| 'double_bed'
+			| 'sofa'
+			| 'double_sofa'
+			| 'one_and_half_sofa'
+			| 'chair';
+		count: number;
+	}[];
 
 	@Column({
 		type: DataType.INTEGER,

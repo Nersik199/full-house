@@ -1,5 +1,12 @@
-import { ApiProperty, PartialType } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, Length } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
+import {
+	IsArray,
+	IsNotEmpty,
+	IsOptional,
+	IsString,
+	Length,
+} from 'class-validator';
 
 export class PoolSpaCreateDto {
 	@ApiProperty({
@@ -54,4 +61,48 @@ export class updateSliderDto {
 		description: 'Изображение обеденного зала (опционально)',
 	})
 	file?: any;
+
+	@ApiPropertyOptional({
+		type: [String],
+		description: 'Массив URL-адресов оставшихся изображений',
+		example: [
+			'https://030672cc-252a-4845-94b8-9db9878b484d.selstorage.ru/rooms/b572e5a3-4807-45e5-aea6-f5bf0e67449a.jpg',
+			'https://030672cc-252a-4845-94b8-9db9878b484d.selstorage.ru/rooms/b572e5a3-4807-45e5-aea6-f5bf0e67449a.jpg',
+		],
+	})
+	@IsOptional()
+	@Transform(({ value }) => {
+		if (typeof value === 'string') {
+			const trimmed = value.trim();
+
+			if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+				try {
+					const parsed = JSON.parse(trimmed);
+					return Array.isArray(parsed) ? parsed : [trimmed];
+				} catch {}
+			}
+
+			if (trimmed.includes(',')) {
+				return trimmed
+					.split(',')
+					.map(item => item.trim())
+					.filter(Boolean);
+			}
+
+			return trimmed ? [trimmed] : [];
+		}
+
+		if (Array.isArray(value)) {
+			return value.flatMap(item =>
+				typeof item === 'string' && item.includes(',')
+					? item.split(',').map(i => i.trim())
+					: item,
+			);
+		}
+
+		return value;
+	})
+	@IsArray()
+	@IsString({ each: true })
+	images?: string[];
 }

@@ -7,12 +7,17 @@ import { InjectModel } from '@nestjs/sequelize';
 
 import { FilesService } from '@/files/files.service';
 import { UpdateHeaderInterfaces } from '@/shared/interfaces/updateHeaderInterfaces';
+import { prepareUpdatedImages } from '@/shared/utils/helper';
 
 import {
 	HeaderPoolSpaCreateDto,
 	HeaderPoolSpaUpdateDto,
 } from './dto/header.dto';
-import { PoolSpaCreateDto, PoolSpaUpdateDto } from './dto/pool_spa.createDto';
+import {
+	PoolSpaCreateDto,
+	PoolSpaUpdateDto,
+	updateSliderDto,
+} from './dto/pool_spa.createDto';
 import { PoolAndSpaAreaHeader } from './entities/header.entity';
 import { PoolSpa } from './entities/pool.and.spa.area.entity';
 import { SliderImage } from './entities/slider.images.entity';
@@ -184,38 +189,60 @@ export class PoolAndSpaAreaService {
 		return slider;
 	}
 
-	async updateSlider(id: number, urlId?: string, file?: Express.Multer.File) {
+	async updateSlider(
+		id: number,
+		dto: updateSliderDto,
+		urlId?: string,
+		file?: Express.Multer.File,
+	) {
 		const slider = await this.sliderImageModel.findByPk(id);
 
 		if (!slider) {
 			throw new NotFoundException('Slider images not found');
 		}
 
-		let images: string[] = Array.isArray(slider.images)
+		const dbImages: string[] = Array.isArray(slider.images)
 			? [...slider.images]
 			: [];
 
-		if (urlId) {
-			const targetKey = this.filesService.extractKey(urlId);
+		const { updatedImages: filteredImages, removedImages } =
+			prepareUpdatedImages(dbImages, dto.images);
 
-			try {
-				await this.filesService.delete(targetKey);
+		let updatedImages: string[] = filteredImages;
 
-				images = images.filter(img => {
-					const imgKey = this.filesService.extractKey(img);
-					return imgKey !== targetKey;
-				});
-			} catch (error) {
-				console.error('Ошибка при удалении старого файла:', error);
-			}
+		if (removedImages.length > 0) {
+			await Promise.all(
+				removedImages.map(async imgUrl => {
+					try {
+						const key = this.filesService.extractKey(imgUrl);
+						await this.filesService.delete(key);
+					} catch (error) {
+						console.error(`Ошибка при удалении файла ${imgUrl}:`, error);
+					}
+				}),
+			);
 		}
 
 		if (file) {
+			if (urlId) {
+				const targetKey = this.filesService.extractKey(urlId);
+
+				await this.filesService.delete(targetKey);
+
+				updatedImages = updatedImages.filter(img => {
+					const imgKey = this.filesService.extractKey(img);
+					return imgKey !== targetKey;
+				});
+			}
+
 			const newImg = await this.filesService.upload(file, 'pool-spa/slider');
-			images.push(newImg);
+
+			updatedImages.push(newImg);
 		}
 
-		await slider.update({ images });
+		await slider.update({
+			images: updatedImages,
+		});
 
 		return slider;
 	}

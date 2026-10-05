@@ -20,6 +20,7 @@ import { CompanyProfileModule } from './company_profile/company_profile.module';
 import { StatisticsModule } from './statistics/statistics.module';
 import { TicketModule } from './ticket/ticket.module';
 import { CartModule } from './cart/cart.module';
+import { SupportModule } from './support/support.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -48,6 +49,7 @@ import { CartModule } from './cart/cart.module';
     StatisticsModule,
     TicketModule,
     CartModule,
+    SupportModule,
   ],
   providers: [],
 })

@@ -6,6 +6,7 @@ import {
 	HttpCode,
 	HttpStatus,
 	Param,
+	ParseIntPipe,
 	Post,
 	Put,
 	Query,
@@ -19,7 +20,7 @@ import { Auth } from 'src/auth/decorators/auth.decorators';
 import { DecodeUrlPipe } from '@/shared/pipes/decode-url.pipe';
 import { CurrentAdmin } from '@/user/decorators/user.decorator';
 
-import { CreateTicketDto } from './dto/CreateTicketDto';
+import { CreateTicketDto, UpdateTicketDto } from './dto/CreateTicketDto';
 import { HeaderTicketCreateDto } from './dto/header.dto';
 import { TicketService } from './ticket.service';
 
@@ -53,7 +54,7 @@ export class TicketController {
 	@UseInterceptors(FileInterceptor('file'))
 	@HttpCode(HttpStatus.OK)
 	async updateHeader(
-		@Param('id') id: number,
+		@Param('id', ParseIntPipe) id: number,
 		@CurrentAdmin('id') userId: number,
 		@Body() dto: HeaderTicketCreateDto,
 		@Query('urlId', DecodeUrlPipe) urlId?: string,
@@ -73,7 +74,7 @@ export class TicketController {
 	@HttpCode(HttpStatus.OK)
 	@Post('/create')
 	async createTicket(@Body() dto: CreateTicketDto) {
-		return await this.ticketService.setTicketsForDate(dto);
+		return await this.ticketService.createTicket(dto);
 	}
 
 	@Get('/by-days')
@@ -90,6 +91,14 @@ export class TicketController {
 		@Query('page') page?: number,
 	) {
 		return await this.ticketService.getAllTickets(page, limit);
+	}
+
+	@ApiBearerAuth('Authorization')
+	@Auth()
+	@HttpCode(HttpStatus.OK)
+	@Put(':id')
+	async updateTicket(@Param('id') id: string, @Body() dto: UpdateTicketDto) {
+		return await this.ticketService.updateTicket(Number(id), dto);
 	}
 
 	@ApiBearerAuth('Authorization')

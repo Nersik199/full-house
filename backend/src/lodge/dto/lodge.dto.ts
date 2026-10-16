@@ -14,6 +14,7 @@ import {
 	IsOptional,
 	IsString,
 	Length,
+	Matches,
 	ValidateNested,
 } from 'class-validator';
 
@@ -237,6 +238,20 @@ export class LodgeCreateDto {
 	@IsOptional()
 	@Transform(({ value }) => value === 'true' || value === true)
 	diningRoom?: boolean;
+
+	@ApiPropertyOptional({
+		example: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+		description: 'Ссылка на YouTube видео номера',
+	})
+	@IsOptional()
+	@IsString({ message: 'youtubeUrl должен быть строкой' })
+	@Matches(
+		/^(https?:\/\/)?(www\.)?(youtube\.com\/(watch\?v=|embed\/)|youtu\.be\/)[\w-]+/,
+		{
+			message: 'youtubeUrl должен быть корректной ссылкой на YouTube',
+		},
+	)
+	youtubeUrl?: string;
 
 	@ApiProperty({
 		type: 'array',

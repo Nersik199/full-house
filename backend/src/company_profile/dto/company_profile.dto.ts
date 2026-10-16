@@ -1,5 +1,7 @@
 import { ApiProperty, PartialType } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 import {
+	IsBoolean,
 	IsEmail,
 	IsNotEmpty,
 	IsOptional,
@@ -23,10 +25,11 @@ export class CompanyProfileCreateDto {
 	@ApiProperty({
 		example: 'info@romashka.ru',
 		description: 'Email компании',
+		required: false,
 	})
 	@IsEmail({}, { message: 'Email должен быть корректным' })
-	@IsNotEmpty({ message: 'Email обязателен' })
-	mail: string;
+	@IsOptional()
+	mail?: string;
 
 	@ApiProperty({
 		example: '+7 (999) 123-45-67',
@@ -42,7 +45,14 @@ export class CompanyProfileCreateDto {
 		required: false,
 		nullable: true,
 	})
+	@Transform(({ value }) => {
+		if (value === 'null' || value === '') return null;
+		if (value === 'true') return true;
+		if (value === 'false') return false;
+		return value;
+	})
 	@IsOptional()
+	@IsBoolean({ message: 'isFooter должен быть boolean или null' })
 	isFooter?: boolean | null;
 
 	@ApiProperty({

@@ -19,9 +19,9 @@ export class CompanyProfile extends Model {
 
 	@Column({
 		type: DataType.STRING,
-		allowNull: false,
+		allowNull: true,
 	})
-	mail: string;
+	mail?: string | null;
 
 	@Column({
 		type: DataType.BOOLEAN,

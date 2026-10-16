@@ -82,6 +82,12 @@ export class Lodge extends Model {
 	bathroom: number;
 
 	@Column({
+		type: DataType.STRING,
+		allowNull: true,
+	})
+	youtubeUrl: string;
+
+	@Column({
 		type: DataType.INTEGER,
 		allowNull: false,
 		defaultValue: 1,

@@ -10,7 +10,7 @@ import { Op } from 'sequelize';
 import { FilesService } from '@/files/files.service';
 import { calculatePagination } from '@/shared/utils/calculate.pagination';
 
-import { CreateTicketDto } from './dto/CreateTicketDto';
+import { CreateTicketDto, UpdateTicketDto } from './dto/CreateTicketDto';
 import { HeaderTicketCreateDto, HeaderTicketUpdateDto } from './dto/header.dto';
 import { TicketHeader } from './entities/header.dto';
 import { Ticket } from './entities/ticket.entity';
@@ -88,12 +88,25 @@ export class TicketService {
 		return header;
 	}
 
-	async setTicketsForDate(dto: CreateTicketDto) {
-		if (!dayjs(dto.date).isValid()) {
-			throw new BadRequestException('Invalid date format');
+	async createTicket(dto: CreateTicketDto) {
+		const startDate = dayjs(dto.startDate);
+
+		const endDate = dayjs(dto.endDate);
+
+		if (!startDate.isValid()) {
+			throw new BadRequestException('Invalid start date format');
 		}
 
-		const targetDate = dayjs(dto.date).format('YYYY-MM-DD');
+		if (!endDate.isValid()) {
+			throw new BadRequestException('Invalid end date format');
+		}
+
+		if (endDate.isBefore(startDate, 'day')) {
+			throw new BadRequestException(
+				'End date cannot be earlier than start date',
+			);
+		}
+
 		const discountPercent = dto.discount || 0;
 
 		if (discountPercent < 0 || discountPercent > 100) {
@@ -103,31 +116,71 @@ export class TicketService {
 		const finalPrice =
 			Math.round(dto.price * (1 - discountPercent / 100) * 100) / 100;
 
-		const ticketData = {
-			date: targetDate,
+		return await this.ticketModel.create({
+			startDate: startDate.format('YYYY-MM-DD'),
+			endDate: endDate.format('YYYY-MM-DD'),
 			price: dto.price,
 			discount: discountPercent,
-			finalPrice: finalPrice || dto.price,
+			finalPrice,
 			quantity: dto.quantity,
-		};
-
-		return await this.ticketModel.create(ticketData);
+			title: dto.title,
+			description: dto.description,
+			subTitle: dto.subTitle,
+			features: dto.features,
+		});
 	}
 
-	async getByDaysTickets(date?: string) {
-		const baseDate = date ? dayjs(date) : dayjs();
+	async updateTicket(id: number, dto: UpdateTicketDto) {
+		const ticket = await this.ticketModel.findByPk(id);
 
-		const start = baseDate.startOf('day').toDate();
-		const end = baseDate.endOf('day').toDate();
+		if (!ticket) {
+			throw new NotFoundException('Ticket not found');
+		}
 
-		return await this.ticketModel.findAll({
-			where: {
-				date: {
-					[Op.between]: [start, end],
-				},
-			},
-			order: [['date', 'ASC']],
+		const startDate = dto.startDate
+			? dayjs(dto.startDate)
+			: dayjs(ticket.startDate);
+
+		const endDate = dto.endDate ? dayjs(dto.endDate) : dayjs(ticket.endDate);
+
+		if (!startDate.isValid()) {
+			throw new BadRequestException('Invalid start date format');
+		}
+
+		if (!endDate.isValid()) {
+			throw new BadRequestException('Invalid end date format');
+		}
+
+		if (endDate.isBefore(startDate, 'day')) {
+			throw new BadRequestException(
+				'End date cannot be earlier than start date',
+			);
+		}
+
+		const price = dto.price ?? ticket.price;
+		const discountPercent = dto.discount ?? ticket.discount ?? 0;
+
+		if (discountPercent < 0 || discountPercent > 100) {
+			throw new BadRequestException('Discount must be between 0 and 100');
+		}
+
+		const finalPrice =
+			Math.round(price * (1 - discountPercent / 100) * 100) / 100;
+
+		await ticket.update({
+			startDate: startDate.format('YYYY-MM-DD'),
+			endDate: endDate.format('YYYY-MM-DD'),
+			price,
+			discount: discountPercent,
+			finalPrice,
+			quantity: dto.quantity ?? ticket.quantity,
+			title: dto.title ?? ticket.title,
+			description: dto.description ?? ticket.description,
+			subTitle: dto.subTitle ?? ticket.subTitle,
+			features: dto.features ?? ticket.features,
 		});
+
+		return ticket;
 	}
 
 	async updateQuantity(id: number, quantitySold: number) {
@@ -167,7 +220,8 @@ export class TicketService {
 
 		const tickets = await this.ticketModel.findAll({
 			order: [
-				['date', 'DESC'],
+				['startDate', 'DESC'],
+				['endDate', 'DESC'],
 				['createdAt', 'DESC'],
 			],
 			limit: safeLimit,
@@ -178,23 +232,8 @@ export class TicketService {
 			throw new NotFoundException('Tickets not found');
 		}
 
-		const groupedData = tickets.reduce(
-			(acc, ticket) => {
-				const dateKey = dayjs(ticket.date).format('YYYY-MM-DD');
-
-				if (!acc[dateKey]) {
-					acc[dateKey] = [];
-				}
-
-				acc[dateKey].push(ticket);
-
-				return acc;
-			},
-			{} as Record<string, any[]>,
-		);
-
 		return {
-			data: groupedData,
+			data: tickets,
 			meta: {
 				total,
 				page: safePage,
@@ -204,14 +243,43 @@ export class TicketService {
 		};
 	}
 
+	async getByDaysTickets(date?: string) {
+		const targetDate = date ? dayjs(date) : dayjs();
+
+		if (!targetDate.isValid()) {
+			throw new BadRequestException('Invalid date format');
+		}
+
+		const formattedDate = targetDate.format('YYYY-MM-DD');
+
+		return await this.ticketModel.findAll({
+			where: {
+				startDate: {
+					[Op.lte]: formattedDate,
+				},
+				endDate: {
+					[Op.gte]: formattedDate,
+				},
+				quantity: {
+					[Op.gt]: 0,
+				},
+			},
+			order: [
+				['startDate', 'ASC'],
+				['endDate', 'ASC'],
+				['createdAt', 'DESC'],
+			],
+		});
+	}
+
 	async getAvailableTicketsByIds(ids: number[]) {
 		if (!ids || ids.length === 0) {
 			return [];
 		}
 
-		const startOfToday = dayjs().startOf('day').toDate();
+		const endDate = dayjs().startOf('day').toDate();
 
-		const tickets = await this.ticketModel.findAll({
+		return await this.ticketModel.findAll({
 			where: {
 				id: {
 					[Op.in]: ids,
@@ -219,13 +287,11 @@ export class TicketService {
 				quantity: {
 					[Op.gt]: 0,
 				},
-				date: {
-					[Op.gte]: startOfToday,
+				endDate: {
+					[Op.gte]: endDate,
 				},
 			},
 		});
-
-		return tickets;
 	}
 
 	async ticketRemove(id: number) {

@@ -4,6 +4,7 @@ import {
 	Delete,
 	Get,
 	Param,
+	ParseIntPipe,
 	Post,
 	Put,
 	Query,
@@ -55,7 +56,7 @@ export class DiningRoomController {
 	@ApiConsumes('multipart/form-data')
 	@UseInterceptors(FileInterceptor('file'))
 	async updateHeader(
-		@Param('id') id: number,
+		@Param('id', ParseIntPipe) id: number,
 		@CurrentAdmin('id') userId: number,
 		@Body() dto: HeaderDiningRoomUpdateDto,
 		@Query('urlId', DecodeUrlPipe) urlId?: string,

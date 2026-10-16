@@ -3,6 +3,7 @@ import {
 	Injectable,
 	NotFoundException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/sequelize';
 
 import { FilesService } from '@/files/files.service';
@@ -17,14 +18,21 @@ import { Home } from './entities/home.entity';
 
 @Injectable()
 export class HomeService {
+	private readonly SEND_CONTACT_MESSAGE_MAIL: string;
+
 	constructor(
 		@InjectModel(Home)
 		private homeModel: typeof Home,
 		@InjectModel(HeaderHome)
 		private readonly headerModel: typeof HeaderHome,
 		private readonly filesService: FilesService,
+		private readonly configService: ConfigService,
 		private readonly mailerService: MailService,
-	) {}
+	) {
+		this.SEND_CONTACT_MESSAGE_MAIL = this.configService.getOrThrow<string>(
+			'FRONTEND_REDIRECT_URL',
+		)!;
+	}
 	async createHeader(dto: HeaderHomeCreateDto, file?: Express.Multer.File) {
 		const uploaded = await this.filesService.upload(file, 'header');
 
@@ -153,21 +161,23 @@ export class HomeService {
 
 	async sendContactMessage(dto: ContactFormDto) {
 		const htmlContent = `
-      <h3>Новое сообщение из формы обратной связи</h3>
-      <p><b>Отправитель:</b> ${dto.firstName} ${dto.lastName}</p>
-      <p><b>Email:</b> ${dto.email}</p>
-      <p><b>Телефон:</b> ${dto.phone}</p>
-      <p><b>Сообщение:</b> ${dto.message}</p>
-    `;
+		<h3>Новое сообщение из формы обратной связи</h3>
+		<p><b>Отправитель:</b> ${dto.firstName} ${dto.lastName}</p>
+		<p><b>Email:</b> ${dto.email}</p>
+		<p><b>Телефон:</b> ${dto.phone}</p>
+		<p><b>Сообщение:</b> ${dto.message}</p>
+	`;
 
 		await this.mailerService.sendMail({
-			// to: 'fullhouseleninavan@gmail.com',
-			to: 'militosyan13@gmail.com',
-			subject: 'Новая заявка с сайта',
+			to: this.SEND_CONTACT_MESSAGE_MAIL,
+			subject: 'Новое сообщение из формы обратной связи — FullHouse',
 			html: htmlContent,
 		});
 
-		return { success: true, message: 'Сообщение отправлено' };
+		return {
+			success: true,
+			message: 'Сообщение отправлено',
+		};
 	}
 
 	async delete(id: number) {

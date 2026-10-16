@@ -6,6 +6,7 @@ import {
 	HttpCode,
 	HttpStatus,
 	Param,
+	ParseIntPipe,
 	Post,
 	Put,
 	Query,
@@ -53,7 +54,7 @@ export class MenuController {
 	@UseInterceptors(FileInterceptor('file'))
 	@HttpCode(HttpStatus.OK)
 	async updateHeader(
-		@Param('id') id: number,
+		@Param('id', ParseIntPipe) id: number,
 		@CurrentAdmin('id') userId: number,
 		@Body() dto: HeaderMenuUpdateDto,
 		@Query('urlId', DecodeUrlPipe) urlId?: string,

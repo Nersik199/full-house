@@ -5,8 +5,8 @@ import {
 	Get,
 	HttpCode,
 	HttpStatus,
-	NotFoundException,
 	Param,
+	ParseIntPipe,
 	Post,
 	Put,
 	Query,
@@ -63,7 +63,7 @@ export class PoolAndSpaAreaController {
 	@UseInterceptors(FileInterceptor('file'))
 	@HttpCode(HttpStatus.OK)
 	async updateHeader(
-		@Param('id') id: number,
+		@Param('id', ParseIntPipe) id: number,
 		@CurrentAdmin('id') userId: number,
 		@Body() dto: HeaderPoolSpaUpdateDto,
 		@Query('urlId', DecodeUrlPipe) urlId?: string,

@@ -1,11 +1,13 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+	BadRequestException,
+	Injectable,
+	NotFoundException,
+} from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/sequelize';
 import dayjs from 'dayjs';
 import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
 import { Sequelize } from 'sequelize';
-
-
 
 import { BookingService } from '@/booking/booking.service';
 import { LodgeService } from '@/lodge/lodge.service';
@@ -13,138 +15,10 @@ import { PaymentService } from '@/payment/payment.service';
 import { RoomService } from '@/room/room.service';
 import { TicketService } from '@/ticket/ticket.service';
 
-
-
 import { LodgeCreatedOrderDto } from './dto/lodgeCreatedOrder.dto';
 import { RoomCreatedOrderDto } from './dto/roomCreatedOrder.dto';
 import { TicketCreatedOrderDto } from './dto/ticketCreatedOrder.dto';
 import { Order } from './entities/order.entity';
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -333,8 +207,8 @@ export class OrderService {
 						guestName: dto.customerName,
 						guestPhone: dto.customerPhone.trim(),
 						guestEmail: dto.customerEmail.trim(),
-						checkIn: dayjs(ticket.date).startOf('day').utc().toDate(),
-						checkOut: dayjs(ticket.date).endOf('day').utc().toDate(),
+						checkIn: dayjs(ticket.startDate).startOf('day').utc().toDate(),
+						checkOut: dayjs(ticket.endDate).endOf('day').utc().toDate(),
 						source: 'online',
 					},
 					transaction,

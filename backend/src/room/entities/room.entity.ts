@@ -180,6 +180,12 @@ export class Room extends Model {
 	}[];
 
 	@Column({
+		type: DataType.STRING,
+		allowNull: true,
+	})
+	youtubeUrl: string;
+
+	@Column({
 		type: DataType.DATE,
 		defaultValue: DataType.NOW,
 		field: 'created_at',

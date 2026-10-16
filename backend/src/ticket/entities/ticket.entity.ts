@@ -13,16 +13,35 @@ export class Ticket extends Model {
 	id: number;
 
 	@Column({
-		type: DataType.DATE,
+		type: DataType.STRING,
 		allowNull: false,
 	})
-	date: Date;
+	title: string;
+
+	@Column({
+		type: DataType.TEXT,
+		allowNull: true,
+	})
+	description: string;
+
+	@Column({
+		type: DataType.TEXT,
+		allowNull: true,
+	})
+	subTitle: string;
 
 	@Column({
 		type: DataType.INTEGER,
 		allowNull: false,
 	})
 	quantity: number;
+
+	@Column({
+		type: DataType.JSONB,
+		allowNull: false,
+		defaultValue: [],
+	})
+	features: string[];
 
 	@Column({
 		type: DataType.DECIMAL(10, 2),
@@ -33,6 +52,18 @@ export class Ticket extends Model {
 		},
 	})
 	price: number;
+
+	@Column({
+		type: DataType.DATEONLY,
+		allowNull: false,
+	})
+	startDate: string;
+
+	@Column({
+		type: DataType.DATEONLY,
+		allowNull: false,
+	})
+	endDate: string;
 
 	@Column({
 		type: DataType.DECIMAL(10, 2),

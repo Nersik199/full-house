@@ -6,6 +6,7 @@ import {
 	HttpCode,
 	HttpStatus,
 	Param,
+	ParseIntPipe,
 	Post,
 	Put,
 	Query,
@@ -54,7 +55,7 @@ export class HomeController {
 	@UseInterceptors(FileInterceptor('file'))
 	@HttpCode(HttpStatus.OK)
 	async updateHeader(
-		@Param('id') id: number,
+		@Param('id', ParseIntPipe) id: number,
 		@CurrentAdmin('id') userId: number,
 		@Body() dto: HeaderHomeUpdateDto,
 		@Query('urlId', DecodeUrlPipe) urlId?: string,

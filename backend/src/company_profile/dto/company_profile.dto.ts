@@ -27,8 +27,9 @@ export class CompanyProfileCreateDto {
 		description: 'Email компании',
 		required: false,
 	})
-	@IsEmail({}, { message: 'Email должен быть корректным' })
+	@Transform(({ value }) => (value === '' ? undefined : value))
 	@IsOptional()
+	@IsEmail({}, { message: 'Email должен быть корректным' })
 	mail?: string;
 
 	@ApiProperty({

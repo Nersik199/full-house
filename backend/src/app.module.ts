@@ -21,6 +21,7 @@ import { StatisticsModule } from './statistics/statistics.module';
 import { TicketModule } from './ticket/ticket.module';
 import { CartModule } from './cart/cart.module';
 import { SupportModule } from './support/support.module';
+import { KaraokeModule } from './karaoke/karaoke.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -50,6 +51,7 @@ import { SupportModule } from './support/support.module';
     TicketModule,
     CartModule,
     SupportModule,
+    KaraokeModule,
   ],
   providers: [],
 })

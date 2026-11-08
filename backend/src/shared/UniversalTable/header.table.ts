@@ -42,6 +42,13 @@ export abstract class BaseHeader extends Model {
 	createdAt: Date;
 
 	@Column({
+		type: DataType.ENUM('terms_of_service', 'privacy_policy'),
+		allowNull: true,
+		defaultValue: null,
+	})
+	type: string | null;
+
+	@Column({
 		type: DataType.DATE,
 		defaultValue: DataType.NOW,
 		field: 'updated_at',

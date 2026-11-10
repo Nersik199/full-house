@@ -3,7 +3,7 @@ import { Table } from 'sequelize-typescript';
 import { BaseHeader } from '@/shared/UniversalTable/header.table';
 
 @Table({
-	tableName: 'header_karaoke',
+	tableName: 'header_Karaoke_us',
 	timestamps: true,
 })
-export class HeaderKaraoke extends BaseHeader {}
+export class KaraokeUsHeader extends BaseHeader {}

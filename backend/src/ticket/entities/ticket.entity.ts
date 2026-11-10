@@ -28,7 +28,7 @@ export class Ticket extends Model {
 		type: DataType.TEXT,
 		allowNull: true,
 	})
-	subTitle: string;
+	subTitle?: string;
 
 	@Column({
 		type: DataType.INTEGER,
@@ -45,13 +45,13 @@ export class Ticket extends Model {
 
 	@Column({
 		type: DataType.DECIMAL(10, 2),
-		allowNull: false,
+		allowNull: true,
 		get() {
 			const value = this.getDataValue('price');
 			return value === null ? null : parseFloat(value);
 		},
 	})
-	price: number;
+	price?: number;
 
 	@Column({
 		type: DataType.DATEONLY,
@@ -64,6 +64,18 @@ export class Ticket extends Model {
 		allowNull: false,
 	})
 	endDate: string;
+
+	@Column({
+		type: DataType.STRING,
+		allowNull: true,
+	})
+	startTime?: string;
+
+	@Column({
+		type: DataType.STRING,
+		allowNull: true,
+	})
+	endTime?: string;
 
 	@Column({
 		type: DataType.DECIMAL(10, 2),

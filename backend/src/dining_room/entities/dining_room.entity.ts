@@ -31,6 +31,12 @@ export class DiningRoom extends Model {
 	image: string;
 
 	@Column({
+		type: DataType.STRING,
+		allowNull: true,
+	})
+	youtubeUrl?: string;
+
+	@Column({
 		type: DataType.DATE,
 		defaultValue: DataType.NOW,
 		field: 'created_at',

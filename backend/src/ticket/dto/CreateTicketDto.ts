@@ -47,12 +47,37 @@ export class CreateTicketDto {
 	@ApiProperty({
 		example: 1500,
 		description: 'Базовая цена билета без учета скидки',
+		required: false,
 	})
-	@IsNotEmpty({ message: 'Цена обязательна' })
+	@IsOptional()
 	@IsNumber({}, { message: 'Цена должна быть числом' })
 	@Min(0, { message: 'Цена не может быть отрицательной' })
 	@Type(() => Number)
-	price: number;
+	price?: number;
+
+	@ApiProperty({
+		example: '09:00',
+		description: 'Время начала в формате HH:mm',
+		required: false,
+	})
+	@IsOptional()
+	@IsString({ message: 'Время начала должно быть строкой' })
+	@Matches(/^([01]\d|2[0-3]):([0-5]\d)$/, {
+		message: 'Время начала должно соответствовать формату HH:mm',
+	})
+	startTime?: string;
+
+	@ApiProperty({
+		example: '18:00',
+		description: 'Время окончания в формате HH:mm',
+		required: false,
+	})
+	@IsOptional()
+	@IsString({ message: 'Время окончания должно быть строкой' })
+	@Matches(/^([01]\d|2[0-3]):([0-5]\d)$/, {
+		message: 'Время окончания должно соответствовать формату HH:mm',
+	})
+	endTime?: string;
 
 	@ApiProperty({
 		example: 'Посещение СПА зоны',

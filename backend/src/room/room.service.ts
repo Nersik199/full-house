@@ -119,6 +119,7 @@ export class RoomService {
 		return await this.roomModel.create({
 			...dto,
 			member,
+			bedType: dto.bedType || 'single',
 			images: imageUrls,
 		});
 	}

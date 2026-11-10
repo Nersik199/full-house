@@ -127,6 +127,8 @@ export class TicketService {
 			description: dto.description,
 			subTitle: dto.subTitle,
 			features: dto.features,
+			startTime: dto.startTime,
+			endTime: dto.endTime,
 		});
 	}
 

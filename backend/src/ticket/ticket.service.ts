@@ -262,9 +262,7 @@ export class TicketService {
 				endDate: {
 					[Op.gte]: formattedDate,
 				},
-				quantity: {
-					[Op.gt]: 0,
-				},
+				[Op.or]: [{ quantity: { [Op.gt]: 0 } }, { price: 0 }],
 			},
 			order: [
 				['startDate', 'ASC'],

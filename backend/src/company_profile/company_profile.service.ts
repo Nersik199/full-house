@@ -108,21 +108,34 @@ export class CompanyProfileService {
 		dto: CompanyProfileUpdateDto,
 		file?: Express.Multer.File,
 	) {
-		let newImg: string;
-		if (urlId && file) {
-			await this.filesService.delete(urlId);
-			newImg = await this.filesService.upload(file, 'company_profile');
+		const updateData: any = { ...dto };
+
+		if (Object.prototype.hasOwnProperty.call(dto, 'mail')) {
+			updateData.mail = dto.mail || null;
 		}
+
+		if (file) {
+			if (urlId) {
+				await this.filesService.delete(urlId);
+			}
+
+			updateData.image = await this.filesService.upload(
+				file,
+				'company_profile',
+			);
+		}
+
 		const [updatedCount, [updatedData]] = await this.companyProfile.update(
-			{ ...dto, image: newImg },
+			updateData,
 			{
 				where: { id },
 				returning: true,
 			},
 		);
 
-		if (updatedCount === 0)
+		if (!updatedCount) {
 			throw new NotFoundException('company profile not found');
+		}
 
 		return updatedData;
 	}

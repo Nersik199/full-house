@@ -27,10 +27,10 @@ export class CompanyProfileCreateDto {
 		description: 'Email компании',
 		required: false,
 	})
-	@Transform(({ value }) => (value === '' ? undefined : value))
+	@Transform(({ value }) => (value === '' || value === 'null' ? null : value))
 	@IsOptional()
 	@IsEmail({}, { message: 'Email должен быть корректным' })
-	mail?: string;
+	mail?: string | null;
 
 	@ApiProperty({
 		example: '+7 (999) 123-45-67',
